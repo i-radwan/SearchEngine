@@ -8,7 +8,7 @@ public class Constants {
     /**
      * Database constants
      */
-    public static final String DATABASE_NAME = "spider_engine";
+    public static final String DATABASE_NAME = "search_engine";
     public static final String DATABASE_HOST_ADDRESS = "localhost";
     public static final int DATABASE_PORT_NUMBER = 27017;
 
