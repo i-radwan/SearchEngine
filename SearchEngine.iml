@@ -11,7 +11,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/libraries/libstemmer/target/libstemmer-1.0.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/libraries/libstemmer-1.0.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
