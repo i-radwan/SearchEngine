@@ -7,9 +7,13 @@ import search.engine.utils.Constants;
 import java.util.ArrayList;
 
 public class QueryProcessor {
+    private boolean isPhraseSeach = false;
+
     public ArrayList<ArrayList<String>> process(String queryString) {
         StringBuilder queryStringBuilder = new StringBuilder(queryString);
         ArrayList<ArrayList<String>> ret = new ArrayList<>();
+
+        this.isPhraseSeach = this.checkIfPhraseSearch(queryString);
 
         // Remove special chars
         queryStringBuilder = this.removeSpecialChars(queryStringBuilder);
@@ -26,23 +30,33 @@ public class QueryProcessor {
 
         // Spread and  get all possible words
 
+        ret.add(stemmedWordsArrayList);
         return ret;
     }
 
-    StringBuilder removeSpecialChars(StringBuilder sb) {
+    public boolean isPhraseSearch() {
+        return this.isPhraseSeach;
+    }
+
+    private boolean checkIfPhraseSearch(String queryString) {
+        return queryString.charAt(0) == queryString.charAt(queryString.length() - 1)
+                && queryString.charAt(0) == '"';
+    }
+
+    private StringBuilder removeSpecialChars(StringBuilder sb) {
         StringBuilder ret = new StringBuilder("");
 
         for (int i = 0; i < sb.length(); i++) {
-            if (sb.charAt(i) >= 'a' && sb.charAt(i) <= 'z'
-                    && sb.charAt(i) >= 'A' && sb.charAt(i) <= 'Z'
-                    && sb.charAt(i) >= '1' && sb.charAt(i) <= '9')
+            if ((sb.charAt(i) >= 'a' && sb.charAt(i) <= 'z')
+                    || (sb.charAt(i) >= 'A' && sb.charAt(i) <= 'Z')
+                    || (sb.charAt(i) >= '1' && sb.charAt(i) <= '9'))
                 ret.append(sb.charAt(i));
         }
 
         return ret;
     }
 
-    ArrayList<String> splitStringToWords(String s) {
+    private ArrayList<String> splitStringToWords(String s) {
         ArrayList<String> wordsArrayList = new ArrayList<>();
         for (String word : s.split(" ")) {
             wordsArrayList.add(word);
@@ -51,7 +65,7 @@ public class QueryProcessor {
         return wordsArrayList;
     }
 
-    ArrayList<String> removeStopWords(ArrayList<String> words) {
+    private ArrayList<String> removeStopWords(ArrayList<String> words) {
         ArrayList<String> ret = new ArrayList<>();
 
         for (String word : words) {
@@ -63,7 +77,7 @@ public class QueryProcessor {
         return ret;
     }
 
-    ArrayList<String> stemWords(ArrayList<String> words) {
+    private ArrayList<String> stemWords(ArrayList<String> words) {
         ArrayList<String> ret = new ArrayList<>();
         SnowballStemmer stemmer = new englishStemmer();
 
@@ -77,7 +91,7 @@ public class QueryProcessor {
         return ret;
     }
 
-    boolean isStopWord(String word) {
+    private boolean isStopWord(String word) {
         if (word.length() < 2) return true;
         if (word.charAt(0) >= '0' && word.charAt(0) <= '9') return true;
         if (Constants.stopWordSet.contains(word)) return true;

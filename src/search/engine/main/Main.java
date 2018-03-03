@@ -12,12 +12,17 @@ public class Main {
         // Server
         port(8080);
 
-        get("/search/:q", (req, res) -> {
-            String queryString = req.params(":q");
+        get("/search", (req, res) -> {
+            String queryString = req.queryParams("q");
 
             QueryProcessor queryProcessor = new QueryProcessor();
 
             ArrayList<ArrayList<String>> queriesList = queryProcessor.process(queryString);
+            boolean isPhraseSearch = queryProcessor.isPhraseSearch();
+
+            // Call the indexer
+
+            // Call the ranker
 
             return queryString;
         });
