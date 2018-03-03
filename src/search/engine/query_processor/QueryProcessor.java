@@ -7,13 +7,14 @@ import search.engine.utils.Constants;
 import java.util.ArrayList;
 
 public class QueryProcessor {
-    private boolean isPhraseSeach = false;
+
+    private boolean isPhraseSearch = false;
 
     public ArrayList<ArrayList<String>> process(String queryString) {
         StringBuilder queryStringBuilder = new StringBuilder(queryString);
         ArrayList<ArrayList<String>> ret = new ArrayList<>();
 
-        this.isPhraseSeach = this.checkIfPhraseSearch(queryString);
+        this.isPhraseSearch = this.checkIfPhraseSearch(queryString);
 
         // Remove special chars
         queryStringBuilder = this.removeSpecialChars(queryStringBuilder);
@@ -35,7 +36,7 @@ public class QueryProcessor {
     }
 
     public boolean isPhraseSearch() {
-        return this.isPhraseSeach;
+        return this.isPhraseSearch;
     }
 
     private boolean checkIfPhraseSearch(String queryString) {
@@ -94,7 +95,7 @@ public class QueryProcessor {
     private boolean isStopWord(String word) {
         if (word.length() < 2) return true;
         if (word.charAt(0) >= '0' && word.charAt(0) <= '9') return true;
-        if (Constants.stopWordSet.contains(word)) return true;
+        if (Constants.STOP_WORDS_SET.contains(word)) return true;
         else return false;
     }
 }
