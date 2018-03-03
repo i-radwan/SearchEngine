@@ -7,17 +7,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="com.sparkjava:spark-core:2.1" level="project" />
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/libraries/snowball-1.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$MODULE_DIR$/libraries/snowball-1.0.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="com.sparkjava:spark-core:2.1" level="project" />
+    <orderEntry type="library" name="snowball-1.0" level="project" />
+    <orderEntry type="library" name="mongo-driver-3.6.3" level="project" />
   </component>
 </module>
