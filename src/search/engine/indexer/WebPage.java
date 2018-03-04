@@ -6,6 +6,8 @@ import org.bson.types.ObjectId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+
 
 public class WebPage {
 
@@ -32,6 +34,7 @@ public class WebPage {
      * <p>
      * where:
      * u: the current web page.
+     * <p>
      * v: the web pages connected to u.
      */
     public double rank = 1.0;
@@ -40,11 +43,6 @@ public class WebPage {
      * List of urls mentioned in the current page.
      */
     public List<String> outUrls = null;
-
-    /**
-     * List of web pages the current page is connected to.
-     */
-    public List<WebPage> edges = null;
 
     /**
      * Web page document content.
@@ -78,12 +76,20 @@ public class WebPage {
     }
 
     /**
-     * Constructs a web page object from json-like object.
+     * Constructs a web page object from JSON-like document.
      *
-     * @param document JSON-like document representing the web page.
+     * @param doc JSON-like document representing the web page.
      */
-    public WebPage(Document document) {
+    public WebPage(Document doc) {
+        id = doc.getObjectId(Constants.FIELD_ID);
+        url = doc.getString(Constants.FIELD_URL);
+        rank = doc.getDouble(Constants.FIELD_RANK);
+        content = doc.getString(Constants.FIELD_PAGE_CONTENT);
+        wordsCount = doc.getInteger(Constants.FIELD_WORDS_COUNT);
 
+        // TODO: find a better way to cast
+        outUrls = (List<String>) doc.get(Constants.FIELD_CONNECTED_TO);
+        parseDictionary((List<Document>) doc.get(Constants.FIELD_DICTIONARY));
     }
 
     /**
@@ -93,7 +99,7 @@ public class WebPage {
      * @param content Web page raw content.
      */
     public WebPage(String url, String content) {
-
+        // TODO: parse the given web page with @AbdoEid
     }
 
     /**
@@ -110,11 +116,10 @@ public class WebPage {
 
         doc.append(Constants.FIELD_URL, url);
         doc.append(Constants.FIELD_RANK, rank);
-        //doc.append(Constants.FIELD_CONNECTED_TO, edges);
+        doc.append(Constants.FIELD_CONNECTED_TO, outUrls);
         doc.append(Constants.FIELD_PAGE_CONTENT, content);
         doc.append(Constants.FIELD_WORDS_COUNT, wordsCount);
         doc.append(Constants.FIELD_DICTIONARY, getDictionary());
-
 
         return doc;
     }
@@ -124,7 +129,7 @@ public class WebPage {
      *
      * @return List of documents representing the dictionary this given web page.
      */
-    public List<Document> getDictionary() {
+    private List<Document> getDictionary() {
         if (wordPosMap == null) {
             return null;
         }
@@ -142,5 +147,25 @@ public class WebPage {
         }
 
         return dictionary;
+    }
+
+    /**
+     * Parse the given dictionary.
+     *
+     * @param dictionary List of documents representing the dictionary this given web page.
+     */
+    private void parseDictionary(List<Document> dictionary) {
+        if (dictionary == null) {
+            return;
+        }
+
+        wordPosMap = new TreeMap<>();
+        wordScoreMap = new TreeMap<>();
+
+        for (Document doc : dictionary) {
+            String word = doc.getString(Constants.FIELD_WORD);
+            wordPosMap.put(word, (List<Integer>) doc.get(Constants.FIELD_POSITIONS));
+            wordScoreMap.put(word, (List<Integer>) doc.get(Constants.FIELD_SCORES));
+        }
     }
 }
