@@ -2,12 +2,9 @@ package search.engine.main;
 
 import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
-import search.engine.query_processor.QueryProcessor;
+import search.engine.server.Server;
 
 import java.util.*;
-
-import static spark.Spark.get;
-import static spark.Spark.port;
 
 
 public class Main {
@@ -21,22 +18,7 @@ public class Main {
 
     public static void testQueryProcessor() {
         // Server
-        port(8080);
-
-        get("/search", (req, res) -> {
-            String queryString = req.queryParams("q");
-
-            QueryProcessor queryProcessor = new QueryProcessor();
-
-            ArrayList<ArrayList<String>> queriesList = queryProcessor.process(queryString);
-            boolean isPhraseSearch = queryProcessor.isPhraseSearch();
-
-            // Call the indexer
-
-            // Call the ranker
-
-            return queryString;
-        });
+        Server.serve();
     }
 
     public static void testCrawler() {

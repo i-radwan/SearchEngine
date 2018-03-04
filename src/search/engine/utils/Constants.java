@@ -8,7 +8,7 @@ public class Constants {
     //
     // Server
     //
-    public static int port = 8080;
+    public static int PORT = 8080;
 
     //
     // Query processing

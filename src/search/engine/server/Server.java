@@ -16,7 +16,7 @@ public class Server {
      */
     public static void serve() {
         // Server
-        port(Constants.port);
+        port(Constants.PORT);
 
         get("/search", (Request req, Response res) -> {
             String queryString = req.queryParams("q");
