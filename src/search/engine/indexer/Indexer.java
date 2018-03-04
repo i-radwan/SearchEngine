@@ -5,14 +5,12 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
-import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
 import java.util.*;
 
 import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 import static com.mongodb.client.model.Updates.set;
 import static com.mongodb.client.model.Updates.setOnInsert;
@@ -53,113 +51,44 @@ public class Indexer {
                 Constants.DATABASE_NAME
         );
 
-        // Get web pages collection from the database
+        // Get collections from the database
         mWebPagesCollection = database.getCollection(Constants.COLLECTION_WEB_PAGES);
     }
 
     /**
      * Indexes the given web page in the search engine inverted database.
      *
-     * @param url      Web page url
-     * @param content  Web page content
-     * @param words    List of parsed words.
-     * @param scores   List of scores for the parsed words.
-     * @param outLinks List of urls the given page is pointing to.
+     * @param webPage Web page to be indexed or updated.
      */
-    public void indexWebPage(String url, String content, List<String> words, List<Integer> scores, List<String> outLinks) {
+    public void indexWebPage(WebPage webPage) {
         // Filter document by web page url
-        Document filter = new Document(Constants.FIELD_URL, url);
-
+        Document filter = new Document(Constants.FIELD_URL, webPage.url);
+        // Create the web page document to be indexed
+        Document update = webPage.toDocument();
         // Add upsert option
         UpdateOptions options = new UpdateOptions().upsert(true);
 
-        // Create the web page document to be indexed
-        Document page = new Document()
-                .append(Constants.FIELD_URL, url)
-                .append(Constants.FIELD_RANK, 1)
-                .append(Constants.FIELD_CONNECTED_TO, getConnectedWebPages(outLinks))
-                .append(Constants.FIELD_PAGE_CONTENT, content)
-                .append(Constants.FIELD_WORDS_COUNT, words.size())
-                .append(Constants.FIELD_DICTIONARY, getDictionary(words, scores));
-
         // Replace or create new document in the web pages collection
-        UpdateResult res = mWebPagesCollection.replaceOne(
+        mWebPagesCollection.replaceOne(
                 filter,
-                page,
+                update,
                 options
         );
-
-        // Log results
-        System.out.println(page);
-        System.out.println(res);
-    }
-
-    /**
-     * Returns the dictionary index for the given web page content.
-     *
-     * @param words  List of parsed words.
-     * @param scores List of scores for the parsed words.
-     * @return List of document representing the dictionary of the given web page.
-     */
-    private List<Document> getDictionary(List<String> words, List<Integer> scores) {
-        // Map holds list of positions, scores for each distinct word
-        Map<String, ArrayList<Integer>> wordPosMap = new TreeMap<>();
-        Map<String, ArrayList<Integer>> wordScoreMap = new TreeMap<>();
-
-        // Fill the map
-        for (int i = 0; i < words.size(); ++i) {
-            String word = words.get(i);
-
-            wordPosMap.putIfAbsent(word, new ArrayList<>());
-            wordPosMap.get(word).add(i);
-
-            wordScoreMap.putIfAbsent(word, new ArrayList<>());
-            wordScoreMap.get(word).add(scores.get(i));
-        }
-
-        // List of word documents
-        ArrayList<Document> dictionary = new ArrayList<>();
-
-        for (String word : wordPosMap.keySet()) {
-            Document doc = new Document()
-                    .append(Constants.FIELD_WORD, word)
-                    .append(Constants.FIELD_POSITIONS, wordPosMap.get(word))
-                    .append(Constants.FIELD_SCORES, wordScoreMap.get(word));
-
-            dictionary.add(doc);
-        }
-
-        return dictionary;
-    }
-
-    /**
-     * Returns a list of web pages ids matching the given urls.
-     *
-     * @param links List of urls the web page is pointing to.
-     * @return List of web pages ids.
-     */
-    private List<ObjectId> getConnectedWebPages(List<String> links) {
-        List<ObjectId> ret = new ArrayList<>();
-
-        for (String url : links) {
-            ret.add(getWebPageId(url));
-        }
-
-        return ret;
     }
 
     /**
      * Updates the web pages ranks according to the given inputs.
+     * TODO: To be used by @Samir
      *
-     * @param pageRanks the new ranks to be updated.
+     * @param webPages List of web pages after updating their ranks.
      */
-    public void updatePageRanks(Map<ObjectId, Integer> pageRanks) {
+    public void updatePageRanks(Collection<WebPage> webPages) {
         List<WriteModel<Document>> operations = new ArrayList<>();
 
-        for (ObjectId id : pageRanks.keySet()) {
+        for (WebPage page : webPages) {
             operations.add(new UpdateOneModel<>(
-                    eq(Constants.FIELD_ID, id),
-                    set(Constants.FIELD_RANK, pageRanks.get(id))
+                    eq(Constants.FIELD_ID, page.id),
+                    set(Constants.FIELD_RANK, page.rank)
             ));
         }
 
@@ -167,37 +96,38 @@ public class Indexer {
     }
 
     /**
-     * Returns the indexed web pages graph.
+     * Returns the indexed web pages graph as a list of web pages.
+     * Each web page has a list of connected web pages.
+     * TODO: To be used by @Samir
      *
-     * @return The web graph represented as adjacency list.
+     * @return the web graph represented as adjacency list.
      */
-    public Map<ObjectId, List<ObjectId>> getWebGraph() {
-        FindIterable<Document> ret = mWebPagesCollection
+    public Map<String, WebPage> getWebGraph() {
+        FindIterable<Document> res = mWebPagesCollection
                 .find()
-                .projection(fields(include(
-                        Constants.FIELD_ID,
+                .projection(include(
+                        Constants.FIELD_URL,
                         Constants.FIELD_CONNECTED_TO
-                )));
+                ));
 
-        Map<ObjectId, List<ObjectId>> edges = new HashMap<>();
+        Map<String, WebPage> map = new HashMap<>();
 
-        for (Document doc : ret) {
-            edges.put(
-                    doc.getObjectId(Constants.FIELD_ID),
-                    (List<ObjectId>) doc.get(Constants.FIELD_CONNECTED_TO) // TODO: find a better way to cast
-            );
+        for (Document doc : res) {
+            WebPage page = new WebPage(doc);
+            map.put(page.url, page);
         }
 
-        return edges;
+        return map;
     }
 
     /**
      * Returns the id of the given web page url.
      * If the url is not found then a new entry will be inserted in the database.
-     * TODO: think about concurrency
+     * TODO: Think about concurrency
+     * TODO: NOT USED! to be removed if not needed.
      *
      * @param url Web page url.
-     * @return The id of the given web page.
+     * @return the id of the given web page.
      */
     public ObjectId getWebPageId(String url) {
         FindOneAndUpdateOptions options = new FindOneAndUpdateOptions();
@@ -218,37 +148,29 @@ public class Indexer {
      * Searches for a specific web pages by their ids.
      *
      * @param ids         List of web pages ids to search for.
-     * @param projections The desired fields to be returned.
-     * @return List of matching web pages.
+     * @param projections The desired fields to be returned. To return all fields just pass null.
+     * @return list of matching web pages.
      */
-    public List<Document> searchById(List<ObjectId> ids, String... projections) {
-        List<Document> ret = new ArrayList<>();
-
-        mWebPagesCollection
-                .find(in(
-                        Constants.FIELD_ID,
-                        ids
-                ))
+    public List<WebPage> searchById(List<ObjectId> ids, String... projections) {
+        FindIterable<Document> res = mWebPagesCollection
+                .find(in(Constants.FIELD_ID, ids))
                 .projection(include(
                         projections
-                ))
-                .into(ret);
+                ));
 
-        return ret;
+        return toWebPages(res);
     }
 
     /**
      * Searches for web pages having any of the given filter words.
      *
      * @param filterWords List of words to search for.
-     * @return List of matching web pages.
+     * @return list of matching web pages.
      */
-    public List<Document> searchByWord(List<String> filterWords) {
-        List<Document> ret = new ArrayList<>();
-
-        mWebPagesCollection
+    public List<WebPage> searchByWord(List<String> filterWords) {
+        FindIterable<Document> res = mWebPagesCollection
                 .find(in(
-                        Constants.FIELD_DICTIONARY + "." + Constants.FIELD_WORD,
+                        Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
                         filterWords
                 ))
                 .projection(include(
@@ -256,25 +178,22 @@ public class Indexer {
                         Constants.FIELD_URL,
                         Constants.FIELD_RANK,
                         Constants.FIELD_WORDS_COUNT,
-                        Constants.FIELD_DICTIONARY
-                ))
-                .into(ret);
+                        Constants.FIELD_WORDS_INDEX
+                ));
 
-        return ret;
+        return toWebPages(res);
     }
 
     /**
      * Searches for web pages having all of the given filter words.
      *
      * @param filterWords List of words to search for.
-     * @return List of matching web pages.
+     * @return list of matching web pages.
      */
-    public List<Document> searchByPhrase(List<String> filterWords) {
-        List<Document> ret = new ArrayList<>();
-
-        mWebPagesCollection
+    public List<WebPage> searchByPhrase(List<String> filterWords) {
+        FindIterable<Document> res = mWebPagesCollection
                 .find(all(
-                        Constants.FIELD_DICTIONARY + "." + Constants.FIELD_WORD,
+                        Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
                         filterWords
                 ))
                 .projection(include(
@@ -282,9 +201,24 @@ public class Indexer {
                         Constants.FIELD_URL,
                         Constants.FIELD_RANK,
                         Constants.FIELD_WORDS_COUNT,
-                        Constants.FIELD_DICTIONARY
-                ))
-                .into(ret);
+                        Constants.FIELD_WORDS_INDEX
+                ));
+
+        return toWebPages(res);
+    }
+
+    /**
+     * Converts the results of find query into a list of web pages.
+     *
+     * @param documents List of documents to be converted.
+     * @return list of web pages.
+     */
+    private List<WebPage> toWebPages(FindIterable<Document> documents) {
+        List<WebPage> ret = new ArrayList<>();
+
+        for (Document doc : documents) {
+            ret.add(new WebPage(doc));
+        }
 
         return ret;
     }

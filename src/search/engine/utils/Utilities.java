@@ -31,6 +31,7 @@ public class Utilities {
 
     /**
      * Process user query
+     *
      * @param queryString
      * @return
      */
