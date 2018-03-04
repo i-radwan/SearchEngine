@@ -26,7 +26,7 @@ public class Constants {
     public static final String FIELD_CONNECTED_TO = "connected_to";
     public static final String FIELD_PAGE_CONTENT = "content";
     public static final String FIELD_WORDS_COUNT = "words_count";
-    public static final String FIELD_DICTIONARY = "dictionary";
+    public static final String FIELD_WORDS_INDEX = "words_index";
     public static final String FIELD_WORD = "word";
     public static final String FIELD_POSITIONS = "positions";
     public static final String FIELD_SCORES = "scores";
@@ -39,6 +39,6 @@ public class Constants {
             FIELD_URL,
             FIELD_RANK,
             FIELD_WORDS_COUNT,
-            FIELD_DICTIONARY
+            FIELD_WORDS_INDEX
     );
 }
