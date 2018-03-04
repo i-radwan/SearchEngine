@@ -113,7 +113,7 @@ public class Utilities {
      * @return
      */
     public static boolean isStopWord(String word) {
-        return word.length() < 2 || Constants.stopWordSet.contains(word);
+        return word.length() < 2 || Constants.STOP_WORDS_SET.contains(word);
     }
 
     /**
