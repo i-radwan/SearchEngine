@@ -10,5 +10,6 @@
     <orderEntry type="library" name="com.sparkjava:spark-core:2.1" level="project" />
     <orderEntry type="library" name="snowball-1.0" level="project" />
     <orderEntry type="library" name="mongo-driver-3.6.3" level="project" />
+    <orderEntry type="library" name="jsoup-1.11.2" level="project" />
   </component>
 </module>
