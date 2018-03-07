@@ -1,15 +1,12 @@
 package search.engine.crawler;
 
-import javafx.util.Pair;
 
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Input {
 	private static Scanner mURLFile, mVisitedURLsFile, mDisallowedURLsFile, mAllowedURLsFile, mURLIdsFile, mURLRulesFile, mSeedFile;
@@ -30,35 +27,28 @@ public class Input {
 
 	/**
 	 * Reads the URL seeds and fills the URLs queue and the visited URLs set
-	 * @param webUrls
-	 * @param visitedUrls
 	 */
-	public static void readSeed(BlockingQueue<String> webUrls, ConcurrentSkipListSet<String> visitedUrls) {
+	public static void readSeed() {
 		while(mSeedFile.hasNextLine()) {
 			String s = mSeedFile.nextLine();
-			webUrls.add(s);
-			visitedUrls.add(s);
+			if (CrawlerThread.mVisitedURLs.contains(s)) {
+                CrawlerThread.mWebURLs.add(s);
+                CrawlerThread.mVisitedURLs.add(s);
+            }
 		}
 	}
 
 	/**
 	 * Reads the previous runs data in case of interruption to continue from where it left of
-	 * @param webUrls
-	 * @param visitedUrls
-	 * @param allowedUrls
-	 * @param disallowedUrls
-	 * @param urlRules
-	 * @param urlIds
-	 * @param baseUrlCnt
 	 */
-	public static void readPreviousRunData(BlockingQueue<String> webUrls, Set<String> visitedUrls, Set<Integer> allowedUrls, Set<Integer> disallowedUrls, ConcurrentHashMap<Integer, Pair<ArrayList<String>, Boolean>> urlRules, ConcurrentHashMap<String, Integer> urlIds, ConcurrentHashMap<String, Integer> baseUrlCnt) {
-		visitedUrls.addAll(readVisitedURLs());
-		baseUrlCnt.putAll(getBaseUrlCnt(visitedUrls));
-		webUrls.addAll(readURLs(visitedUrls));
-		allowedUrls.addAll(readAllowedURLs());
-		disallowedUrls.addAll(readDisallowedURLs());
-		urlIds.putAll(readURLIds());
-		urlRules.putAll(readURLRules(urlIds));
+	public static void readPreviousRunData() {
+		CrawlerThread.mVisitedURLs.addAll(readVisitedURLs());
+		CrawlerThread.mBaseURLCnt.putAll(getBaseUrlCnt(CrawlerThread.mVisitedURLs));
+		CrawlerThread.mWebURLs.addAll(readURLs(CrawlerThread.mVisitedURLs));
+		RobotsTextManager.mAllowedURLs.addAll(readAllowedURLs());
+		RobotsTextManager.mDisallowedURLs.addAll(readDisallowedURLs());
+		RobotsTextManager.mURLIds.putAll(readURLIds());
+		RobotsTextManager.mURLRules.putAll(readURLRules(RobotsTextManager.mURLIds));
 	}
 
 	/**
@@ -168,8 +158,8 @@ public class Input {
 	 * @param UrlIds
 	 * @return
 	 */
-	public static ConcurrentHashMap<Integer, Pair<ArrayList<String>, Boolean>> readURLRules(ConcurrentHashMap<String, Integer> UrlIds) {
-		ConcurrentHashMap<Integer, Pair<ArrayList<String>, Boolean>> ret = new ConcurrentHashMap<>();
+	public static ConcurrentHashMap<Integer, RobotsTextManager.RulesStatus> readURLRules(ConcurrentHashMap<String, Integer> UrlIds) {
+		ConcurrentHashMap<Integer, RobotsTextManager.RulesStatus> ret = new ConcurrentHashMap<>();
 		String curUrl;
 		Integer curId = 0;
 		while(mURLRulesFile.hasNextLine()) {
@@ -177,10 +167,10 @@ public class Input {
 			if (line.startsWith(Constants.INIT_URL_RULE_FILE)) {
 				curUrl = line.substring(Constants.INIT_URL_RULE_FILE.length(), line.length());
 				curId = UrlIds.get(curUrl);
-				ret.put(curId, new Pair<>(new ArrayList<>(), true));
+				ret.put(curId, new RobotsTextManager.RulesStatus(true));
 			}
 			else {
-				ret.get(curId).getKey().add(line);
+				ret.get(curId).rules.add(line);
 			}
 		}
 		return ret;

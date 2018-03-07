@@ -86,7 +86,6 @@ public final class URLUtilities {
 
     /**
      * Takes a URL and a set of rules and return true if the url matches the disallowed rules
-     * TODO: parse robots.txt after getting it.
      *
      * @param url
      * @param rules
@@ -95,23 +94,7 @@ public final class URLUtilities {
     public static boolean isURLDisallowed(String url, ArrayList<String> rules) {
         //loop on each rule and start matching it using the library regex
         for (String rule : rules) {
-
-            String tmp[] = rule.split(":");
-
-            if (tmp.length != 2) {
-                // Invalid rule
-                continue;
-            }
-
-            String directive = tmp[0].trim();
-
-            if (!directive.equals("disallow")) {
-                continue;
-            }
-
-            String _rule = tmp[1].trim();
-
-            Pattern pat = Pattern.compile(_rule);
+            Pattern pat = Pattern.compile(rule);
             Matcher matcher = pat.matcher(url);
 
             if (matcher.find())

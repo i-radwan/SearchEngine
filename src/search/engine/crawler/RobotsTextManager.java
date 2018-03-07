@@ -1,7 +1,5 @@
 package search.engine.crawler;
 
-import javafx.util.Pair;
-
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,27 +8,20 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public class RobotsTextManager {
 
-    private static ConcurrentSkipListSet<Integer> mDisallowedURLs, mAllowedURLs;
-    public static ConcurrentHashMap<Integer, Pair<ArrayList<String>, Boolean>> mURLRules;
-    private static ConcurrentHashMap<String, Integer> mURLIds;
-    protected final String mUserAgent;
-
-    /**
-     * Takes the data and initialize it's static members
-     *
-     * @param urlIds
-     * @param urlRules
-     * @param disallowedUrls
-     * @param allowedUrls
-     * @param userAgent
-     */
-    RobotsTextManager(ConcurrentHashMap<String, Integer> urlIds, ConcurrentHashMap<Integer, Pair<ArrayList<String>, Boolean>> urlRules, ConcurrentSkipListSet<Integer> disallowedUrls, ConcurrentSkipListSet<Integer> allowedUrls, String userAgent) {
-        mURLRules = urlRules;
-        mDisallowedURLs = disallowedUrls;
-        mUserAgent = userAgent;
-        mAllowedURLs = allowedUrls;
-        mURLIds = urlIds;
+    static class RulesStatus {
+        public ArrayList<String> rules;
+        public boolean status;
+        RulesStatus(boolean initStatus) {
+            rules = new ArrayList<>();
+            status = initStatus;
+        }
     }
+
+    public static ConcurrentSkipListSet<Integer> mDisallowedURLs = new ConcurrentSkipListSet<>();
+    public static ConcurrentSkipListSet<Integer> mAllowedURLs = new ConcurrentSkipListSet<>();
+    public static ConcurrentHashMap<Integer, RulesStatus> mURLRules = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<String, Integer> mURLIds = new ConcurrentHashMap<>();
+    protected final String mUserAgent = Constants.USER_AGENT;
 
     /**
      * Returns the URL id if it exists else it creates a new ID and give it to the URL
@@ -73,7 +64,7 @@ public class RobotsTextManager {
     public boolean cacheURL(URL url) {
         synchronized (mURLRules) {
             if (!isCached(url)) {
-                mURLRules.put(getURLId(URLUtilities.getBaseURL(url)), new Pair<>(new ArrayList<>(), false));
+                mURLRules.put(getURLId(URLUtilities.getBaseURL(url)), new RulesStatus(false));
                 return true;
             }
             return false;
@@ -91,11 +82,13 @@ public class RobotsTextManager {
      */
     public void updateRules(URL url, ArrayList<String> rules) {
         synchronized (mURLRules) {
-            mURLRules.put(getURLId(URLUtilities.getBaseURL(url)), new Pair<>(rules, true));
+            RulesStatus rulesStatus = mURLRules.get(getURLId(URLUtilities.getBaseURL(url)));
+            rulesStatus.status = true;
+            rulesStatus.rules = new ArrayList<>(rules);
 
-            ConcurrentHashMap<Integer, Pair<ArrayList<String>, Boolean>> sync = mURLRules;
-            synchronized (sync) {
-                sync.notifyAll();
+            synchronized (rulesStatus) {
+                Output.log("notifying for url : " + URLUtilities.getBaseURL(url));
+                rulesStatus.notifyAll();
             }
         }
     }
@@ -113,9 +106,8 @@ public class RobotsTextManager {
             return false;
 
         ArrayList<String> rules;
-        synchronized (mURLRules) {
-            rules = new ArrayList<>(mURLRules.get(getURLId(URLUtilities.getBaseURL(url))).getKey());
-        }
+        rules = mURLRules.get(getURLId(URLUtilities.getBaseURL(url))).rules;
+
         boolean ret = URLUtilities.isURLDisallowed(url.toString(), rules);
         if (ret) {
             mDisallowedURLs.add(getURLId(url.toString()));

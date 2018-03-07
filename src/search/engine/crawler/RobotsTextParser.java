@@ -1,12 +1,9 @@
 package search.engine.crawler;
 
-import javafx.util.Pair;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import java.net.URL;
-import java.util.concurrent.ConcurrentHashMap;
 
 
 public class RobotsTextParser {
@@ -33,24 +30,22 @@ public class RobotsTextParser {
         //check if the URL is already cached in the data and if it wasn't cached cache it
         if (mManager.cacheURL(url)) {
             //parse the file to a HashMap
-            HashMap<String, ArrayList<String>> parsedRobotsTxt = parseRobotsText(URLUtilities.getRobotsText(url));
+            ArrayList<String> parsedRobotsTxt = parseRobotsText(URLUtilities.getRobotsText(url));
 
-            //Gets the current user-agent rules
-            ArrayList<String> rules = getUserAgentRules(parsedRobotsTxt);
-            if (rules == null)
-                rules = new ArrayList<>();
-
-            Output.logURLRule(url.toString(), rules);
-            mManager.updateRules(url, rules);
+            Output.logURLRule(url.toString(), parsedRobotsTxt);
+            mManager.updateRules(url, parsedRobotsTxt);
         } else {
-            ConcurrentHashMap<Integer, Pair<ArrayList<String>, Boolean>> sync = mManager.mURLRules;
-            Pair<ArrayList<String>, Boolean> sync2 = sync.get(mManager.getURLId(URLUtilities.getBaseURL(url)));
+            RobotsTextManager.RulesStatus sync = RobotsTextManager.mURLRules.get(mManager.getURLId(URLUtilities.getBaseURL(url)));
             synchronized (sync) {
                 //The robots.txt is still not ready
-                while (!sync2.getValue()) {
+                while (!sync.status) {
                     try {
+                        Output.log(" waiting for url : " + URLUtilities.getBaseURL(url));
                         sync.wait();
-                        sync2 = sync.get(mManager.getURLId(URLUtilities.getBaseURL(url)));
+                        if (sync.status)
+                            Output.log(" woke up and did find url : " + URLUtilities.getBaseURL(url));
+                        else
+                            Output.log(" woke up and didn't find url : " + URLUtilities.getBaseURL(url));
                     } catch (InterruptedException e) {
                     }
                 }
@@ -70,29 +65,13 @@ public class RobotsTextParser {
     }
 
     /**
-     * Takes the parsed robots.txt and returns the Rules regarding the current User Agent
-     * TODO: to be removed
-     *
-     * @param parsedRobotsTxt
-     * @return
-     */
-    private ArrayList<String> getUserAgentRules(HashMap<String, ArrayList<String>> parsedRobotsTxt) {
-        //Concatanates the default user Agent rules with the current user Agent rules
-        ArrayList<String> ret = parsedRobotsTxt.get("*");
-        if (mManager.mUserAgent != "*") {
-            ret.addAll(parsedRobotsTxt.get(mManager.mUserAgent));
-        }
-        return ret;
-    }
-
-    /**
      * Takes lines of the robots.txt and parses it
      *
      * @param robotTxt
      * @return
      */
-    private HashMap<String, ArrayList<String>> parseRobotsText(ArrayList<String> robotTxt) {
-        HashMap<String, ArrayList<String>> parsedRobotTxt = new HashMap<>();
+    private ArrayList<String> parseRobotsText(ArrayList<String> robotTxt) {
+        ArrayList<String> parsedRobotTxt = new ArrayList<>();
         String curUserAgent = null;
 
         //loop on each line of the file if it starts with user-agent then it's a new user-agent
@@ -100,13 +79,16 @@ public class RobotsTextParser {
         for (String line : robotTxt) {
             if (line.startsWith("user-agent")) {
                 curUserAgent = line.split(":")[1].trim();
-                parsedRobotTxt.putIfAbsent(curUserAgent, new ArrayList<>());
-            } else if (curUserAgent != null && (line.startsWith("disallow") || line.startsWith("allow"))) {
-                line = line.replaceAll("\\*", ".*");
-                line = line.replaceAll("\\?", "[?]");
+            } else if (mManager.mUserAgent.equals(curUserAgent) && line.startsWith("disallow")) {
+                String tmp[] = line.split(":", 2);
 
-                ArrayList<String> rules = parsedRobotTxt.get(curUserAgent);
-                rules.add(line);
+                String _line = tmp[1].trim();
+
+                _line = _line.replaceAll("\\*", ".*");
+                _line = _line.replaceAll("\\?", "[?]");
+
+                if (_line.length() > 0)
+                    parsedRobotTxt.add(_line);
             }
         }
 
