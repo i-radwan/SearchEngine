@@ -6,33 +6,24 @@ import org.jsoup.select.Elements;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 
 public class CrawlerThread extends java.lang.Thread {
 
-    private BlockingQueue<String> mWebURLs;
-    private ConcurrentSkipListSet<String> mVisitedURLs;
-    private ConcurrentHashMap<String, Integer> mBaseURLCnt;
-    private static int mWebPagesCnt;
+    public static BlockingQueue<String> mWebURLs = new LinkedBlockingDeque<>();
+    public static ConcurrentSkipListSet<String> mVisitedURLs = new ConcurrentSkipListSet<>();
+    public static ConcurrentHashMap<String, Integer> mBaseURLCnt = new ConcurrentHashMap<>();
+    public static int mWebPagesCnt = 0;
     private RobotsTextParser mRobotTxtParser;
 
     /**
      * CrawlerThread Constructor that takes the list of the current web urls and the visited ones
      *
-     * @param toCrawl
-     * @param crawled
      * @param robotManager
      */
-    CrawlerThread(BlockingQueue<String> toCrawl, ConcurrentSkipListSet<String> crawled, RobotsTextManager robotManager, ConcurrentHashMap<String, Integer> baseUrlCnt, int webPagesCnt) {
-        mWebURLs = toCrawl;
-        mVisitedURLs = crawled;
+    CrawlerThread(RobotsTextManager robotManager) {
         mRobotTxtParser = new RobotsTextParser(robotManager);
-        mBaseURLCnt = baseUrlCnt;
-        mWebPagesCnt = webPagesCnt;
     }
 
     /**
@@ -50,6 +41,7 @@ public class CrawlerThread extends java.lang.Thread {
             Output.log(e.getMessage());
         }
         if (url == null) {
+            System.out.println("Crawler " + this.getName() + "is exiting");
             throw new Exception("Cannot poll anymore URLS Exiting !");
         }
         return url;
@@ -129,8 +121,7 @@ public class CrawlerThread extends java.lang.Thread {
                 Output.log(e.getMessage());
                 continue;
             }
-            if (!isAllowedByRobotsTxt(nextUrl.toString()))
-                continue;
+
             //lock the arrays and insert in them
             synchronized (mVisitedURLs) {
                 synchronized (mWebURLs) {
@@ -185,6 +176,14 @@ public class CrawlerThread extends java.lang.Thread {
             if (mWebPagesCnt > Constants.MAX_WEBPAGES_CNT)
                 continue;
 
+            //if the robots.txt check gets checked earlier the crawler would be more interested in
+            //getting robots.txt than getting the webpages themselves
+            if (!isAllowedByRobotsTxt(curUrl)) {
+                removeURLFromCnt(curUrl);
+                continue;
+            }
+
+
 
             Output.log("Crawling: " + curUrl);
 
@@ -197,9 +196,9 @@ public class CrawlerThread extends java.lang.Thread {
             }
 
             //if (!doc.baseUri().equals(curUrl))
-            //	Output.logVisitedURL(curUrl);
+            //	Output.logVisitedURL(doc.baseUri());
 
-            Output.logVisitedURL(doc.baseUri());
+            Output.logVisitedURL(curUrl);
 
             extractURLS(doc);
         }
