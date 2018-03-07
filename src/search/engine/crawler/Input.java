@@ -198,5 +198,4 @@ public class Input {
 		mURLIdsFile.close();
 		mURLRulesFile.close();
 	}
-
 }

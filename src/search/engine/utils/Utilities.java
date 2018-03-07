@@ -5,44 +5,56 @@ import org.tartarus.snowball.ext.englishStemmer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
 
 public class Utilities {
+
     /**
-     * Process string as follows:
-     * Convert to lower
-     * Replace special chars with spaces
-     * Remove completely-numeric words
+     * Processes the given string as follows:
+     * <p>
+     * Converts the string into lowercase.
+     * <p>
+     * Replaces special chars with spaces.
+     * <p>
+     * Removes completely-numeric words.
      *
-     * @param s input string
-     * @return the processed string
+     * @param str the input string to be processed
+     * @return the processed string.
      */
-    public static String processString(String s) {
+    public static String processString(String str) {
         // Convert to lower case
-        s = s.toLowerCase();
+        str = str.toLowerCase();
 
         // Replace special chars with space
-        s = s.replaceAll("[^\\dA-Za-z ]", " ");
+        str = str.replaceAll("[^\\dA-Za-z ]", " ");
 
         // Remove all completely-numeric words
-        s = s.replaceAll("\\b(\\d+)\\b", " ");
+        str = str.replaceAll("\\b(\\d+)\\b", " ");
 
-        return s;
+        // Replace multiple consecutive spaces by only one white space
+        str = str.replaceAll("\\s+", " ");
+
+        return str.trim();
     }
 
     /**
-     * Process user query
+     * Processes user search query.
      *
-     * @param queryString
+     * @param queryString the input search query string
      * @return
      */
-    public static ArrayList<ArrayList<String>> processQuery(String queryString) {
-        // Check if phrase search before processing the string (removing special chars)
+    public static List<List<String>> processQuery(String queryString) {
+        // Trim the query string
+        queryString = queryString.trim();
+
+        // Check if phrase search before processing the string (before removing special chars)
         boolean isPhraseSeach = checkIfPhraseSearch(queryString);
 
-        ArrayList<ArrayList<String>> ret = new ArrayList<>();
+        List<List<String>> ret = new ArrayList<>();
 
         // Split the processed query into words
-        ArrayList<String> wordsArrayList = splitStringToWords(processString(queryString));
+        List<String> wordsArrayList = splitStringToWords(processString(queryString));
 
         // Remove stop words
         wordsArrayList = removeStopWords(wordsArrayList);
@@ -51,7 +63,7 @@ public class Utilities {
         ret.add(wordsArrayList);
 
         // Stem words
-        ArrayList<String> stemmedWordsArrayList = stemWords(wordsArrayList);
+        List<String> stemmedWordsArrayList = stemWords(wordsArrayList);
         ret.add(stemmedWordsArrayList);
 
         // ToDo: Spread and  get all possible words
@@ -60,27 +72,29 @@ public class Utilities {
     }
 
     /**
-     * Split string into words
+     * Splits processed string into list of words.
      *
-     * @param s
-     * @return
+     * @param str the input string to be split
+     * @return list of words representing the given string
      */
-    public static ArrayList<String> splitStringToWords(String s) {
-        return new ArrayList<>(Arrays.asList(s.split(" ")));
+    public static List<String> splitStringToWords(String str) {
+        return Arrays.asList(str.split(" "));
     }
 
     /**
-     * Remove stop words
+     * Removes the stop words from the given list of words.
      *
-     * @param words
-     * @return
+     * @param words list of words
+     * @return a new list of non-stopping words.
      */
-    public static ArrayList<String> removeStopWords(ArrayList<String> words) {
-        ArrayList<String> ret = new ArrayList<>();
+    public static List<String> removeStopWords(List<String> words) {
+        List<String> ret = new ArrayList<>();
 
         for (String word : words) {
-            if (word.isEmpty()) continue;
-            if (isStopWord(word)) continue;
+            if (word.isEmpty() || isStopWord(word)) {
+                continue;
+            }
+
             ret.add(word);
         }
 
@@ -88,19 +102,18 @@ public class Utilities {
     }
 
     /**
-     * Stem the given words
+     * Converts the given list of words into their stem version.
      *
-     * @param words
-     * @return
+     * @param words list of words
+     * @return a new list of stemmed words.
      */
-    public static ArrayList<String> stemWords(ArrayList<String> words) {
-        ArrayList<String> ret = new ArrayList<>();
+    public static List<String> stemWords(List<String> words) {
+        List<String> ret = new ArrayList<>();
         SnowballStemmer stemmer = new englishStemmer();
 
         for (String word : words) {
             stemmer.setCurrent(word);
             stemmer.stem();
-
             ret.add(stemmer.getCurrent());
         }
 
@@ -108,23 +121,24 @@ public class Utilities {
     }
 
     /**
-     * Check if a given word is stop word
+     * Checks whether the given word is stop word or not.
      *
-     * @param word
-     * @return
+     * @param word a string
+     * @return {@code true} if the given word is a stop word, {@code false} otherwise
      */
     public static boolean isStopWord(String word) {
         return word.length() < 2 || Constants.STOP_WORDS_SET.contains(word);
     }
 
     /**
-     * Check if phrase search
+     * Checks whether the given search query is a phrase search or not.
      *
-     * @param queryString
-     * @return
+     * @param queryString the input search query string
+     * @return {@code true} if the given string is surrounded by double quotes, {@code false} otherwise
      */
     public static boolean checkIfPhraseSearch(String queryString) {
-        return queryString.charAt(0) == queryString.charAt(queryString.length() - 1)
-                && queryString.charAt(0) == '"';
+
+        return queryString.charAt(0) == '"'
+                && queryString.charAt(queryString.length() - 1) == '"';
     }
 }

@@ -5,14 +5,16 @@ import search.engine.utils.Utilities;
 import spark.Request;
 import spark.Response;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import static spark.Spark.get;
 import static spark.SparkBase.port;
 
+
 public class Server {
+
     /**
-     * Start serving the clients
+     * Starts serving the clients.
      */
     public static void serve() {
         // Server
@@ -23,7 +25,7 @@ public class Server {
 
             // Process the query
             boolean isPhraseSearch = Utilities.checkIfPhraseSearch(queryString);
-            ArrayList<ArrayList<String>> queriesList = Utilities.processQuery(queryString);
+            List<List<String>> queriesList = Utilities.processQuery(queryString);
 
             // Call the indexer
 

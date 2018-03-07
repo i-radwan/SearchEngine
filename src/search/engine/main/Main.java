@@ -1,20 +1,19 @@
 package search.engine.main;
 
-import javafx.util.Pair;
 import search.engine.crawler.Crawler;
 import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.server.Server;
+import search.engine.utils.Utilities;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
         //testQueryProcessor();
-        testCrawler();
+        //testCrawler();
         //testIndexer();
         //testRanker();
     }
@@ -28,7 +27,7 @@ public class Main {
         Crawler crawler = new Crawler();
 
         crawler.start(5);
-	}
+    }
 
     public static void testIndexer() {
         Indexer indexer = new Indexer();
