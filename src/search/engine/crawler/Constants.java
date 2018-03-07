@@ -12,6 +12,7 @@ public class Constants {
 	public static String URL_IDS_FILE_NAME = "crawler_data/url_ids_file.txt";
 	public static String URL_RULES_FILE_NAME = "crawler_data/url_rules_file.txt";
 	public static String INIT_URL_RULE_FILE = "URL_RULE: ";
+	public static String USER_AGENT = "*";
 	
 	public static int MAX_POLL_WAIT_TIME = 10000;
 	public static int MAX_BASE_URL_CNT = 10;

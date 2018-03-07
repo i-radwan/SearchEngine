@@ -1,18 +1,20 @@
 package search.engine.main;
 
+import javafx.util.Pair;
 import search.engine.crawler.Crawler;
 import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.server.Server;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
         //testQueryProcessor();
-        //testCrawler();
+        testCrawler();
         //testIndexer();
         //testRanker();
     }
