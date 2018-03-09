@@ -10,7 +10,7 @@ import java.util.*;
 
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         //testQueryProcessor();
         //testCrawler();
         //testCrawler();
@@ -23,7 +23,7 @@ public class Main {
         Server.serve();
     }
 
-    public static void testCrawler() throws InterruptedException {
+    public static void testCrawler() {
         Crawler crawler = new Crawler();
         crawler.start(5);
     }
