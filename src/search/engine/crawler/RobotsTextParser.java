@@ -31,7 +31,7 @@ public class RobotsTextParser {
      * @return {@code true} if the given url doesn't violate the robots rules, {@code false} otherwise
      */
     public boolean allowedURL(URL url) {
-        generateRobotTxt(url);
+        getRobotTxt(url);
         return mManager.allowedURL(url);
     }
 
@@ -42,12 +42,12 @@ public class RobotsTextParser {
      *
      * @param url
      */
-    private void generateRobotTxt(URL url) {
+    private void getRobotTxt(URL url) {
         // Check if the URL is already cached in the data and if it wasn't cached cache it
         if (mManager.cacheURL(url)) {
-            List<String> parsedRobotsTxt = parseRobotsText(WebUtilities.getRobotsText(url));
-            mManager.updateRules(url, parsedRobotsTxt);
+            List<String> parsedRobotsTxt = parseRobotsText(WebUtilities.fetchRobotsText(url));
             Output.logURLRules(url.toString(), parsedRobotsTxt);
+            mManager.updateRules(url, parsedRobotsTxt);
         } else {
             String baseURL = WebUtilities.getBaseURL(url);
             int id = mManager.getURLId(baseURL);

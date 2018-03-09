@@ -4,7 +4,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import search.engine.crawler.WebPageManager;
+import search.engine.crawler.WebUtilities;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -36,12 +36,13 @@ public class WebPage implements Comparable {
      * <p>
      * To be calculated as follows:
      * <p>
-     * PR(u) = Σ PR(v) / OutDegree(v)
+     * <i>PR(u) = Σ PR(v) / OutDegree(v)</i>
      * <p>
      * where:
-     * u: the current web page.
-     * <p>
-     * v: the web pages connected to u.
+     * <ul>
+     * <li><i>u</i>: the current web page.</li>
+     * <li><i>v</i>: the web pages connected to u.</li>
+     * </ul>
      */
     public double rank = 1.0;
 
@@ -111,7 +112,7 @@ public class WebPage implements Comparable {
         extractOutLinks(doc);
 
         // Extract page content
-        extractPageContent(doc);
+        //extractPageContent(doc);
     }
 
     /**
@@ -169,7 +170,7 @@ public class WebPage implements Comparable {
         for (Element element : links) {
             String link = element.attr("abs:href");
 
-            if (WebPageManager.crawlableURL(link)) {
+            if (WebUtilities.validURL(link)) {
                 outLinks.add(link);
             }
         }

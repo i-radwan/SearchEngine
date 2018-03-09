@@ -10,8 +10,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public final class WebUtilities {
@@ -28,7 +26,7 @@ public final class WebUtilities {
         try {
             ret = new URL(url);
         } catch (MalformedURLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
 
         return ret;
@@ -65,7 +63,7 @@ public final class WebUtilities {
      * @param url a web page URL object
      * @return list of strings representing the robots text of the given web page
      */
-    public static List<String> getRobotsText(URL url) {
+    public static List<String> fetchRobotsText(URL url) {
         // Get web page robots text url
         url = getRobotsTextURL(url);
 
@@ -89,12 +87,12 @@ public final class WebUtilities {
 
     /**
      * Connects to the given web page and
-     * returns document representing the content of the page.
+     * returns document representing its HTML content.
      *
      * @param url a web page URL string
      * @return {@code jsoup.nodes.Document} representing the content of the given web page
      */
-    public static Document getWebPage(String url) {
+    public static Document fetchWebPage(String url) {
         Document ret = null;
 
         try {
@@ -105,5 +103,22 @@ public final class WebUtilities {
         }
 
         return ret;
+    }
+
+    /**
+     * Returns true if the given URL is of valid type to be fetched.
+     *
+     * @param url a web page URL string to check
+     * @return {@code true} if the given url is valid to be fetched, {@code false} otherwise
+     */
+    public static boolean validURL(String url) {
+        return !url.isEmpty()
+                && !url.contains(".css")
+                && !url.contains(".jpg")
+                && !url.contains(".pdf")
+                && !url.contains(".docs")
+                && !url.contains(".js")
+                && !url.contains(".png")
+                && !url.contains(".ico");
     }
 }

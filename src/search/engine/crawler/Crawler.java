@@ -1,24 +1,28 @@
 package search.engine.crawler;
 
-import java.io.IOException;
+import search.engine.indexer.Indexer;
+
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class Crawler {
 
+    //
+    // Member variables
+    //
     private List<Thread> mCrawlerThreads;
     private RobotsTextManager mRobotManager;
+    private Indexer mIndexer;
+
 
     /**
      * Initializes the web crawler environment and starts
      * crawling.
      *
      * @param threadsCnt the number of crawler threads to start
-     * @throws IOException
-     * @throws InterruptedException
      */
-    public void start(int threadsCnt) throws InterruptedException {
+    public void start(int threadsCnt) {
         init();
         initAndStartThreads(threadsCnt);
         waitThreadsFinish();
@@ -27,11 +31,10 @@ public class Crawler {
 
     /**
      * Reads the seed of URLs to crawl and the data of the previous runs.
-     *
-     * @throws IOException
      */
     private void init() {
         mRobotManager = new RobotsTextManager();
+        mIndexer = new Indexer();
 
         // Initialize I/O files
         Output.init();
@@ -62,7 +65,7 @@ public class Crawler {
         mCrawlerThreads = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
-            mCrawlerThreads.add(new CrawlerThread(mRobotManager));
+            mCrawlerThreads.add(new CrawlerThread(mRobotManager, mIndexer));
             mCrawlerThreads.get(i).setName(String.valueOf((i + 1)));
             mCrawlerThreads.get(i).start();
         }
@@ -70,12 +73,14 @@ public class Crawler {
 
     /**
      * Waits the crawler threads until they finish.
-     *
-     * @throws InterruptedException
      */
-    private void waitThreadsFinish() throws InterruptedException {
-        for (Thread c : mCrawlerThreads) {
-            c.join();
+    private void waitThreadsFinish() {
+        for (Thread thread : mCrawlerThreads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

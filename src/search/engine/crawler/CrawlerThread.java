@@ -1,10 +1,9 @@
 package search.engine.crawler;
 
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import search.engine.indexer.Indexer;
+import search.engine.indexer.WebPage;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.*;
 
@@ -22,16 +21,103 @@ public class CrawlerThread extends java.lang.Thread {
     //
     // Member variables
     //
-    private RobotsTextParser mRobotTxtParser;
+    private RobotsTextParser mRobotTextParser;
+    private Indexer mIndexer;
 
 
     /**
      * Constructs a new crawler thread.
      *
      * @param robotManager robot manger object to handle robots text parsing
+     * @param indexer      an indexer object in order to store the crawled web pages
      */
-    CrawlerThread(RobotsTextManager robotManager) {
-        mRobotTxtParser = new RobotsTextParser(robotManager);
+    CrawlerThread(RobotsTextManager robotManager, Indexer indexer) {
+        mRobotTextParser = new RobotsTextParser(robotManager);
+        mIndexer = indexer;
+    }
+
+    /**
+     * Crawler main function.
+     * As long as there exists URLs to crawl, the function would be
+     * running getting documents and new URLs.
+     */
+    @Override
+    public void run() {
+        System.out.println("    - Crawler " + this.getName() + " started");
+
+        while (true) {
+            URL curUrl = getNextURL();
+
+            if (curUrl == null) {
+                break;
+            }
+
+            String curUrlStr = curUrl.toString();
+            String curBaseUrl = WebUtilities.getBaseURL(curUrl);
+
+            // If the following check placed earlier then the crawler would be more interested in
+            // fetching robots.txt rather than fetching the web pages themselves.
+            if (!mRobotTextParser.allowedURL(curUrl)) {
+                Output.log("Couldn't crawl url : " + curUrlStr + " because of robots.txt !!!!!!");
+                removeURLFromCnt(curBaseUrl);
+                continue;
+            }
+
+
+            Output.log("Crawling: " + curUrlStr);
+
+            Document doc = WebUtilities.fetchWebPage(curUrlStr);
+
+            if (doc == null) {
+                Output.log("Empty HTML document returned : " + curUrlStr);
+                removeURLFromCnt(curBaseUrl);
+                continue;
+            }
+
+            Output.logVisitedURL(curUrlStr);
+
+            processWebPage(doc);
+        }
+
+        System.out.println("Crawler " + this.getName() + " is exiting...");
+    }
+
+    /**
+     * Processes the given HTML document by extracting the out links
+     * and inserting then in the queue, and indexing it in the database.
+     *
+     * @param doc the web page document to process
+     */
+    private void processWebPage(Document doc) {
+        WebPage page = new WebPage(doc);
+
+        //
+        // Extract web page URLs
+        //
+        for (String urlStr : page.outLinks) {
+            URL url = WebUtilities.getURL(urlStr);
+
+            if (url == null) {
+                continue;
+            }
+
+            String baseUrlStr = WebUtilities.getBaseURL(url);
+
+            // Lock the arrays and insert in them
+            synchronized (sVisitedURLs) {
+                synchronized (sURLsQueue) {
+                    synchronized (sBaseURLVisitedCnt) {
+                        //
+                        if (crawlable(urlStr, baseUrlStr))
+                            addURL(urlStr, baseUrlStr);
+                        else
+                            Output.log("Skipped: " + urlStr);
+                    }
+                }
+            }
+        }
+
+        //mIndexer.indexWebPage(page);
     }
 
     /**
@@ -39,9 +125,8 @@ public class CrawlerThread extends java.lang.Thread {
      * Throws an exception if it couldn't poll any URLs in {@code MAX_POLL_WAIT_TIME_MS} millis.
      *
      * @return the front url string of the queue
-     * @throws Exception
      */
-    private String getNextUrl() throws Exception {
+    private URL getNextURL() {
         String url = "";
 
         try {
@@ -50,33 +135,48 @@ public class CrawlerThread extends java.lang.Thread {
             Output.log(e.getMessage());
         }
 
-        if (url == null) {
-            System.out.println("Crawler " + this.getName() + " is exiting...");
-            throw new Exception("Cannot poll anymore URLs.");
-        }
-
-        return url;
+        return WebUtilities.getURL(url);
     }
 
     /**
      * Adds the given URL to the queue and marks it as visited.
+     * <p>
+     * The function must be called with <b>exclusive</b> access to:
+     * <ul>
+     * <li>{@code sWebPagesCnt}</li>
+     * <li>{@code sBaseURLVisitedCnt}</li>
+     * <li>{@code sVisitedURLs}</li>
+     * </ul>
      *
-     * @param url a web page URL to be added
+     * @param url     the web page URL to be added
+     * @param baseURL the web page base URL string
      */
-    private void addUrl(String url) {
+    private void addURL(String url, String baseURL) {
+        sWebPagesCnt++;
         sURLsQueue.add(url);
         sVisitedURLs.add(url);
-
-        try {
-            URL x = new URL(url);
-            int cnt = sBaseURLVisitedCnt.getOrDefault(WebUtilities.getBaseURL(x), 0);
-            sBaseURLVisitedCnt.put(WebUtilities.getBaseURL(x), cnt + 1);
-            sWebPagesCnt++;
-        } catch (MalformedURLException e) {
-            //e.printStackTrace();
-        }
-
+        sBaseURLVisitedCnt.put(
+                baseURL,
+                sBaseURLVisitedCnt.getOrDefault(baseURL, 0) + 1
+        );
         Output.logURL(url);
+    }
+
+    /**
+     * Removes the given URL from the web pages count.
+     * To be called when the web page fails to be crawled,
+     * either because it is not allowed by robots rules or due to any other errors.
+     *
+     * @param baseURL the web page base URL
+     */
+    private void removeURLFromCnt(String baseURL) {
+        synchronized (sBaseURLVisitedCnt) {
+            sWebPagesCnt--;
+            sBaseURLVisitedCnt.put(
+                    baseURL,
+                    sBaseURLVisitedCnt.getOrDefault(baseURL, 1) - 1
+            );
+        }
     }
 
     /**
@@ -95,129 +195,13 @@ public class CrawlerThread extends java.lang.Thread {
      * <li>{@code sVisitedURLs}</li>
      * </ul>
      *
-     * @param url a web page URL object
+     * @param url     the web page URL string
+     * @param baseURL the web page base URL string
      * @return {@code true} if the given URL is valid to be crawled
      */
-    private boolean crawlable(URL url) {
+    private boolean crawlable(String url, String baseURL) {
         return sWebPagesCnt < Constants.MAX_WEB_PAGES_COUNT
-                && sBaseURLVisitedCnt.getOrDefault(WebUtilities.getBaseURL(url), 0) < Constants.MAX_BASE_URL_COUNT
-                && !sVisitedURLs.contains(url.toString());
-    }
-
-    /**
-     * Checks if the given URL does not violate robots text rules.
-     *
-     * @param url a web page URL string
-     * @return {@code true} if the given URL is allowed by robots text
-     */
-    private boolean allowedByRobotsText(String url) {
-        try {
-            URL tmp = new URL(url);
-
-            if (!mRobotTxtParser.allowedURL(tmp)) {
-                Output.log("Couldn't crawl url : " + url + " because of robots.txt !!!!!!");
-                return false;
-            }
-
-            return true;
-        } catch (MalformedURLException e) {
-            Output.log(e.getMessage());
-        }
-        return false;
-    }
-
-    /**
-     * Takes the HTML Document and inserts the URLs in the document into the Queue
-     *
-     * @param doc
-     */
-    private void extractURLS(Document doc) {
-        Elements links = WebPageManager.processWebPage(doc);
-        URL nextUrl;
-        for (Element link : links) {
-            try {
-                nextUrl = new URL(link.attr("abs:href"));
-            } catch (MalformedURLException e) {
-                Output.log(e.getMessage());
-                continue;
-            }
-
-            //lock the arrays and insert in them
-            synchronized (sVisitedURLs) {
-                synchronized (sURLsQueue) {
-                    synchronized (sBaseURLVisitedCnt) {
-                        if (crawlable(nextUrl))
-                            addUrl(nextUrl.toString());
-                        else
-                            Output.log("skipped: " + nextUrl);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * When a URL is found to be a bad url which is when a URL is not allowed by robots.txt or it gives an error
-     * during the connection remove it from the webpages limit
-     *
-     * @param url
-     */
-    private void removeURLFromCnt(String url) {
-        synchronized (sBaseURLVisitedCnt) {
-            try {
-                URL x = new URL(url);
-                Integer cnt = sBaseURLVisitedCnt.getOrDefault(WebUtilities.getBaseURL(x), 1);
-                sWebPagesCnt--;
-                sBaseURLVisitedCnt.put(WebUtilities.getBaseURL(x), cnt - 1);
-            } catch (MalformedURLException e) {
-
-            }
-        }
-    }
-
-    /**
-     * Crawler main function.
-     * As long as there exists URLs to crawl the function would be running getting documents and new URLs.
-     */
-    @Override
-    public void run() {
-        System.out.println("- Crawler " + this.getName() + " started");
-
-        while (true) {
-            String curUrl;
-
-            try {
-                curUrl = getNextUrl();
-            } catch (Exception e) {
-                Output.log(e.getMessage());
-                return;
-            }
-
-            if (sWebPagesCnt > Constants.MAX_WEB_PAGES_COUNT) {
-                continue;
-            }
-
-            // If the following check placed earlier then the crawler would be more interested in
-            // fetching robots.txt rather than fetching the web pages themselves.
-            if (!allowedByRobotsText(curUrl)) {
-                removeURLFromCnt(curUrl);
-                continue;
-            }
-
-            Output.log("Crawling: " + curUrl);
-            Document doc = WebUtilities.getWebPage(curUrl);
-
-            if (doc == null) {
-                removeURLFromCnt(curUrl);
-                Output.logDisallowedURL(curUrl);
-                continue;
-            }
-
-            //if (!doc.baseUri().equals(curUrl))
-            //	Output.logVisitedURL(doc.baseUri());
-
-            Output.logVisitedURL(curUrl);
-            extractURLS(doc);
-        }
+                && sBaseURLVisitedCnt.getOrDefault(baseURL, 0) < Constants.MAX_BASE_URL_COUNT
+                && !sVisitedURLs.contains(url);
     }
 }

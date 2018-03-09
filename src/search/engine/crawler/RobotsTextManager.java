@@ -1,7 +1,6 @@
 package search.engine.crawler;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -85,16 +84,17 @@ public class RobotsTextManager {
     public void updateRules(URL url, List<String> rules) {
         String baseURL = WebUtilities.getBaseURL(url);
         int id = getURLId(baseURL);
+        RobotsRules robotsRules;
 
         synchronized (URLRules) {
-            RobotsRules robotsRules = URLRules.get(id);
-            robotsRules.rules = new ArrayList<>(rules);
-            robotsRules.status = true;
+            robotsRules = URLRules.get(id);
+        }
 
-            synchronized (robotsRules) {
-                Output.log("notifying for url : " + baseURL);
-                robotsRules.notifyAll();
-            }
+        synchronized (robotsRules) {
+            robotsRules.rules = rules;
+            robotsRules.status = true;
+            robotsRules.notifyAll();
+            Output.log("Notifying for url : " + baseURL);
         }
     }
 
