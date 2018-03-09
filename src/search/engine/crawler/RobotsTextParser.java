@@ -1,5 +1,7 @@
 package search.engine.crawler;
 
+import search.engine.utils.WebUtilities;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;

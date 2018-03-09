@@ -1,5 +1,8 @@
 package search.engine.crawler;
 
+import search.engine.utils.Constants;
+import search.engine.utils.WebUtilities;
+
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,11 +11,15 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public class RobotsTextManager {
 
+    //
+    // Member variables
+    //
     public ConcurrentSkipListSet<Integer> allowedURLs = new ConcurrentSkipListSet<>();
     public ConcurrentSkipListSet<Integer> disallowedURLs = new ConcurrentSkipListSet<>();
     public ConcurrentHashMap<Integer, RobotsRules> URLRules = new ConcurrentHashMap<>();
     public ConcurrentHashMap<String, Integer> URLIds = new ConcurrentHashMap<>();
     public String userAgent = Constants.USER_AGENT;
+
 
     /**
      * Returns the URL ID if exists,

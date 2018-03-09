@@ -1,7 +1,8 @@
-package search.engine.crawler;
+package search.engine.utils;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import search.engine.crawler.Output;
 
 import java.io.BufferedReader;
 import java.io.IOException;

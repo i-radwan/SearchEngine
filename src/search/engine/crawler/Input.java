@@ -1,5 +1,8 @@
 package search.engine.crawler;
 
+import search.engine.utils.Constants;
+import search.engine.utils.WebUtilities;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;

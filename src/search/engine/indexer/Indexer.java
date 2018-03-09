@@ -7,6 +7,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import search.engine.models.WebPage;
+import search.engine.utils.Constants;
 
 import java.util.*;
 

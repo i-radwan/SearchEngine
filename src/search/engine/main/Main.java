@@ -2,7 +2,7 @@ package search.engine.main;
 
 import search.engine.crawler.Crawler;
 import search.engine.indexer.Indexer;
-import search.engine.indexer.WebPage;
+import search.engine.models.WebPage;
 import search.engine.server.Server;
 
 import java.util.*;
@@ -12,6 +12,7 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
         //testQueryProcessor();
+        //testCrawler();
         //testCrawler();
         //testIndexer();
         //testRanker();

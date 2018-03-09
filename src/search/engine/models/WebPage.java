@@ -1,10 +1,11 @@
-package search.engine.indexer;
+package search.engine.models;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import search.engine.crawler.WebUtilities;
+import search.engine.utils.Constants;
+import search.engine.utils.WebUtilities;
 
 import java.io.FileWriter;
 import java.io.IOException;

@@ -1,5 +1,7 @@
 package search.engine.crawler;
 
+import search.engine.utils.Constants;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;

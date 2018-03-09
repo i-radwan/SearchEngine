@@ -2,7 +2,9 @@ package search.engine.crawler;
 
 import org.jsoup.nodes.Document;
 import search.engine.indexer.Indexer;
-import search.engine.indexer.WebPage;
+import search.engine.models.WebPage;
+import search.engine.utils.Constants;
+import search.engine.utils.WebUtilities;
 
 import java.net.URL;
 import java.util.concurrent.*;
