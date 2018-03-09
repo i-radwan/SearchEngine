@@ -1,6 +1,5 @@
 package search.engine.crawler;
 
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -8,184 +7,222 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 public class Input {
-	private static Scanner mURLFile, mVisitedURLsFile, mDisallowedURLsFile, mAllowedURLsFile, mURLIdsFile, mURLRulesFile, mSeedFile;
 
-	public static void init() {
-		try {
-			mURLFile = new Scanner(new FileReader(Constants.URLS_FILE_NAME));
-			mVisitedURLsFile = new Scanner(new FileReader(Constants.VISITED_URLS_FILE_NAME));
-			mDisallowedURLsFile = new Scanner(new FileReader(Constants.DISALLOWED_URLS_FILE_NAME));
-			mAllowedURLsFile = new Scanner(new FileReader(Constants.ALLOWED_URLS_FILE_NAME));
-			mURLIdsFile = new Scanner(new FileReader(Constants.URL_IDS_FILE_NAME));
-			mURLRulesFile = new Scanner(new FileReader(Constants.URL_RULES_FILE_NAME));
-			mSeedFile = new Scanner(new FileReader(Constants.SEED_FILE_NAME));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+    //
+    // Static variables
+    //
+    // TODO: change Scanner to BufferedReader as it is much more faster
+    private static Scanner sSeedFile;
+    private static Scanner sURLFile;
+    private static Scanner sVisitedURLsFile;
+    private static Scanner sAllowedURLsFile;
+    private static Scanner sDisallowedURLsFile;
+    private static Scanner sURLIdsFile;
+    private static Scanner sURLRulesFile;
 
-	/**
-	 * Reads the URL seeds and fills the URLs queue and the visited URLs set
-	 */
-	public static void readSeed() {
-		while(mSeedFile.hasNextLine()) {
-			String s = mSeedFile.nextLine();
-			if (CrawlerThread.mVisitedURLs.contains(s)) {
-                CrawlerThread.mWebURLs.add(s);
-                CrawlerThread.mVisitedURLs.add(s);
+
+    /**
+     * Initializes the input files.
+     */
+    public static void init() {
+        try {
+            sURLFile = new Scanner(new FileReader(Constants.URLS_FILE_NAME));
+            sVisitedURLsFile = new Scanner(new FileReader(Constants.VISITED_URLS_FILE_NAME));
+            sDisallowedURLsFile = new Scanner(new FileReader(Constants.DISALLOWED_URLS_FILE_NAME));
+            sAllowedURLsFile = new Scanner(new FileReader(Constants.ALLOWED_URLS_FILE_NAME));
+            sURLIdsFile = new Scanner(new FileReader(Constants.URL_IDS_FILE_NAME));
+            sURLRulesFile = new Scanner(new FileReader(Constants.URL_RULES_FILE_NAME));
+            sSeedFile = new Scanner(new FileReader(Constants.SEED_FILE_NAME));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Reads the URL seeds and fills the URLs queue and the visited URLs set
+     */
+    public static void readSeed() {
+        while (sSeedFile.hasNextLine()) {
+            String s = sSeedFile.nextLine();
+
+            if (!CrawlerThread.sVisitedURLs.contains(s)) {
+                CrawlerThread.sURLsQueue.add(s);
+                CrawlerThread.sVisitedURLs.add(s);
             }
-		}
-	}
+        }
+    }
 
-	/**
-	 * Reads the previous runs data in case of interruption to continue from where it left of
-	 */
-	public static void readPreviousRunData() {
-		CrawlerThread.mVisitedURLs.addAll(readVisitedURLs());
-		CrawlerThread.mBaseURLCnt.putAll(getBaseUrlCnt(CrawlerThread.mVisitedURLs));
-		CrawlerThread.mWebURLs.addAll(readURLs(CrawlerThread.mVisitedURLs));
-		RobotsTextManager.mAllowedURLs.addAll(readAllowedURLs());
-		RobotsTextManager.mDisallowedURLs.addAll(readDisallowedURLs());
-		RobotsTextManager.mURLIds.putAll(readURLIds());
-		RobotsTextManager.mURLRules.putAll(readURLRules(RobotsTextManager.mURLIds));
-	}
+    /**
+     * Reads the data of the previous runs in case of interruption.
+     * Used to continue from the same state as before.
+     */
+    public static void readPreviousRunData(RobotsTextManager manager) {
+        CrawlerThread.sVisitedURLs.addAll(readVisitedURLs());
+        CrawlerThread.sBaseURLVisitedCnt.putAll(getBaseURLVisitedCnt(CrawlerThread.sVisitedURLs));
+        CrawlerThread.sURLsQueue.addAll(readURLs(CrawlerThread.sVisitedURLs));
+        manager.allowedURLs.addAll(readAllowedURLs());
+        manager.disallowedURLs.addAll(readDisallowedURLs());
+        manager.URLIds.putAll(readURLIds());
+        manager.URLRules.putAll(readURLRules(manager.URLIds));
+    }
 
-	/**
-	 * Gets the Count of each website's webpages from the visited set
-	 * @param visitedUrls
-	 * @return
-	 */
-	private static ConcurrentHashMap<String, Integer> getBaseUrlCnt(Set<String> visitedUrls) {
-		ConcurrentHashMap<String, Integer> ret = new ConcurrentHashMap<>();
-		for(String url : visitedUrls) {
-			try {
-				URL tmp = new URL(url);
-				ret.putIfAbsent(URLUtilities.getBaseURL(tmp), 0);
-				Integer x = ret.get(URLUtilities.getBaseURL(tmp));
-				ret.put(URLUtilities.getBaseURL(tmp), x+1);
-			} catch (MalformedURLException e) {	}
-		}
-		return ret;
-	}
+    /**
+     * Reads the URLs to be crawled.
+     *
+     * @param visitedURLs set of visited URLs
+     * @return a list of URLs to be crawled
+     */
+    public static List<String> readURLs(Set<String> visitedURLs) {
+        List<String> ret = new ArrayList<>();
 
-	/**
-	 * Takes in a scanner and reads the file into set of lines
-	 * @param scanner
-	 * @return
-	 */
-	private static Set<String> readFile(Scanner scanner) {
-		Set<String> ret = new HashSet<>();
-		while(scanner.hasNextLine()) {
-			ret.add(scanner.nextLine());
-		}
-		return ret;
-	}
+        while (sURLFile.hasNextLine()) {
+            String url = sURLFile.nextLine();
 
-	/**
-	 * Takes in a scanner and reads the file into set of Integers
-	 * @param scanner
-	 * @return
-	 */
-	private static Set<Integer> readIntegers(Scanner scanner) {
-		Set<Integer> ret = new HashSet<>();
-		while(scanner.hasNextInt()) {
-			ret.add(scanner.nextInt());
-		}
-		return ret;
-	}
+            if (!visitedURLs.contains(url)) {
+                ret.add(url);
+                visitedURLs.add(url);
+            }
+        }
 
-	/**
-	 * Reads the URLs to be crawled from the URL file
-	 * @param visitedURLs
-	 * @return
-	 */
-	public static ArrayList<String> readURLs(Set<String> visitedURLs) {
-		ArrayList<String> ret = new ArrayList<>();
-		String s;
-		while(mURLFile.hasNextLine()) {
-			s = mURLFile.nextLine();
+        return ret;
+    }
 
-			if (!visitedURLs.contains(s)) {
-				ret.add(s);
-				visitedURLs.add(s);
-			}
-		}
-		return ret;
-	}
+    /**
+     * Reads the URLs that has been visited in the previous run.
+     *
+     * @return set of visited URLs.
+     */
+    public static Set<String> readVisitedURLs() {
+        return readFile(sVisitedURLsFile);
+    }
 
-	/**
-	 * Reads the URLs that has been visited from the visited file
-	 * @return
-	 */
-	public static Set<String> readVisitedURLs() {
-		return readFile(mVisitedURLsFile);
-	}
+    /**
+     * Reads the URLs that are allowed to be crawled by the robots.txt.
+     *
+     * @return set of allowed URLs IDs
+     */
+    public static Set<Integer> readAllowedURLs() {
+        return readIntegers(sAllowedURLsFile);
+    }
 
-	/**
-	 * Reads the URLs that are allowed to be crawled by the robots.txt
-	 * @return
-	 */
-	public static Set<Integer> readAllowedURLs() {
-		return readIntegers(mAllowedURLsFile);
-	}
+    /**
+     * Reads the URLs that are disallowed to be crawled by the robots.txt.
+     *
+     * @return set of disallowed URLs IDs
+     */
+    public static Set<Integer> readDisallowedURLs() {
+        return readIntegers(sDisallowedURLsFile);
+    }
 
-	/**
-	 * Reads the URLs that are disallowed to be crawled by the robots.txt
-	 * @return
-	 */
-	public static Set<Integer> readDisallowedURLs() {
-		return readIntegers(mDisallowedURLsFile);
-	}
+    /**
+     * Reads the URLs with their IDs in order to know the ID of each URL.
+     * To be used in {@code RobotsTextManager}.
+     *
+     * @return a map from a URL string to an integer ID
+     */
+    public static ConcurrentHashMap<String, Integer> readURLIds() {
+        ConcurrentHashMap<String, Integer> ret = new ConcurrentHashMap<>();
 
-	/**
-	 * Reads the URLs with their ids in order to know each URL id for the RobotsTextManager
-	 * @return
-	 */
-	public static ConcurrentHashMap<String, Integer> readURLIds() {
-		ConcurrentHashMap<String, Integer> ret = new ConcurrentHashMap<>();
-		while(mURLIdsFile.hasNextLine()) {
-			Integer id = mURLIdsFile.nextInt();
-			mURLIdsFile.nextLine();
-			String url = mURLIdsFile.nextLine();
-			ret.put(url, id);
-		}
-		return ret;
-	}
+        while (sURLIdsFile.hasNextLine()) {
+            Integer id = sURLIdsFile.nextInt();
+            sURLIdsFile.nextLine();
+            String url = sURLIdsFile.nextLine();
+            ret.put(url, id);
+        }
 
-	/**
-	 * Reads for each URL its rules that has been gotten from the robots.txt
-	 * @param UrlIds
-	 * @return
-	 */
-	public static ConcurrentHashMap<Integer, RobotsTextManager.RulesStatus> readURLRules(ConcurrentHashMap<String, Integer> UrlIds) {
-		ConcurrentHashMap<Integer, RobotsTextManager.RulesStatus> ret = new ConcurrentHashMap<>();
-		String curUrl;
-		Integer curId = 0;
-		while(mURLRulesFile.hasNextLine()) {
-			String line = mURLRulesFile.nextLine();
-			if (line.startsWith(Constants.INIT_URL_RULE_FILE)) {
-				curUrl = line.substring(Constants.INIT_URL_RULE_FILE.length(), line.length());
-				curId = UrlIds.get(curUrl);
-				ret.put(curId, new RobotsTextManager.RulesStatus(true));
-			}
-			else {
-				ret.get(curId).rules.add(line);
-			}
-		}
-		return ret;
-	}
+        return ret;
+    }
 
+    /**
+     * Reads the
+     * Reads for each URL its rules that has been gotten from the robots.txt
+     *
+     * @param URLIds map from a URL string to a unique ID
+     * @return a map from an id to a robots rules object
+     */
+    public static ConcurrentHashMap<Integer, RobotsRules> readURLRules(ConcurrentHashMap<String, Integer> URLIds) {
+        ConcurrentHashMap<Integer, RobotsRules> ret = new ConcurrentHashMap<>();
 
-	/**
-	 * Closes the opened files after finish
-	 */
-	public static void closeFiles() {
-		mURLFile.close();
-		mVisitedURLsFile.close();
-		mDisallowedURLsFile.close();
-		mAllowedURLsFile.close();
-		mURLIdsFile.close();
-		mURLRulesFile.close();
-	}
+        RobotsRules curRules = null;
+
+        while (sURLRulesFile.hasNextLine()) {
+            String line = sURLRulesFile.nextLine();
+
+            if (line.startsWith(Constants.INIT_URL_RULE_FILE)) {
+                String url = line.substring(Constants.INIT_URL_RULE_FILE.length(), line.length());
+                int curId = URLIds.get(url);
+                curRules = new RobotsRules(true);
+                ret.put(curId, curRules);
+            } else if (curRules != null) {
+                curRules.rules.add(line);
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Calculates and returns the visited web pages count for each website.
+     *
+     * @param visitedURLs a set of visited URLs
+     * @return a map containing the visited count for each unique website
+     */
+    private static ConcurrentHashMap<String, Integer> getBaseURLVisitedCnt(Set<String> visitedURLs) {
+        ConcurrentHashMap<String, Integer> ret = new ConcurrentHashMap<>();
+
+        for (String url : visitedURLs) {
+            try {
+                URL tmp = new URL(url);
+                String baseURL = WebUtilities.getBaseURL(tmp);
+                Integer cnt = ret.getOrDefault(baseURL, 0);
+                ret.put(baseURL, cnt + 1);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Reads the given stream as a set of strings.
+     *
+     * @param scanner the stream to read from
+     * @return a set of string
+     */
+    private static Set<String> readFile(Scanner scanner) {
+        Set<String> ret = new HashSet<>();
+        while (scanner.hasNextLine()) {
+            ret.add(scanner.nextLine());
+        }
+        return ret;
+    }
+
+    /**
+     * Reads the given stream as a set of integers.
+     *
+     * @param scanner the stream to read from
+     * @return a set of integers
+     */
+    private static Set<Integer> readIntegers(Scanner scanner) {
+        Set<Integer> ret = new HashSet<>();
+        while (scanner.hasNextInt()) {
+            ret.add(scanner.nextInt());
+        }
+        return ret;
+    }
+
+    /**
+     * Closes the opened files after finish.
+     */
+    public static void closeFiles() {
+        sURLFile.close();
+        sVisitedURLsFile.close();
+        sDisallowedURLsFile.close();
+        sAllowedURLsFile.close();
+        sURLIdsFile.close();
+        sURLRulesFile.close();
+    }
 }

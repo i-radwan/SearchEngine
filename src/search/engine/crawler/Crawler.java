@@ -1,76 +1,80 @@
 package search.engine.crawler;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Crawler {
 
-    private static ArrayList<Thread> mCrawlers = new ArrayList<>();
-    private static RobotsTextManager mRobotManager;
+    private List<Thread> mCrawlerThreads;
+    private RobotsTextManager mRobotManager;
 
     /**
-     * Initializes the web crawlers and the start URLs
+     * Initializes the web crawler environment and starts
+     * crawling.
      *
-     * @param threadsCnt
+     * @param threadsCnt the number of crawler threads to start
      * @throws IOException
      * @throws InterruptedException
      */
-    public static void start(int threadsCnt) throws InterruptedException {
+    public void start(int threadsCnt) throws InterruptedException {
         init();
-
         initAndStartThreads(threadsCnt);
         waitThreadsFinish();
-
         Output.closeFiles();
     }
 
     /**
-     * Reads the seed of URLs to crawl and the previous runs data
+     * Reads the seed of URLs to crawl and the data of the previous runs.
      *
      * @throws IOException
      */
-    private static void init() {
+    private void init() {
+        mRobotManager = new RobotsTextManager();
+
+        // Initialize I/O files
         Output.init();
-        //Output.clearFiles();
         Input.init();
 
+        System.out.println("Reading URL seeds and previous run data, please wait...");
 
-        System.out.println("Reading Seed and Previous run data please wait!!");
-
-        Input.readPreviousRunData();
+        Input.readPreviousRunData(mRobotManager);
         Input.readSeed();
-
         Input.closeFiles();
-        for (ConcurrentHashMap.Entry<String, Integer> entry : CrawlerThread.mBaseURLCnt.entrySet()) {
-            CrawlerThread.mWebPagesCnt += entry.getValue();
+
+        // Count the number of visited web pages in the previous run
+        for (Integer cnt : CrawlerThread.sBaseURLVisitedCnt.values()) {
+            CrawlerThread.sWebPagesCnt += cnt;
         }
 
-        System.out.println("Ready.");
-        mRobotManager = new RobotsTextManager();
+        System.out.println("Finished reading data");
     }
 
     /**
-     * Initialize the threads and set their name and start them
+     * Initializes the crawler threads and starts them.
      *
-     * @param size
+     * @param count the number of crawler threads to start
      */
-    private static void initAndStartThreads(int size) {
-        for (int i = 0; i < size; i++) {
-            mCrawlers.add(new CrawlerThread(mRobotManager));
-            mCrawlers.get(i).setName(String.valueOf((i + 1)));
-            mCrawlers.get(i).start();
+    private void initAndStartThreads(int count) {
+        System.out.println("Starting crawler threads...");
+
+        mCrawlerThreads = new ArrayList<>();
+
+        for (int i = 0; i < count; i++) {
+            mCrawlerThreads.add(new CrawlerThread(mRobotManager));
+            mCrawlerThreads.get(i).setName(String.valueOf((i + 1)));
+            mCrawlerThreads.get(i).start();
         }
     }
 
     /**
-     * Try and join the threads after they are finished
+     * Waits the crawler threads until they finish.
      *
      * @throws InterruptedException
      */
-    private static void waitThreadsFinish() throws InterruptedException {
-        for (Thread c : mCrawlers) {
+    private void waitThreadsFinish() throws InterruptedException {
+        for (Thread c : mCrawlerThreads) {
             c.join();
         }
     }

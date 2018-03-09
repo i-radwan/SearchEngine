@@ -2,7 +2,13 @@ package search.engine.indexer;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import search.engine.crawler.WebPageManager;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +48,7 @@ public class WebPage implements Comparable {
     /**
      * List of urls mentioned in the current page.
      */
-    public List<String> outUrls = null;
+    public List<String> outLinks = null;
 
     /**
      * Web page document content.
@@ -76,18 +82,9 @@ public class WebPage implements Comparable {
     }
 
     /**
-     * Constructs a web page object and parse the given url.
-     *
-     * @param url web page url.
-     */
-    public WebPage(String url) {
-        this.url = url;
-    }
-
-    /**
      * Constructs a web page object from JSON-like document.
      *
-     * @param doc JSON-like document representing the web page.
+     * @param doc JSON-like document representing the web page
      */
     public WebPage(Document doc) {
         id = (ObjectId) doc.getOrDefault(Constants.FIELD_ID, null);
@@ -97,8 +94,24 @@ public class WebPage implements Comparable {
         wordsCount = (int) doc.getOrDefault(Constants.FIELD_WORDS_COUNT, 0);
 
         // TODO: find a better way to cast
-        outUrls = (List<String>) doc.getOrDefault(Constants.FIELD_CONNECTED_TO, null);
+        outLinks = (List<String>) doc.getOrDefault(Constants.FIELD_CONNECTED_TO, null);
         parseWordsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_WORDS_INDEX, null));
+    }
+
+    /**
+     * Constructs a web page object from the raw HTML content of the page.
+     *
+     * @param doc web page raw content
+     */
+    public WebPage(org.jsoup.nodes.Document doc) {
+        // Get web page url
+        this.url = doc.baseUri();
+
+        // Extract the list of out links.
+        extractOutLinks(doc);
+
+        // Extract page content
+        extractPageContent(doc);
     }
 
     /**
@@ -113,10 +126,10 @@ public class WebPage implements Comparable {
 
         // TODO: extract the list of out links and parse them.
         // TODO: parse urls to be all lower case and in the remove the prefix "http:/www." and similar.
-        outUrls = new ArrayList<>();
-        outUrls.add("codeforces.com");
-        outUrls.add("csacademy.com");
-        outUrls.add("hackerrank.com");
+        outLinks = new ArrayList<>();
+        outLinks.add("codeforces.com");
+        outLinks.add("csacademy.com");
+        outLinks.add("hackerrank.com");
 
         // TODO: extract the web page body and remove HTML tags
         this.content = content;
@@ -143,9 +156,56 @@ public class WebPage implements Comparable {
     }
 
     /**
+     * Extracts all out links from the given raw web page document
+     * and adds them to {@code outLinks} list.
+     *
+     * @param doc web page raw content
+     */
+    private void extractOutLinks(org.jsoup.nodes.Document doc) {
+        outLinks = new ArrayList<>();
+
+        Elements links = doc.select("link[href], a[href]");
+
+        for (Element element : links) {
+            String link = element.attr("abs:href");
+
+            if (WebPageManager.crawlableURL(link)) {
+                outLinks.add(link);
+            }
+        }
+
+        //System.out.println("#out_links: " + outLinks.size());
+        //for (String link : outLinks) {
+        //    System.out.println(link);
+        //}
+    }
+
+    /**
+     * Extracts the web page content from the given raw web page document.
+     * TODO: extract visual text and add score
+     *
+     * @param doc web page raw content
+     */
+    private void extractPageContent(org.jsoup.nodes.Document doc) {
+        Element body = doc.body();
+
+        PrintWriter file;
+
+        try {
+            content = body.getElementsByTag("p").text();
+
+            file = new PrintWriter(new FileWriter("tmp.txt"));
+            file.println(content);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Returns a JSON-like document representing this web page object.
      *
-     * @return web page document.
+     * @return web page document
      */
     public Document toDocument() {
         Document doc = new Document();
@@ -156,7 +216,7 @@ public class WebPage implements Comparable {
 
         doc.append(Constants.FIELD_URL, url);
         doc.append(Constants.FIELD_RANK, rank);
-        doc.append(Constants.FIELD_CONNECTED_TO, outUrls);
+        doc.append(Constants.FIELD_CONNECTED_TO, outLinks);
         doc.append(Constants.FIELD_PAGE_CONTENT, content);
         doc.append(Constants.FIELD_WORDS_COUNT, wordsCount);
         doc.append(Constants.FIELD_WORDS_INDEX, getWordsIndex());
@@ -167,7 +227,7 @@ public class WebPage implements Comparable {
     /**
      * Returns the words index of this web page.
      *
-     * @return list of documents representing the words index this given web page.
+     * @return list of documents representing the words index this given web page
      */
     private List<Document> getWordsIndex() {
         if (wordPosMap == null) {
@@ -192,7 +252,7 @@ public class WebPage implements Comparable {
     /**
      * Parse the given wordsIndex.
      *
-     * @param wordsIndex list of documents representing the dictionary this given web page.
+     * @param wordsIndex list of documents representing the dictionary this given web page
      */
     private void parseWordsIndex(List<Document> wordsIndex) {
         if (wordsIndex == null) {
@@ -212,7 +272,7 @@ public class WebPage implements Comparable {
     /**
      * Returns a hash code representing the web page.
      *
-     * @return a hash code value.
+     * @return a hash code value
      */
     @Override
     public int hashCode() {
@@ -224,8 +284,8 @@ public class WebPage implements Comparable {
      * The result is {@code true} if and only if the argument is not {@code null} and
      * has the same url.
      *
-     * @param obj The object to compare this web page against.
-     * @return {@code true} if the given object has the same url, {@code false} otherwise.
+     * @param obj The object to compare this web page against
+     * @return {@code true} if the given object has the same url, {@code false} otherwise
      */
     @Override
     public boolean equals(Object obj) {
@@ -239,12 +299,12 @@ public class WebPage implements Comparable {
     /**
      * Compares two web pages lexicographically according to their urls.
      *
-     * @param obj The object to compare this web page against.
+     * @param obj The object to compare this web page against
      * @return the value {@code 0} if both urls are equal;
      * a value less than {@code 0} if this web page url
      * is lexicographically less than the argument; and a
      * value greater than {@code 0} if this web page url is
-     * lexicographically greater than the string argument.
+     * lexicographically greater than the string argument
      */
     @Override
     public int compareTo(Object obj) {

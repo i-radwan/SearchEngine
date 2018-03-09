@@ -2,121 +2,130 @@ package search.engine.crawler;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 
 public class RobotsTextManager {
 
-    static class RulesStatus {
-        public ArrayList<String> rules;
-        public boolean status;
-        RulesStatus(boolean initStatus) {
-            rules = new ArrayList<>();
-            status = initStatus;
-        }
-    }
-
-    public static ConcurrentSkipListSet<Integer> mDisallowedURLs = new ConcurrentSkipListSet<>();
-    public static ConcurrentSkipListSet<Integer> mAllowedURLs = new ConcurrentSkipListSet<>();
-    public static ConcurrentHashMap<Integer, RulesStatus> mURLRules = new ConcurrentHashMap<>();
-    public static ConcurrentHashMap<String, Integer> mURLIds = new ConcurrentHashMap<>();
-    protected final String mUserAgent = Constants.USER_AGENT;
+    public ConcurrentSkipListSet<Integer> allowedURLs = new ConcurrentSkipListSet<>();
+    public ConcurrentSkipListSet<Integer> disallowedURLs = new ConcurrentSkipListSet<>();
+    public ConcurrentHashMap<Integer, RobotsRules> URLRules = new ConcurrentHashMap<>();
+    public ConcurrentHashMap<String, Integer> URLIds = new ConcurrentHashMap<>();
+    public String userAgent = Constants.USER_AGENT;
 
     /**
-     * Returns the URL id if it exists else it creates a new ID and give it to the URL
+     * Returns the URL ID if exists,
+     * otherwise it creates a new ID and give it to the URL.
      *
-     * @param url
-     * @return
+     * @param url a web page url string
+     * @return the ID of the given url
      */
-    public Integer getURLId(String url) {
-        synchronized (mURLIds) {
-            if (mURLIds.containsKey(url))
-                return mURLIds.get(url);
+    public int getURLId(String url) {
+        int id;
 
-            Output.logURLId(mURLIds.size(), url);
-            mURLIds.put(url, mURLIds.size());
-            return mURLIds.size() - 1;
+        synchronized (URLIds) {
+            if (URLIds.containsKey(url)) {
+                return URLIds.get(url);
+            }
+
+            id = URLIds.size();
+            URLIds.put(url, id);
         }
+
+        Output.logURLId(id, url);
+        return id;
     }
 
     /**
-     * Returns true if the Object has the URL's robots.txt Cached
+     * Checks whether the given robots text
+     * of the given URL is cached before.
      *
-     * @param url
-     * @return
+     * @param url a web page URL object to check
+     * @return {@code true} if the URL's robots.txt cached, @{code false} otherwise
      */
-    public boolean isCached(URL url) {
-        synchronized (mURLRules) {
-            if (mURLRules.containsKey(getURLId(URLUtilities.getBaseURL(url))))
-                return true;
-            return false;
+    public boolean cached(URL url) {
+        int id = getURLId(WebUtilities.getBaseURL(url));
+
+        synchronized (URLRules) {
+            return (URLRules.containsKey(id));
         }
     }
 
     /**
-     * If the URL was already cached it returns true else it Caches the URL by inserting a new arraylist and setting the
-     * value of the pair to be false in order to know that that it was Cached but it's robots.txt was not generated
+     * Caches the given URL in the memory.
+     * Returns false if the URL already cached, else it caches the URL by inserting a new {@code RobotsRules}
+     * object and setting its status to false to indicate that the rules are being fetched.
      *
-     * @param url
-     * @return returns true if the URL wasn't cached and false if it was
+     * @param url a web page URL object
+     * @return returns {@code true} if the URL was cached, {@code false} otherwise
      */
     public boolean cacheURL(URL url) {
-        synchronized (mURLRules) {
-            if (!isCached(url)) {
-                mURLRules.put(getURLId(URLUtilities.getBaseURL(url)), new RulesStatus(false));
+        int id = getURLId(WebUtilities.getBaseURL(url));
+
+        synchronized (URLRules) {
+            if (!URLRules.containsKey(id)) {
+                URLRules.put(id, new RobotsRules(false));
                 return true;
             }
-            return false;
         }
+
+        return false;
     }
 
-
     /**
-     * takes the URL and the list of the new rules and sets them
-     * also sets the value of the pair to be true in order to know that the robots.txt was inserted and then notify the
-     * waiting threads
+     * Updates the robots rules of the given URL
+     * and set the rules status to true to indicate that the rules was inserted
+     * then notify the waiting threads.
      *
-     * @param url
-     * @param rules
+     * @param url   the web page URL to be updated
+     * @param rules list of new robots rules
      */
-    public void updateRules(URL url, ArrayList<String> rules) {
-        synchronized (mURLRules) {
-            RulesStatus rulesStatus = mURLRules.get(getURLId(URLUtilities.getBaseURL(url)));
-            rulesStatus.status = true;
-            rulesStatus.rules = new ArrayList<>(rules);
+    public void updateRules(URL url, List<String> rules) {
+        String baseURL = WebUtilities.getBaseURL(url);
+        int id = getURLId(baseURL);
 
-            synchronized (rulesStatus) {
-                Output.log("notifying for url : " + URLUtilities.getBaseURL(url));
-                rulesStatus.notifyAll();
+        synchronized (URLRules) {
+            RobotsRules robotsRules = URLRules.get(id);
+            robotsRules.rules = new ArrayList<>(rules);
+            robotsRules.status = true;
+
+            synchronized (robotsRules) {
+                Output.log("notifying for url : " + baseURL);
+                robotsRules.notifyAll();
             }
         }
     }
 
     /**
-     * returns true if the URL is allowed to be crawled
+     * Checks whether the given URL is allowed to be crawled.
      *
-     * @param url
-     * @return
+     * @param url a web page URL object
+     * @return {@code true} if the given URL is allowed to be crawled, {@code false} otherwise
      */
-    public boolean isUrlAllowed(URL url) {
-        if (mAllowedURLs.contains(getURLId(url.toString())))
+    public boolean allowedURL(URL url) {
+        int id = getURLId(url.toString());
+
+        if (allowedURLs.contains(id))
             return true;
-        if (mDisallowedURLs.contains(getURLId(url.toString())))
+        if (disallowedURLs.contains(id))
             return false;
 
-        ArrayList<String> rules;
-        rules = mURLRules.get(getURLId(URLUtilities.getBaseURL(url))).rules;
+        // Match the given URL with the disallowed rules
+        boolean disallowed = RobotsTextParser.matchRules(
+                url.toString(),
+                URLRules.get(getURLId(WebUtilities.getBaseURL(url))).rules
+        );
 
-        boolean ret = URLUtilities.isURLDisallowed(url.toString(), rules);
-        if (ret) {
-            mDisallowedURLs.add(getURLId(url.toString()));
-            Output.logDisallowedURL(String.valueOf(getURLId(url.toString())));
+        if (disallowed) {
+            disallowedURLs.add(id);
+            Output.logDisallowedURL(String.valueOf(id));
         } else {
-            mAllowedURLs.add(getURLId(url.toString()));
-            Output.logAllowedURL(String.valueOf(getURLId(url.toString())));
+            allowedURLs.add(id);
+            Output.logAllowedURL(String.valueOf(id));
         }
 
-        return !ret;
+        return !disallowed;
     }
 }

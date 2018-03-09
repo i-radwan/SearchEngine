@@ -4,7 +4,6 @@ import search.engine.crawler.Crawler;
 import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.server.Server;
-import search.engine.utils.Utilities;
 
 import java.util.*;
 
@@ -25,7 +24,6 @@ public class Main {
 
     public static void testCrawler() throws InterruptedException {
         Crawler crawler = new Crawler();
-
         crawler.start(5);
     }
 

@@ -11,90 +11,110 @@ import java.util.concurrent.*;
 
 public class CrawlerThread extends java.lang.Thread {
 
-    public static BlockingQueue<String> mWebURLs = new LinkedBlockingDeque<>();
-    public static ConcurrentSkipListSet<String> mVisitedURLs = new ConcurrentSkipListSet<>();
-    public static ConcurrentHashMap<String, Integer> mBaseURLCnt = new ConcurrentHashMap<>();
-    public static int mWebPagesCnt = 0;
+    //
+    // Static variables
+    //
+    public static int sWebPagesCnt = 0;
+    public static BlockingQueue<String> sURLsQueue = new LinkedBlockingDeque<>();
+    public static ConcurrentSkipListSet<String> sVisitedURLs = new ConcurrentSkipListSet<>();
+    public static ConcurrentHashMap<String, Integer> sBaseURLVisitedCnt = new ConcurrentHashMap<>();
+
+    //
+    // Member variables
+    //
     private RobotsTextParser mRobotTxtParser;
 
+
     /**
-     * CrawlerThread Constructor that takes the list of the current web urls and the visited ones
+     * Constructs a new crawler thread.
      *
-     * @param robotManager
+     * @param robotManager robot manger object to handle robots text parsing
      */
     CrawlerThread(RobotsTextManager robotManager) {
         mRobotTxtParser = new RobotsTextParser(robotManager);
     }
 
     /**
-     * Gets the URL that is in front of the Queue and returns it
-     * Throws exception if it couldn't poll any urls
+     * Gets the front URL of the queue and returns it.
+     * Throws an exception if it couldn't poll any URLs in {@code MAX_POLL_WAIT_TIME_MS} millis.
      *
-     * @return
+     * @return the front url string of the queue
      * @throws Exception
      */
     private String getNextUrl() throws Exception {
         String url = "";
+
         try {
-            url = mWebURLs.poll(Constants.MAX_POLL_WAIT_TIME, TimeUnit.MILLISECONDS);
+            url = sURLsQueue.poll(Constants.MAX_POLL_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             Output.log(e.getMessage());
         }
+
         if (url == null) {
-            System.out.println("Crawler " + this.getName() + "is exiting");
-            throw new Exception("Cannot poll anymore URLS Exiting !");
+            System.out.println("Crawler " + this.getName() + " is exiting...");
+            throw new Exception("Cannot poll anymore URLs.");
         }
+
         return url;
     }
 
     /**
-     * Adds the URL to the Queue and sets it as visited
+     * Adds the given URL to the queue and marks it as visited.
      *
-     * @param url
+     * @param url a web page URL to be added
      */
     private void addUrl(String url) {
-        mWebURLs.add(url);
-        mVisitedURLs.add(url);
+        sURLsQueue.add(url);
+        sVisitedURLs.add(url);
 
         try {
             URL x = new URL(url);
-            Integer cnt = mBaseURLCnt.getOrDefault(URLUtilities.getBaseURL(x), 0);
-            mBaseURLCnt.put(URLUtilities.getBaseURL(x), cnt + 1);
-            mWebPagesCnt++;
+            int cnt = sBaseURLVisitedCnt.getOrDefault(WebUtilities.getBaseURL(x), 0);
+            sBaseURLVisitedCnt.put(WebUtilities.getBaseURL(x), cnt + 1);
+            sWebPagesCnt++;
         } catch (MalformedURLException e) {
-
+            //e.printStackTrace();
         }
 
         Output.logURL(url);
     }
 
     /**
-     * Checks if the maximum limit of crawling web pages is not reached
-     * and checks if the url is not visited.
-     * To be called exclusively.
+     * Checks if the given URL is valid to be crawled.
+     * <p>
+     * Valid rules:
+     * <ul>
+     * <li>The maximum limit of crawling web pages is not reached.</li>
+     * <li>The url is not visited before.</li>
+     * </ul>
+     * <p>
+     * The function must be called with <b>exclusive</b> access to:
+     * <ul>
+     * <li>{@code sWebPagesCnt}</li>
+     * <li>{@code sBaseURLVisitedCnt}</li>
+     * <li>{@code sVisitedURLs}</li>
+     * </ul>
      *
-     * @param url
-     * @return
+     * @param url a web page URL object
+     * @return {@code true} if the given URL is valid to be crawled
      */
-    private boolean isCrawlable(URL url) {
-        String tmp = url.toString();
-
-        return mWebPagesCnt < Constants.MAX_WEBPAGES_CNT
-                && mBaseURLCnt.getOrDefault(URLUtilities.getBaseURL(url), 0) < Constants.MAX_BASE_URL_CNT
-                && !mVisitedURLs.contains(tmp);
+    private boolean crawlable(URL url) {
+        return sWebPagesCnt < Constants.MAX_WEB_PAGES_COUNT
+                && sBaseURLVisitedCnt.getOrDefault(WebUtilities.getBaseURL(url), 0) < Constants.MAX_BASE_URL_COUNT
+                && !sVisitedURLs.contains(url.toString());
     }
 
     /**
-     * returns true if the given URL doesn't violate the robots.txt rules
+     * Checks if the given URL does not violate robots text rules.
      *
-     * @param url
-     * @return
+     * @param url a web page URL string
+     * @return {@code true} if the given URL is allowed by robots text
      */
-    private boolean isAllowedByRobotsTxt(String url) {
+    private boolean allowedByRobotsText(String url) {
         try {
             URL tmp = new URL(url);
 
-            if (!mRobotTxtParser.isUrlAllowed(tmp)) {
+            if (!mRobotTxtParser.allowedURL(tmp)) {
                 Output.log("Couldn't crawl url : " + url + " because of robots.txt !!!!!!");
                 return false;
             }
@@ -123,10 +143,10 @@ public class CrawlerThread extends java.lang.Thread {
             }
 
             //lock the arrays and insert in them
-            synchronized (mVisitedURLs) {
-                synchronized (mWebURLs) {
-                    synchronized (mBaseURLCnt) {
-                        if (isCrawlable(nextUrl))
+            synchronized (sVisitedURLs) {
+                synchronized (sURLsQueue) {
+                    synchronized (sBaseURLVisitedCnt) {
+                        if (crawlable(nextUrl))
                             addUrl(nextUrl.toString());
                         else
                             Output.log("skipped: " + nextUrl);
@@ -143,12 +163,12 @@ public class CrawlerThread extends java.lang.Thread {
      * @param url
      */
     private void removeURLFromCnt(String url) {
-        synchronized (mBaseURLCnt) {
+        synchronized (sBaseURLVisitedCnt) {
             try {
                 URL x = new URL(url);
-                Integer cnt = mBaseURLCnt.getOrDefault(URLUtilities.getBaseURL(x), 1);
-                mWebPagesCnt--;
-                mBaseURLCnt.put(URLUtilities.getBaseURL(x), cnt - 1);
+                Integer cnt = sBaseURLVisitedCnt.getOrDefault(WebUtilities.getBaseURL(x), 1);
+                sWebPagesCnt--;
+                sBaseURLVisitedCnt.put(WebUtilities.getBaseURL(x), cnt - 1);
             } catch (MalformedURLException e) {
 
             }
@@ -156,12 +176,12 @@ public class CrawlerThread extends java.lang.Thread {
     }
 
     /**
-     * Crawler function
-     * As long as there exists URLs to crawl the function would be running getting documents and new URLs
+     * Crawler main function.
+     * As long as there exists URLs to crawl the function would be running getting documents and new URLs.
      */
     @Override
     public void run() {
-        System.out.println("Crawler " + this.getName() + " started !");
+        System.out.println("- Crawler " + this.getName() + " started");
 
         while (true) {
             String curUrl;
@@ -173,21 +193,19 @@ public class CrawlerThread extends java.lang.Thread {
                 return;
             }
 
-            if (mWebPagesCnt > Constants.MAX_WEBPAGES_CNT)
+            if (sWebPagesCnt > Constants.MAX_WEB_PAGES_COUNT) {
                 continue;
+            }
 
-            //if the robots.txt check gets checked earlier the crawler would be more interested in
-            //getting robots.txt than getting the webpages themselves
-            if (!isAllowedByRobotsTxt(curUrl)) {
+            // If the following check placed earlier then the crawler would be more interested in
+            // fetching robots.txt rather than fetching the web pages themselves.
+            if (!allowedByRobotsText(curUrl)) {
                 removeURLFromCnt(curUrl);
                 continue;
             }
 
-
-
             Output.log("Crawling: " + curUrl);
-
-            Document doc = URLUtilities.getWebPage(curUrl);
+            Document doc = WebUtilities.getWebPage(curUrl);
 
             if (doc == null) {
                 removeURLFromCnt(curUrl);
@@ -199,7 +217,6 @@ public class CrawlerThread extends java.lang.Thread {
             //	Output.logVisitedURL(doc.baseUri());
 
             Output.logVisitedURL(curUrl);
-
             extractURLS(doc);
         }
     }

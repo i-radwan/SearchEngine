@@ -1,13 +1,10 @@
 **/.idea/workspace.xml 
 **/.idea/tasks.xml
 **/.idea/misc.xml
-crawler_data/allowed_urls_file.txt
-crawler_data/disallowed_urls_file.txt
-crawler_data/log.txt
-crawler_data/to_crawl_urls.txt
-crawler_data/url_ids_file.txt
-crawler_data/url_rules_file.txt
-crawler_data/visited_urls_file.txt
-out/
-.DS_Store
 .idea/dictionaries/
+.DS_Store
+out/
+
+# Ignore all crawler data except seed.txt file
+data/crawler/*
+!data/crawler/seed.txt
