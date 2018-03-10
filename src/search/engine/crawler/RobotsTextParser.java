@@ -59,14 +59,14 @@ public class RobotsTextParser {
                 //The robots.txt is still not ready
                 while (!sync.status) {
                     try {
-                        Output.log(" waiting for url : " + baseURL);
+                        Output.log("Waiting for url : " + baseURL);
 
                         sync.wait();
 
                         if (sync.status)
-                            Output.log(" woke up and did find url : " + baseURL);
+                            Output.log("Woke up and did find url : " + baseURL);
                         else
-                            Output.log(" woke up and didn't find url : " + baseURL);
+                            Output.log("Woke up and didn't find url : " + baseURL);
 
                     } catch (InterruptedException e) {
                         //e.printStackTrace();

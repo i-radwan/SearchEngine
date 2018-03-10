@@ -45,48 +45,70 @@ public class CrawlerThread extends java.lang.Thread {
      */
     @Override
     public void run() {
-        System.out.println("    - Crawler " + this.getName() + " started");
+        System.out.println("Crawler " + this.getName() + " started");
 
         while (true) {
+            // Pop the first URL in the queue
             URL curUrl = getNextURL();
 
+            // If no URL was found in the queue then break
             if (curUrl == null) {
                 break;
             }
 
-            String curUrlStr = curUrl.toString();
-            String curBaseUrl = WebUtilities.getBaseURL(curUrl);
-
-            // If the following check placed earlier then the crawler would be more interested in
-            // fetching robots.txt rather than fetching the web pages themselves.
-            if (!mRobotTextParser.allowedURL(curUrl)) {
-                Output.log("Couldn't crawl url : " + curUrlStr + " because of robots.txt !!!!!!");
-                removeURLFromCnt(curBaseUrl);
-                continue;
-            }
-
-
-            Output.log("Crawling: " + curUrlStr);
-
-            Document doc = WebUtilities.fetchWebPage(curUrlStr);
-
-            if (doc == null) {
-                Output.log("Empty HTML document returned : " + curUrlStr);
-                removeURLFromCnt(curBaseUrl);
-                continue;
-            }
-
-            Output.logVisitedURL(curUrlStr);
-
-            processWebPage(doc);
+            // Start crawling the current web page
+            crawl(curUrl);
         }
 
         System.out.println("Crawler " + this.getName() + " is exiting...");
     }
 
     /**
-     * Processes the given HTML document by extracting the out links
-     * and inserting then in the queue, and indexing it in the database.
+     * Crawls the given web page URL and index it in the database.
+     *
+     * @param url a web page URL object to crawl
+     */
+    private void crawl(URL url) {
+        // Get URL string and base URL string for further uses
+        String urlStr = url.toString();
+        String baseUrlStr = WebUtilities.getBaseURL(url);
+
+        //
+        // If the following check placed earlier then the crawler would be more interested in
+        // fetching robots.txt rather than fetching the web pages themselves.
+        //
+
+        // If the current web page URL is not allowed by robots text then continue
+        if (!mRobotTextParser.allowedURL(url)) {
+            removeURLFromCnt(baseUrlStr);
+            Output.log("Not allowed by robots.txt : " + urlStr);
+            return;
+        }
+
+        //
+        Output.log("Crawling : " + urlStr);
+
+        // Fetch the current web page content
+        Document doc = WebUtilities.fetchWebPage(urlStr);
+
+        // If any errors occurred during connection then continue
+        if (doc == null || doc.body() == null) {
+            removeURLFromCnt(baseUrlStr);
+            Output.log("Empty HTML document returned : " + urlStr);
+            return;
+        }
+
+        // Process the current fetched web page
+        // 1. Extract its out links
+        // 2. Process the textual content and index the page in the database
+        processWebPage(doc);
+        Output.logVisitedURL(urlStr);
+    }
+
+    /**
+     * Processes the given HTML document by extracting its out links
+     * and inserting them in the queue,
+     * and indexing the web page in the database.
      *
      * @param doc the web page document to process
      */
@@ -113,7 +135,7 @@ public class CrawlerThread extends java.lang.Thread {
                         if (crawlable(urlStr, baseUrlStr))
                             addURL(urlStr, baseUrlStr);
                         else
-                            Output.log("Skipped: " + urlStr);
+                            Output.log("Skipped : " + urlStr);
                     }
                 }
             }

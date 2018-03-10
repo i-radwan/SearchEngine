@@ -63,6 +63,8 @@ public class Output {
             sVisitedURLsFile.println(url);
             sVisitedURLsFile.flush();
         }
+
+        System.out.println("Crawler " + Thread.currentThread().getName() + " => " + "Visit: " + url);
     }
 
     /**

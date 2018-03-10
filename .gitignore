@@ -6,5 +6,6 @@
 out/
 
 # Ignore all crawler data except seed.txt file
-data/crawler/*
+data/*
+!data/crawler/*
 !data/crawler/seed.txt

@@ -5,11 +5,9 @@ import org.bson.types.ObjectId;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import search.engine.utils.Constants;
+import search.engine.utils.WebPageParser;
 import search.engine.utils.WebUtilities;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -113,48 +111,7 @@ public class WebPage implements Comparable {
         extractOutLinks(doc);
 
         // Extract page content
-        //extractPageContent(doc);
-    }
-
-    /**
-     * Constructs a web page object from the raw HTML content of the page.
-     * TODO: parse the given web page with @AbdoEid
-     *
-     * @param url     Web page url.
-     * @param content Web page raw content.
-     */
-    public WebPage(String url, String content) {
-        this.url = url;
-
-        // TODO: extract the list of out links and parse them.
-        // TODO: parse urls to be all lower case and in the remove the prefix "http:/www." and similar.
-        outLinks = new ArrayList<>();
-        outLinks.add("codeforces.com");
-        outLinks.add("csacademy.com");
-        outLinks.add("hackerrank.com");
-
-        // TODO: extract the web page body and remove HTML tags
-        this.content = content;
-
-
-        wordPosMap = new HashMap<>();
-        wordScoreMap = new HashMap<>();
-
-        // TODO: loop through each tag to create words index and give a score for each occurrence
-        // TODO: use the parser of @IAR
-        String[] words = content.split(" ");
-
-        for (int i = 0; i < words.length; ++i) {
-            String word = words[i];
-
-            wordPosMap.putIfAbsent(word, new ArrayList<>());
-            wordPosMap.get(word).add(i);
-
-            wordScoreMap.putIfAbsent(word, new ArrayList<>());
-            wordScoreMap.get(word).add(1);
-        }
-
-        wordsCount += words.length;
+        extractPageContent(doc);
     }
 
     /**
@@ -166,7 +123,7 @@ public class WebPage implements Comparable {
     private void extractOutLinks(org.jsoup.nodes.Document doc) {
         outLinks = new ArrayList<>();
 
-        Elements links = doc.select("link[href], a[href]");
+        Elements links = doc.body().select("link[href], a[href]");
 
         for (Element element : links) {
             String link = element.attr("abs:href");
@@ -175,33 +132,21 @@ public class WebPage implements Comparable {
                 outLinks.add(link);
             }
         }
-
-        //System.out.println("#out_links: " + outLinks.size());
-        //for (String link : outLinks) {
-        //    System.out.println(link);
-        //}
     }
 
     /**
      * Extracts the web page content from the given raw web page document.
-     * TODO: extract visual text and add score
      *
      * @param doc web page raw content
      */
     private void extractPageContent(org.jsoup.nodes.Document doc) {
-        Element body = doc.body();
+        WebPageParser parser = new WebPageParser();
+        parser.parse(doc);
 
-        PrintWriter file;
-
-        try {
-            content = body.getElementsByTag("p").text();
-
-            file = new PrintWriter(new FileWriter("tmp.txt"));
-            file.println(content);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        content = parser.getPageContent();
+        wordsCount = parser.getWordsCount();
+        wordPosMap = parser.getWordsPositions();
+        wordScoreMap = parser.getWordsScore();
     }
 
     /**

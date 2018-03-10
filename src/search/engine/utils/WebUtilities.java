@@ -2,7 +2,6 @@ package search.engine.utils;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import search.engine.crawler.Output;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -100,7 +99,6 @@ public final class WebUtilities {
             ret = Jsoup.connect(url).get();
         } catch (Exception e) {
             //e.printStackTrace();
-            Output.log(e.getMessage());
         }
 
         return ret;

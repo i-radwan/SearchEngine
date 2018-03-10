@@ -1,9 +1,6 @@
 package search.engine.utils;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 public class Constants {
@@ -13,26 +10,6 @@ public class Constants {
     //
 
     public static final String DATA_PATH = "data";
-
-    // ================================================================================================
-    //
-    // Server
-    //
-
-    public static int PORT = 8080;
-
-    // ================================================================================================
-    //
-    // Query processing
-    //
-
-    public static final String[] STOP_WORDS = {
-            "I", "a", "about", "an", "are", "as", "at", "be", "by", "com", "for",
-            "from", "how", "in", "is", "it", "of", "on", "or", "that", "the",
-            "this", "to", "was", "what", "when", "where", "who", "will",
-            "with", "the", "www"
-    };
-    public static final Set<String> STOP_WORDS_SET = new HashSet<>(Arrays.asList(STOP_WORDS));
 
     // ================================================================================================
     //
@@ -61,7 +38,7 @@ public class Constants {
     /**
      * Limits constants
      */
-    public static final int MAX_POLL_WAIT_TIME_MS = 10000;
+    public static final int MAX_POLL_WAIT_TIME_MS = 5000;
     public static final int MAX_BASE_URL_COUNT = 10;
     public static final int MAX_WEB_PAGES_COUNT = 5000;
 
@@ -106,4 +83,57 @@ public class Constants {
             FIELD_WORDS_COUNT,
             FIELD_WORDS_INDEX
     );
+
+    // ================================================================================================
+    //
+    // Server
+    //
+
+    public static int PORT = 8080;
+
+    // ================================================================================================
+    //
+    // Query processing
+    //
+
+    public static final String[] STOP_WORDS = {
+            "I", "a", "about", "an", "are", "as", "at", "be", "by", "com", "for",
+            "from", "how", "in", "is", "it", "of", "on", "or", "that", "the",
+            "this", "to", "was", "what", "when", "where", "who", "will",
+            "with", "the", "www", "can", "and"
+    };
+    public static final Set<String> STOP_WORDS_SET = new HashSet<>(Arrays.asList(STOP_WORDS));
+
+    // ================================================================================================
+    //
+    // Web Page Parse
+    //
+
+    public static final String[] ALLOWED_TAGS = {
+            "#root", "html", "head", "title",
+            "body",
+            "div", "p", "main", "article", "pre",
+            "h1", "h2", "h3", "h4", "h5", "h6",
+            "b", "i", "em", "blockquote", "strong",
+            "a", "span",
+            "ol", "ul", "li"
+    };
+
+    public static final Set<String> ALLOWED_TAGS_SET = new HashSet<>(Arrays.asList(ALLOWED_TAGS));
+
+    // TODO: to be edited
+    public static final Map<String, Integer> TAG_TO_SCORE_MAP = new HashMap<String, Integer>() {
+        {
+            put("h1", 10);
+            put("h2", 9);
+            put("h3", 8);
+            put("h4", 7);
+            put("h5", 6);
+            put("h6", 5);
+            put("b", 4);
+            put("em", 4);
+            put("strong", 4);
+            put("i", 3);
+        }
+    };
 }

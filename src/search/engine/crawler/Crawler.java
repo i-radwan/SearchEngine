@@ -38,12 +38,13 @@ public class Crawler {
 
         // Initialize I/O files
         Output.init();
+        Output.clearFiles();
         Input.init();
 
         System.out.println("Reading URL seeds and previous run data, please wait...");
 
-        Input.readPreviousRunData(mRobotManager);
         Input.readSeed();
+        Input.readPreviousRunData(mRobotManager);
         Input.closeFiles();
 
         // Count the number of visited web pages in the previous run

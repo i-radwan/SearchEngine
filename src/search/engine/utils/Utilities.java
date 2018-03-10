@@ -4,7 +4,6 @@ import org.tartarus.snowball.SnowballStemmer;
 import org.tartarus.snowball.ext.englishStemmer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -49,15 +48,16 @@ public class Utilities {
         queryString = queryString.trim();
 
         // Check if phrase search before processing the string (before removing special chars)
-        boolean isPhraseSeach = checkIfPhraseSearch(queryString);
+        boolean isPhraseSeach = phraseSearch(queryString);
 
         List<List<String>> ret = new ArrayList<>();
 
         // Split the processed query into words
-        List<String> wordsArrayList = splitStringToWords(processString(queryString));
+        String processedQuery = processString(queryString);
+        String[] words = processedQuery.split(" ");
 
         // Remove stop words
-        wordsArrayList = removeStopWords(wordsArrayList);
+        List<String> wordsArrayList = removeStopWords(words);
 
         // Add original query words without stemming
         ret.add(wordsArrayList);
@@ -72,26 +72,16 @@ public class Utilities {
     }
 
     /**
-     * Splits processed string into list of words.
-     *
-     * @param str the input string to be split
-     * @return list of words representing the given string
-     */
-    public static List<String> splitStringToWords(String str) {
-        return Arrays.asList(str.split(" "));
-    }
-
-    /**
      * Removes the stop words from the given list of words.
      *
      * @param words list of words
      * @return a new list of non-stopping words.
      */
-    public static List<String> removeStopWords(List<String> words) {
+    public static List<String> removeStopWords(String[] words) {
         List<String> ret = new ArrayList<>();
 
         for (String word : words) {
-            if (word.isEmpty() || isStopWord(word)) {
+            if (stopWord(word)) {
                 continue;
             }
 
@@ -126,8 +116,8 @@ public class Utilities {
      * @param word a string
      * @return {@code true} if the given word is a stop word, {@code false} otherwise
      */
-    public static boolean isStopWord(String word) {
-        return word.length() < 2 || Constants.STOP_WORDS_SET.contains(word);
+    public static boolean stopWord(String word) {
+        return word.length() <= 2 || Constants.STOP_WORDS_SET.contains(word);
     }
 
     /**
@@ -136,7 +126,7 @@ public class Utilities {
      * @param queryString the input search query string
      * @return {@code true} if the given string is surrounded by double quotes, {@code false} otherwise
      */
-    public static boolean checkIfPhraseSearch(String queryString) {
+    public static boolean phraseSearch(String queryString) {
 
         return queryString.charAt(0) == '"'
                 && queryString.charAt(queryString.length() - 1) == '"';
