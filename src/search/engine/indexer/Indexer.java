@@ -36,7 +36,6 @@ public class Indexer {
     //
     // Member methods
     //
-    // TODO: think of better names for the functions. xD
 
     /**
      * Constructs indexer object.
@@ -60,13 +59,13 @@ public class Indexer {
     /**
      * Indexes the given web page in the search engine inverted database.
      *
-     * @param webPage Web page to be indexed or updated.
+     * @param page a web page to be indexed or updated
      */
-    public void indexWebPage(WebPage webPage) {
+    public void indexWebPage(WebPage page) {
         // Filter document by web page url
-        Document filter = new Document(Constants.FIELD_URL, webPage.url);
+        Document filter = new Document(Constants.FIELD_URL, page.url);
         // Create the web page document to be indexed
-        Document update = webPage.toDocument();
+        Document update = page.toDocument();
         // Add upsert option
         UpdateOptions options = new UpdateOptions().upsert(true);
 
@@ -82,12 +81,12 @@ public class Indexer {
      * Updates the web pages ranks according to the given inputs.
      * TODO: To be used by @Samir
      *
-     * @param webPages List of web pages after updating their ranks.
+     * @param pages list of web pages after updating their ranks
      */
-    public void updatePageRanks(Collection<WebPage> webPages) {
+    public void updatePageRanks(Collection<WebPage> pages) {
         List<WriteModel<Document>> operations = new ArrayList<>();
 
-        for (WebPage page : webPages) {
+        for (WebPage page : pages) {
             operations.add(new UpdateOneModel<>(
                     eq(Constants.FIELD_ID, page.id),
                     set(Constants.FIELD_RANK, page.rank)
@@ -102,7 +101,7 @@ public class Indexer {
      * Each web page has a list of connected web pages.
      * TODO: To be used by @Samir
      *
-     * @return the web graph represented as adjacency list.
+     * @return the web graph represented as adjacency list
      */
     public Map<String, WebPage> getWebGraph() {
         FindIterable<Document> res = mWebPagesCollection
@@ -128,8 +127,8 @@ public class Indexer {
      * TODO: Think about concurrency
      * TODO: NOT USED! to be removed if not needed.
      *
-     * @param url Web page url.
-     * @return the id of the given web page.
+     * @param url web page URL string
+     * @return the id of the given web page
      */
     public ObjectId getWebPageId(String url) {
         FindOneAndUpdateOptions options = new FindOneAndUpdateOptions();
@@ -149,9 +148,9 @@ public class Indexer {
     /**
      * Searches for a specific web pages by their ids.
      *
-     * @param ids         List of web pages ids to search for.
-     * @param projections The desired fields to be returned. To return all fields just pass null.
-     * @return list of matching web pages.
+     * @param ids         list of web pages ids to search for
+     * @param projections the desired fields to be returned. To return all fields just pass null
+     * @return list of matching web pages
      */
     public List<WebPage> searchById(List<ObjectId> ids, String... projections) {
         FindIterable<Document> res = mWebPagesCollection
@@ -166,8 +165,8 @@ public class Indexer {
     /**
      * Searches for web pages having any of the given filter words.
      *
-     * @param filterWords List of words to search for.
-     * @return list of matching web pages.
+     * @param filterWords list of words to search for
+     * @return list of matching web pages
      */
     public List<WebPage> searchByWord(List<String> filterWords) {
         FindIterable<Document> res = mWebPagesCollection
@@ -189,8 +188,8 @@ public class Indexer {
     /**
      * Searches for web pages having all of the given filter words.
      *
-     * @param filterWords List of words to search for.
-     * @return list of matching web pages.
+     * @param filterWords list of words to search for
+     * @return list of matching web pages
      */
     public List<WebPage> searchByPhrase(List<String> filterWords) {
         FindIterable<Document> res = mWebPagesCollection
@@ -212,8 +211,8 @@ public class Indexer {
     /**
      * Converts the results of find query into a list of web pages.
      *
-     * @param documents List of documents to be converted.
-     * @return list of web pages.
+     * @param documents List of documents to be converted
+     * @return list of web pages
      */
     private List<WebPage> toWebPages(FindIterable<Document> documents) {
         List<WebPage> ret = new ArrayList<>();

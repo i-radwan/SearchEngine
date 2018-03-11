@@ -4,77 +4,74 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
+import search.engine.models.WebPage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.URL;
+import java.util.*;
 
 
 public class WebPageParser {
 
     //
-    // Member variables
+    // Static Member variables
     //
-    private int mCurIdx;
-    private StringBuilder mContent;
-    private Map<String, List<Integer>> mWordPosMap;
-    private Map<String, List<Integer>> mWordScoreMap;
+    private static int sCurIdx;
+    private static StringBuilder sContent;
+    private static Map<String, List<Integer>> sWordPosMap;
+    private static Map<String, List<Integer>> sWordScoreMap;
+    private static Set<String> sOutLinks;
 
 
     /**
-     * Parses the given web page document and extracts its textual content,
-     * and construct word-position, and word-score map needed by the indexer.
+     * Parses the given web page document and returns a {@code WebPage} object
+     * with the parsed data.
      *
      * @param doc a web page document to parse
+     * @return a web page object constructed from the given document
      */
-    public void parse(Document doc) {
-        mCurIdx = 0;
-        mContent = new StringBuilder();
-        mWordPosMap = new HashMap<>();
-        mWordScoreMap = new HashMap<>();
+    public static WebPage parse(Document doc) {
+        // Initializing variables
+        sCurIdx = 0;
+        sContent = new StringBuilder();
+        sWordPosMap = new HashMap<>();
+        sWordScoreMap = new HashMap<>();
+        sOutLinks = new HashSet<>();
 
-        // TODO: parse <head> and get web page title
+        // Parsing
+        extractOutLinks(doc);
         dfs(doc, doc.tagName());
+
+        // Assigning variables
+        WebPage ret = new WebPage();
+        ret.url = doc.baseUri();
+        ret.outLinks = new ArrayList<>();
+        ret.outLinks.addAll(sOutLinks);
+        ret.content = sContent.toString().trim();
+        ret.wordsCount = sCurIdx;
+        ret.wordPosMap = sWordPosMap;
+        ret.wordScoreMap = sWordScoreMap;
+
+        return ret;
     }
 
     /**
-     * Returns the words count after parsing the web page content
-     * and after removing the numeric and special characters.
+     * Extracts all out links from the given raw web page document
+     * and adds them to {@code outLinks} list.
      *
-     * @return the number of words after parsing
+     * @param doc web page raw content
      */
-    public int getWordsCount() {
-        return mCurIdx;
-    }
+    private static void extractOutLinks(Document doc) {
+        Elements links = doc.body().select("link[href], a[href]");
 
-    /**
-     * Returns the extracted web page content.
-     *
-     * @return the number of words after parsing
-     */
-    public String getPageContent() {
-        // TODO: Remove strange characters
-        return mContent.toString();
-    }
+        for (Element element : links) {
+            String link = element.attr("abs:href");
+            URL url = WebUtilities.getURL(link);
 
-    /**
-     * Returns a map from a given word to a list of occurrence positions.
-     *
-     * @return the word-position map
-     */
-    public Map<String, List<Integer>> getWordsPositions() {
-        return mWordPosMap;
-    }
-
-    /**
-     * Returns a map from a given word to a list of score
-     * representing the tag of their occurrence positions.
-     *
-     * @return the word-score map
-     */
-    public Map<String, List<Integer>> getWordsScore() {
-        return mWordScoreMap;
+            if (url != null && WebUtilities.validURL(link)) {
+                sOutLinks.add(WebUtilities.normalizeURL(url));
+            }
+        }
     }
 
     /**
@@ -84,7 +81,7 @@ public class WebPageParser {
      * @param cur         current node in the DFS
      * @param previousTag the parent node tag name
      */
-    private void dfs(Node cur, String previousTag) {
+    private static void dfs(Node cur, String previousTag) {
         // If its a text node then process its text
         if (cur instanceof TextNode) {
             TextNode node = (TextNode) cur;
@@ -115,16 +112,16 @@ public class WebPageParser {
      * @param str the string to process
      * @param tag the string tag
      */
-    private void processText(String str, String tag) {
+    private static void processText(String str, String tag) {
         if (str.isEmpty()) {
             return;
         }
 
         //
-        // Append the exact text to the page mContent variable
+        // Append the exact text to the page sContent variable
         //
-        mContent.append(str);
-        mContent.append(" ");
+        sContent.append(str);
+        sContent.append(" ");
 
         //
         // Process the string and construct words index map
@@ -135,10 +132,10 @@ public class WebPageParser {
         int score = Constants.TAG_TO_SCORE_MAP.getOrDefault(tag, 1);
 
         for (String word : words) {
-            mWordPosMap.putIfAbsent(word, new ArrayList<>());
-            mWordScoreMap.putIfAbsent(word, new ArrayList<>());
-            mWordPosMap.get(word).add(mCurIdx++);
-            mWordScoreMap.get(word).add(score);
+            sWordPosMap.putIfAbsent(word, new ArrayList<>());
+            sWordScoreMap.putIfAbsent(word, new ArrayList<>());
+            sWordPosMap.get(word).add(sCurIdx++);
+            sWordScoreMap.get(word).add(score);
         }
     }
 }

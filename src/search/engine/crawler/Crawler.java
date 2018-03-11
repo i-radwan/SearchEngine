@@ -44,7 +44,7 @@ public class Crawler {
         System.out.println("Reading URL seeds and previous run data, please wait...");
 
         Input.readSeed();
-        Input.readPreviousRunData(mRobotManager);
+        Input.readPreviousRunData();
         Input.closeFiles();
 
         // Count the number of visited web pages in the previous run

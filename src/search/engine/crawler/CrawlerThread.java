@@ -4,6 +4,7 @@ import org.jsoup.nodes.Document;
 import search.engine.indexer.Indexer;
 import search.engine.models.WebPage;
 import search.engine.utils.Constants;
+import search.engine.utils.WebPageParser;
 import search.engine.utils.WebUtilities;
 
 import java.net.URL;
@@ -23,18 +24,18 @@ public class CrawlerThread extends java.lang.Thread {
     //
     // Member variables
     //
-    private RobotsTextParser mRobotTextParser;
+    private RobotsTextManager mRobotTextManager;
     private Indexer mIndexer;
 
 
     /**
      * Constructs a new crawler thread.
      *
-     * @param robotManager robot manger object to handle robots text parsing
+     * @param robotManager robots text manger object to handle robots text parsing and retrieving
      * @param indexer      an indexer object in order to store the crawled web pages
      */
     CrawlerThread(RobotsTextManager robotManager, Indexer indexer) {
-        mRobotTextParser = new RobotsTextParser(robotManager);
+        mRobotTextManager = robotManager;
         mIndexer = indexer;
     }
 
@@ -78,8 +79,10 @@ public class CrawlerThread extends java.lang.Thread {
         // fetching robots.txt rather than fetching the web pages themselves.
         //
 
+        // TODO: check for web page visiting frequency from the database
+
         // If the current web page URL is not allowed by robots text then continue
-        if (!mRobotTextParser.allowedURL(url)) {
+        if (!mRobotTextManager.allowedURL(url)) {
             removeURLFromCnt(baseUrlStr);
             Output.log("Not allowed by robots.txt : " + urlStr);
             return;
@@ -113,18 +116,13 @@ public class CrawlerThread extends java.lang.Thread {
      * @param doc the web page document to process
      */
     private void processWebPage(Document doc) {
-        WebPage page = new WebPage(doc);
+        WebPage page = WebPageParser.parse(doc);
 
         //
         // Extract web page URLs
         //
         for (String urlStr : page.outLinks) {
             URL url = WebUtilities.getURL(urlStr);
-
-            if (url == null) {
-                continue;
-            }
-
             String baseUrlStr = WebUtilities.getBaseURL(url);
 
             // Lock the arrays and insert in them

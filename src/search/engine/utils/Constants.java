@@ -33,14 +33,14 @@ public class Constants {
      * Robots text constants
      */
     public static final String INIT_URL_RULE_FILE = "URL_RULE: ";
-    public static final String USER_AGENT = "*";
+    public static final String DEFAULT_USER_AGENT = "*";
 
     /**
      * Limits constants
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 5000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 5000;
+    public static final int MAX_WEB_PAGES_COUNT = 20;
 
     // ================================================================================================
     //
@@ -109,6 +109,9 @@ public class Constants {
     // Web Page Parse
     //
 
+    /**
+     * Allowed tags to be traversed during web page content extraction.
+     */
     public static final String[] ALLOWED_TAGS = {
             "#root", "html", "head", "title",
             "body",
@@ -118,12 +121,15 @@ public class Constants {
             "a", "span",
             "ol", "ul", "li"
     };
-
     public static final Set<String> ALLOWED_TAGS_SET = new HashSet<>(Arrays.asList(ALLOWED_TAGS));
 
-    // TODO: to be edited
+    /**
+     * Map from an HTML tag to an integer score representing the importance of this tag.
+     * TODO: to be edited
+     */
     public static final Map<String, Integer> TAG_TO_SCORE_MAP = new HashMap<String, Integer>() {
         {
+            put("title", 20);
             put("h1", 10);
             put("h2", 9);
             put("h3", 8);

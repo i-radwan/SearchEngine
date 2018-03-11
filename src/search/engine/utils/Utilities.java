@@ -11,12 +11,11 @@ public class Utilities {
 
     /**
      * Processes the given string as follows:
-     * <p>
-     * Converts the string into lowercase.
-     * <p>
-     * Replaces special chars with spaces.
-     * <p>
-     * Removes completely-numeric words.
+     * <ul>
+     * <li>Converts the string into lowercase.</li>
+     * <li>Replaces special chars with spaces.</li>
+     * <li>Removes completely-numeric words.</li>
+     * </ul>
      *
      * @param str the input string to be processed
      * @return the processed string.
@@ -48,7 +47,7 @@ public class Utilities {
         queryString = queryString.trim();
 
         // Check if phrase search before processing the string (before removing special chars)
-        boolean isPhraseSeach = phraseSearch(queryString);
+        boolean isPhraseSeach = isPhraseSearch(queryString);
 
         List<List<String>> ret = new ArrayList<>();
 
@@ -126,7 +125,7 @@ public class Utilities {
      * @param queryString the input search query string
      * @return {@code true} if the given string is surrounded by double quotes, {@code false} otherwise
      */
-    public static boolean phraseSearch(String queryString) {
+    public static boolean isPhraseSearch(String queryString) {
 
         return queryString.charAt(0) == '"'
                 && queryString.charAt(queryString.length() - 1) == '"';

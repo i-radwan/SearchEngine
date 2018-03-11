@@ -33,6 +33,17 @@ public final class WebUtilities {
     }
 
     /**
+     * Returns a normalized URL string of the given web page URL object.
+     * (i.e. removes the fragment part from the URL).
+     *
+     * @param url a web page URL object
+     * @return normalized URL string representing
+     */
+    public static String normalizeURL(URL url) {
+        return url.getProtocol() + "://" + url.getHost() + url.getPath();
+    }
+
+    /**
      * Returns the base URL string of the given web page URL object.
      *
      * @param url a web page URL object

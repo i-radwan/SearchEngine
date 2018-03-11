@@ -5,11 +5,13 @@ import search.engine.crawler.Crawler;
 import search.engine.indexer.Indexer;
 import search.engine.models.WebPage;
 import search.engine.server.Server;
+import search.engine.utils.WebPageParser;
 import search.engine.utils.WebUtilities;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.*;
 
 
@@ -18,6 +20,12 @@ public class Main {
     private static Scanner scanner;
 
     public static void main(String[] args) throws IOException {
+
+        URL url = new URL("https://www.wikipedia.org/wiki/Java_(programming_language)#Java_platform");
+
+        System.out.println(url);
+        System.out.println();
+
         scanner = new Scanner(System.in);
 
         int choice = -1;
@@ -103,7 +111,7 @@ public class Main {
     private static void testWebPageParse() throws IOException {
         Document doc = WebUtilities.fetchWebPage("http://codeforces.com/problemset/problem/950/B");
         System.out.println("Fetched");
-        WebPage page = new WebPage(doc);
+        WebPage page = WebPageParser.parse(doc);
 
         PrintWriter writer = new PrintWriter(new FileWriter("data/tmp.txt"));
 
@@ -117,8 +125,8 @@ public class Main {
         //
         writer.printf("Out Links:\n");
         int idx = 0;
-        for (String link : page.outLinks) {
-            writer.printf("\t%-3d: %s\n", idx++, link);
+        for (String url : page.outLinks) {
+            writer.printf("\t%-3d: %s\n", idx++, url);
         }
         writer.printf("\n");
 

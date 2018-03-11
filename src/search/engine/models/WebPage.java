@@ -2,19 +2,13 @@ package search.engine.models;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import search.engine.utils.Constants;
-import search.engine.utils.WebPageParser;
-import search.engine.utils.WebUtilities;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.URL;
+import java.util.*;
 
 
-public class WebPage implements Comparable {
+public class WebPage {
 
     //
     // Member variables
@@ -92,61 +86,8 @@ public class WebPage implements Comparable {
         rank = (double) doc.getOrDefault(Constants.FIELD_RANK, 1.0);
         content = (String) doc.getOrDefault(Constants.FIELD_PAGE_CONTENT, null);
         wordsCount = (int) doc.getOrDefault(Constants.FIELD_WORDS_COUNT, 0);
-
-        // TODO: find a better way to cast
         outLinks = (List<String>) doc.getOrDefault(Constants.FIELD_CONNECTED_TO, null);
         parseWordsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_WORDS_INDEX, null));
-    }
-
-    /**
-     * Constructs a web page object from the raw HTML content of the page.
-     *
-     * @param doc web page raw content
-     */
-    public WebPage(org.jsoup.nodes.Document doc) {
-        // Get web page url
-        this.url = doc.baseUri();
-
-        // Extract the list of out links.
-        extractOutLinks(doc);
-
-        // Extract page content
-        extractPageContent(doc);
-    }
-
-    /**
-     * Extracts all out links from the given raw web page document
-     * and adds them to {@code outLinks} list.
-     *
-     * @param doc web page raw content
-     */
-    private void extractOutLinks(org.jsoup.nodes.Document doc) {
-        outLinks = new ArrayList<>();
-
-        Elements links = doc.body().select("link[href], a[href]");
-
-        for (Element element : links) {
-            String link = element.attr("abs:href");
-
-            if (WebUtilities.validURL(link)) {
-                outLinks.add(link);
-            }
-        }
-    }
-
-    /**
-     * Extracts the web page content from the given raw web page document.
-     *
-     * @param doc web page raw content
-     */
-    private void extractPageContent(org.jsoup.nodes.Document doc) {
-        WebPageParser parser = new WebPageParser();
-        parser.parse(doc);
-
-        content = parser.getPageContent();
-        wordsCount = parser.getWordsCount();
-        wordPosMap = parser.getWordsPositions();
-        wordScoreMap = parser.getWordsScore();
     }
 
     /**
@@ -182,7 +123,7 @@ public class WebPage implements Comparable {
         }
 
         // List of word documents
-        ArrayList<Document> dictionary = new ArrayList<>();
+        List<Document> dictionary = new ArrayList<>();
 
         for (String word : wordPosMap.keySet()) {
             Document doc = new Document()
@@ -214,51 +155,5 @@ public class WebPage implements Comparable {
             wordPosMap.put(word, (List<Integer>) doc.get(Constants.FIELD_POSITIONS));
             wordScoreMap.put(word, (List<Integer>) doc.get(Constants.FIELD_SCORES));
         }
-    }
-
-    /**
-     * Returns a hash code representing the web page.
-     *
-     * @return a hash code value
-     */
-    @Override
-    public int hashCode() {
-        return url.hashCode();
-    }
-
-    /**
-     * Compares this web page to the specified object.
-     * The result is {@code true} if and only if the argument is not {@code null} and
-     * has the same url.
-     *
-     * @param obj The object to compare this web page against
-     * @return {@code true} if the given object has the same url, {@code false} otherwise
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof WebPage) {
-            obj = ((WebPage) obj).url;
-        }
-
-        return url.equals(obj);
-    }
-
-    /**
-     * Compares two web pages lexicographically according to their urls.
-     *
-     * @param obj The object to compare this web page against
-     * @return the value {@code 0} if both urls are equal;
-     * a value less than {@code 0} if this web page url
-     * is lexicographically less than the argument; and a
-     * value greater than {@code 0} if this web page url is
-     * lexicographically greater than the string argument
-     */
-    @Override
-    public int compareTo(Object obj) {
-        if (obj instanceof WebPage) {
-            obj = ((WebPage) obj).url;
-        }
-
-        return url.compareTo((String) obj);
     }
 }

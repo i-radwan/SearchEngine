@@ -24,7 +24,7 @@ public class Server {
             String queryString = req.queryParams("q");
 
             // Process the query
-            boolean isPhraseSearch = Utilities.phraseSearch(queryString);
+            boolean isPhraseSearch = Utilities.isPhraseSearch(queryString);
             List<List<String>> queriesList = Utilities.processQuery(queryString);
 
             // Call the indexer
