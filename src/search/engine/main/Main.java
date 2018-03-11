@@ -5,13 +5,13 @@ import search.engine.crawler.Crawler;
 import search.engine.indexer.Indexer;
 import search.engine.models.WebPage;
 import search.engine.server.Server;
+import search.engine.utils.Utilities;
 import search.engine.utils.WebPageParser;
 import search.engine.utils.WebUtilities;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.util.*;
 
 
@@ -20,12 +20,6 @@ public class Main {
     private static Scanner scanner;
 
     public static void main(String[] args) throws IOException {
-
-        URL url = new URL("https://www.wikipedia.org/wiki/Java_(programming_language)#Java_platform");
-
-        System.out.println(url);
-        System.out.println();
-
         scanner = new Scanner(System.in);
 
         int choice = -1;
@@ -152,9 +146,23 @@ public class Main {
             for (int score : page.wordScoreMap.get(word)) {
                 writer.printf("%d\t", score);
             }
-            writer.printf("\n\n\n");
+            writer.printf("\n\n");
         }
         writer.printf("\n");
+
+        //
+        // Web Page Dictionary
+        //
+        writer.printf("Words Dictionary:\n");
+        Map<String, Set<String>> dictionary = Utilities.getWordsDictionary(page.wordPosMap.keySet());
+        for (String stem : dictionary.keySet()) {
+            writer.printf("\t%s\n", stem);
+            writer.printf("\t\tSynonyms:\t\t");
+            for (String word : dictionary.get(stem)) {
+                writer.printf("%s\t", word);
+            }
+            writer.printf("\n\n");
+        }
 
 
         writer.close();

@@ -3,8 +3,7 @@ package search.engine.utils;
 import org.tartarus.snowball.SnowballStemmer;
 import org.tartarus.snowball.ext.englishStemmer;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 public class Utilities {
@@ -91,7 +90,7 @@ public class Utilities {
     }
 
     /**
-     * Converts the given list of words into their stem version.
+     * Converts the given list of words into their stemmed version.
      *
      * @param words list of words
      * @return a new list of stemmed words.
@@ -104,6 +103,34 @@ public class Utilities {
             stemmer.setCurrent(word);
             stemmer.stem();
             ret.add(stemmer.getCurrent());
+        }
+
+        return ret;
+    }
+
+    /**
+     * Constructs and returns the words dictionary of the given words set.
+     * <p>
+     * Words dictionary is a map from a stemmed word to
+     * all the words present in the given set having the same stem.
+     *
+     * @param words the words set to get their dictionary
+     * @return the words dictionary
+     */
+    public static Map<String, Set<String>> getWordsDictionary(Set<String> words) {
+        Map<String, Set<String>> ret = new TreeMap<>();
+
+        SnowballStemmer stemmer = new englishStemmer();
+
+        for (String word : words) {
+            // Stem word
+            stemmer.setCurrent(word);
+            stemmer.stem();
+            String stem = stemmer.getCurrent();
+
+            // Map[stem].insert(word)
+            ret.putIfAbsent(stem, new TreeSet<>());
+            ret.get(stem).add(word);
         }
 
         return ret;
@@ -126,7 +153,6 @@ public class Utilities {
      * @return {@code true} if the given string is surrounded by double quotes, {@code false} otherwise
      */
     public static boolean isPhraseSearch(String queryString) {
-
         return queryString.charAt(0) == '"'
                 && queryString.charAt(queryString.length() - 1) == '"';
     }

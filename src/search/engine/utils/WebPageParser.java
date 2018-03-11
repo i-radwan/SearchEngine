@@ -44,7 +44,7 @@ public class WebPageParser {
 
         // Assigning variables
         WebPage ret = new WebPage();
-        ret.url = doc.baseUri();
+        ret.url = WebUtilities.normalizeURL(WebUtilities.getURL(doc.baseUri()));
         ret.outLinks = new ArrayList<>();
         ret.outLinks.addAll(sOutLinks);
         ret.content = sContent.toString().trim();
