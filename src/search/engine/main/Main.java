@@ -73,8 +73,15 @@ public class Main {
      */
     private static void startCrawler() {
         System.out.println("Please enter the number of crawler threads: ");
-        Crawler crawler = new Crawler();
-        crawler.start(scanner.nextInt());
+        int cnt = scanner.nextInt();
+
+        Indexer indexer = new Indexer();
+        Crawler crawler = new Crawler(indexer);
+        crawler.readPreviousData();
+
+        while (true) {
+            crawler.start(cnt);
+        }
     }
 
     /**

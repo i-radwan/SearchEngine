@@ -49,7 +49,7 @@ public class Indexer {
         // Drop database
         mongoClient.dropDatabase(Constants.DATABASE_NAME);
 
-        // Get Search engine database
+        // Get search engine database
         MongoDatabase database = mongoClient.getDatabase(Constants.DATABASE_NAME);
 
         //

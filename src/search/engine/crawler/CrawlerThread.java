@@ -187,8 +187,8 @@ public class CrawlerThread extends Thread {
                         //
                         if (crawlable(urlStr, baseUrlStr))
                             addURL(urlStr, baseUrlStr);
-                        else
-                            Output.log("Skipped : " + urlStr);
+                        //else
+                        //    Output.log("Skipped : " + urlStr);
                     }
                 }
             }

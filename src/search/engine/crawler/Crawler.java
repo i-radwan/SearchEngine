@@ -1,9 +1,12 @@
 package search.engine.crawler;
 
 import search.engine.indexer.Indexer;
+import search.engine.utils.WebUtilities;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Crawler {
@@ -17,42 +20,80 @@ public class Crawler {
 
 
     /**
+     * Constructor.
+     *
+     * @param indexer a database indexer object to store the crawled web pages.
+     */
+    public Crawler(Indexer indexer) {
+        mIndexer = indexer;
+        mRobotManager = new RobotsTextManager();
+    }
+
+    /**
      * Initializes the web crawler environment and starts
      * crawling.
      *
      * @param threadsCnt the number of crawler threads to start
      */
     public void start(int threadsCnt) {
-        init();
-        initAndStartThreads(threadsCnt);
+        Output.openFiles();
+
+        Input.readSeed();
+        calcVisitedUrlCount();
+
+        System.out.println("Start crawling...");
+        startThreads(threadsCnt);
         waitThreadsFinish();
+        System.out.println("Finish crawling");
+
         Output.closeFiles();
+        clearData();
     }
 
     /**
-     * Reads the seed of URLs to crawl and the data of the previous runs.
+     * Read previous data of the last crawling run.
      */
-    private void init() {
-        mRobotManager = new RobotsTextManager();
-        mIndexer = new Indexer();
-
-        // Initialize I/O files
-        Output.init();
-        Output.clearFiles();
-        Input.init();
-
-        System.out.println("Reading URL seeds and previous run data, please wait...");
-
-        Input.readSeed();
+    public void readPreviousData() {
+        System.out.println("Reading previous run data...");
         Input.readPreviousRunData();
-        Input.closeFiles();
+        System.out.println(CrawlerThread.sURLsQueue.size() + " URL(s) has been added to the queue");
+    }
 
-        // Count the number of visited web pages in the previous run
-        for (Integer cnt : CrawlerThread.sBaseURLVisitedCnt.values()) {
-            CrawlerThread.sWebPagesCnt += cnt;
+    /**
+     * Calculates the URL visited counts according to
+     * the current data in the visited set.
+     */
+    private void calcVisitedUrlCount() {
+        // Clear previous counts
+        CrawlerThread.sWebPagesCnt = 0;
+        CrawlerThread.sBaseURLVisitedCnt = new ConcurrentHashMap<>();
+
+        // Calculate current counts
+        for (String link : CrawlerThread.sVisitedURLs) {
+            URL url = WebUtilities.getURL(link);
+
+            if (url == null) {
+                continue;
+            }
+
+            String baseURL = WebUtilities.getBaseURL(url);
+
+            CrawlerThread.sBaseURLVisitedCnt.put(
+                    baseURL,
+                    CrawlerThread.sBaseURLVisitedCnt.getOrDefault(baseURL, 0) + 1
+            );
+
+            CrawlerThread.sWebPagesCnt++;
         }
+    }
 
-        System.out.println("Finished reading data");
+    /**
+     * Clears crawling data.
+     */
+    private void clearData() {
+        CrawlerThread.sURLsQueue.clear();
+        CrawlerThread.sVisitedURLs.clear();
+        Output.clearFiles();
     }
 
     /**
@@ -60,9 +101,7 @@ public class Crawler {
      *
      * @param count the number of crawler threads to start
      */
-    private void initAndStartThreads(int count) {
-        System.out.println("Starting crawler threads...");
-
+    private void startThreads(int count) {
         mCrawlerThreads = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
