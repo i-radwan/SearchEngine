@@ -25,33 +25,37 @@ public class Main {
         int choice = -1;
 
         while (choice == -1) {
-            System.out.println("Please enter a unit to test:");
+            System.out.println("Please enter a function to run:");
             System.out.println("1. Crawler");
-            System.out.println("2. Indexer");
-            System.out.println("3. Ranker");
-            System.out.println("4. Query Processor");
-            System.out.println("5. Web Page Parser");
-            System.out.println("6. Exit");
+            System.out.println("2. Clear Database");
+            System.out.println("3. Test Indexer");
+            System.out.println("4. Test Ranker");
+            System.out.println("5. Test Query Processor");
+            System.out.println("6. Test Web Page Parser");
+            System.out.println("7. Exit");
 
             choice = scanner.nextInt();
 
             switch (choice) {
                 case 1:
-                    testCrawler();
+                    startCrawler();
                     break;
                 case 2:
-                    testIndexer();
+                    clearDatabase();
                     break;
                 case 3:
-                    testRanker();
+                    testIndexer();
                     break;
                 case 4:
-                    testQueryProcessor();
+                    testRanker();
                     break;
                 case 5:
-                    testWebPageParse();
+                    testQueryProcessor();
                     break;
                 case 6:
+                    testWebPageParse();
+                    break;
+                case 7:
                     System.out.println("Bye!");
                     break;
                 default:
@@ -64,10 +68,22 @@ public class Main {
         scanner.close();
     }
 
-    private static void testCrawler() {
+    /**
+     * Start running the crawling process.
+     */
+    private static void startCrawler() {
         System.out.println("Please enter the number of crawler threads: ");
         Crawler crawler = new Crawler();
         crawler.start(scanner.nextInt());
+    }
+
+    /**
+     * Clears our database and recreate the indexes.
+     */
+    private static void clearDatabase() {
+        System.out.println("Clearing search engine database...");
+        Indexer.migrate();
+        System.out.println("Done!");
     }
 
     private static void testIndexer() {

@@ -37,6 +37,38 @@ public class Indexer {
     //
 
     /**
+     * Clears the current search engine database and recreate the indexes.
+     */
+    public static void migrate() {
+        // Create Mongo Client
+        MongoClient mongoClient = new MongoClient(
+                Constants.DATABASE_HOST_ADDRESS,
+                Constants.DATABASE_PORT_NUMBER
+        );
+
+        // Drop database
+        mongoClient.dropDatabase(Constants.DATABASE_NAME);
+
+        // Get Search engine database
+        MongoDatabase database = mongoClient.getDatabase(Constants.DATABASE_NAME);
+
+        //
+        MongoCollection<Document> collection;
+        IndexOptions indexOptions = new IndexOptions().unique(true);
+
+        // Create web page collection and its indexes
+        database.createCollection(Constants.COLLECTION_WEB_PAGES);
+        collection = database.getCollection(Constants.COLLECTION_WEB_PAGES);
+        collection.createIndex(Indexes.ascending(Constants.FIELD_URL), indexOptions);
+        collection.createIndex(Indexes.ascending(Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD));
+
+        // Create dictionary collection and its indexes
+        database.createCollection(Constants.COLLECTION_DICTIONARY);
+        collection = database.getCollection(Constants.COLLECTION_DICTIONARY);
+        collection.createIndex(Indexes.ascending(Constants.FIELD_WORD), indexOptions);
+    }
+
+    /**
      * Constructs indexer object.
      */
     public Indexer() {
@@ -74,6 +106,36 @@ public class Indexer {
                 filter,
                 update,
                 options
+        );
+    }
+
+    /**
+     * Increments the fetch skip count of the given web page.
+     * Used to mange the frequency of fetching the content of the web page.
+     *
+     * @param url the web page url string to update
+     */
+    public void incrementFetchSkipCount(String url) {
+        mWebPagesCollection.updateOne(
+                eq(Constants.FIELD_URL, url),
+                inc(Constants.FILED_FETCH_SKIP_COUNT, 1)
+        );
+    }
+
+    /**
+     * Updates the fetch skip limit of the given web page and
+     * resets the fetch skip count.
+     * Used to mange the frequency of fetching the content of the web page.
+     *
+     * @param url the web page url string to update
+     */
+    public void updateFetchSkipLimit(String url, int limit) {
+        mWebPagesCollection.updateOne(
+                eq(Constants.FIELD_URL, url),
+                combine(
+                        set(Constants.FILED_FETCH_SKIP_LIMIT, limit),
+                        set(Constants.FILED_FETCH_SKIP_COUNT, 0)
+                )
         );
     }
 
@@ -206,36 +268,6 @@ public class Indexer {
         );
 
         return doc.getObjectId(Constants.FIELD_ID);
-    }
-
-    /**
-     * Increments the fetch skip count of the given web page.
-     * Used to mange the frequency of fetching the content of the web page.
-     *
-     * @param url the web page url string to update
-     */
-    public void incrementFetchSkipCount(String url) {
-        mWebPagesCollection.updateOne(
-                eq(Constants.FIELD_URL, url),
-                inc(Constants.FILED_FETCH_SKIP_COUNT, 1)
-        );
-    }
-
-    /**
-     * Updates the fetch skip limit of the given web page and
-     * resets the fetch skip count.
-     * Used to mange the frequency of fetching the content of the web page.
-     *
-     * @param url the web page url string to update
-     */
-    public void updateFetchSkipLimit(String url, int limit) {
-        mWebPagesCollection.updateOne(
-                eq(Constants.FIELD_URL, url),
-                combine(
-                        set(Constants.FILED_FETCH_SKIP_LIMIT, limit),
-                        set(Constants.FILED_FETCH_SKIP_COUNT, 0)
-                )
-        );
     }
 
     /**
