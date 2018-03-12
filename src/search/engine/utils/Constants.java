@@ -24,15 +24,10 @@ public class Constants {
     public static final String LOG_FILE_NAME = CRAWLER_DATA_PATH + "/log.txt";
     public static final String URLS_FILE_NAME = CRAWLER_DATA_PATH + "/urls_to_crawl.txt";
     public static final String VISITED_URLS_FILE_NAME = CRAWLER_DATA_PATH + "/visited_urls.txt";
-    public static final String ALLOWED_URLS_FILE_NAME = CRAWLER_DATA_PATH + "/allowed_urls.txt";
-    public static final String DISALLOWED_URLS_FILE_NAME = CRAWLER_DATA_PATH + "/disallowed_urls.txt";
-    public static final String URL_IDS_FILE_NAME = CRAWLER_DATA_PATH + "/url_ids.txt";
-    public static final String URL_RULES_FILE_NAME = CRAWLER_DATA_PATH + "/url_rules.txt";
 
     /**
      * Robots text constants
      */
-    public static final String INIT_URL_RULE_FILE = "URL_RULE: ";
     public static final String DEFAULT_USER_AGENT = "*";
 
     /**
@@ -40,7 +35,7 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 5000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 20;
+    public static final int MAX_WEB_PAGES_COUNT = 100;
 
     // ================================================================================================
     //
@@ -58,6 +53,7 @@ public class Constants {
      * Collection constants
      */
     public static final String COLLECTION_WEB_PAGES = "web_pages";
+    public static final String COLLECTION_DICTIONARY = "dictionary";
 
     /**
      * Fields constants
@@ -72,6 +68,7 @@ public class Constants {
     public static final String FIELD_WORD = "word";
     public static final String FIELD_POSITIONS = "positions";
     public static final String FIELD_SCORES = "scores";
+    public static final String FILED_SYNONYMS = "synonyms";
 
     /**
      * Common fields lists

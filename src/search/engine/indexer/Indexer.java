@@ -14,8 +14,7 @@ import java.util.*;
 
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Projections.include;
-import static com.mongodb.client.model.Updates.set;
-import static com.mongodb.client.model.Updates.setOnInsert;
+import static com.mongodb.client.model.Updates.*;
 
 
 public class Indexer {
@@ -54,6 +53,7 @@ public class Indexer {
 
         // Get collections from the database
         mWebPagesCollection = database.getCollection(Constants.COLLECTION_WEB_PAGES);
+        mDictionaryCollection = database.getCollection(Constants.COLLECTION_DICTIONARY);
     }
 
     /**
@@ -75,6 +75,52 @@ public class Indexer {
                 update,
                 options
         );
+    }
+
+    /**
+     * Updates the words dictionary in the database.
+     * <p>
+     * Words dictionary is a map from a stemmed word to
+     * all the words having the same stem.
+     *
+     * @param dictionary the dictionary map form a word to its synonyms to update
+     */
+    public void updateWordsDictionary(Map<String, List<String>> dictionary) {
+        List<WriteModel<Document>> operations = new ArrayList<>();
+
+        // Add upsert option
+        UpdateOptions options = new UpdateOptions().upsert(true);
+
+        for (Map.Entry<String, List<String>> it : dictionary.entrySet()) {
+            operations.add(new UpdateOneModel<>(
+                    eq(Constants.FIELD_WORD, it.getKey()),
+                    addEachToSet(Constants.FILED_SYNONYMS, it.getValue()),
+                    options
+            ));
+        }
+
+        mDictionaryCollection.bulkWrite(operations);
+    }
+
+    /**
+     * Returns the dictionary of the given list of words.
+     *
+     * @param words list of words to get their dictionary
+     * @return the dictionary map form a word to its synonyms
+     */
+    public Map<String, List<String>> getWordsDictionary(List<String> words) {
+        Map<String, List<String>> dictionary = new HashMap<>();
+
+        FindIterable<Document> res = mDictionaryCollection.find(in(Constants.FIELD_WORD, words));
+
+        for (Document doc : res) {
+            dictionary.put(
+                    doc.getString(Constants.FIELD_WORD),
+                    (List<String>) doc.get(Constants.FILED_SYNONYMS)
+            );
+        }
+
+        return dictionary;
     }
 
     /**

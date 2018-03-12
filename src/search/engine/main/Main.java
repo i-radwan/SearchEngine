@@ -91,6 +91,17 @@ public class Main {
         for (WebPage page : list) {
             System.out.println(page.toDocument());
         }
+
+        //
+        // Testing dictionary
+        //
+
+        Map<String, List<String>> dictionary = new HashMap<>();
+        dictionary.put("comput", Arrays.asList("computer", "computing", "computers", "hehe"));
+
+        indexer.updateWordsDictionary(dictionary);
+
+        System.out.println(indexer.getWordsDictionary(Arrays.asList("comput", "archiv")));
     }
 
     private static void testRanker() {
@@ -154,7 +165,7 @@ public class Main {
         // Web Page Dictionary
         //
         writer.printf("Words Dictionary:\n");
-        Map<String, Set<String>> dictionary = Utilities.getWordsDictionary(page.wordPosMap.keySet());
+        Map<String, List<String>> dictionary = Utilities.getWordsDictionary(page.wordPosMap.keySet());
         for (String stem : dictionary.keySet()) {
             writer.printf("\t%s\n", stem);
             writer.printf("\t\tSynonyms:\t\t");
@@ -163,7 +174,6 @@ public class Main {
             }
             writer.printf("\n\n");
         }
-
 
         writer.close();
     }

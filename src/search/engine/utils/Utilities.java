@@ -117,8 +117,8 @@ public class Utilities {
      * @param words the words set to get their dictionary
      * @return the words dictionary
      */
-    public static Map<String, Set<String>> getWordsDictionary(Set<String> words) {
-        Map<String, Set<String>> ret = new TreeMap<>();
+    public static Map<String, List<String>> getWordsDictionary(Set<String> words) {
+        Map<String, List<String>> ret = new TreeMap<>();
 
         SnowballStemmer stemmer = new englishStemmer();
 
@@ -129,7 +129,7 @@ public class Utilities {
             String stem = stemmer.getCurrent();
 
             // Map[stem].insert(word)
-            ret.putIfAbsent(stem, new TreeSet<>());
+            ret.putIfAbsent(stem, new ArrayList<>());
             ret.get(stem).add(word);
         }
 
