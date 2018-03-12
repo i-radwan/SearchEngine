@@ -4,8 +4,10 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import search.engine.utils.Constants;
 
-import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class WebPage {
@@ -63,6 +65,12 @@ public class WebPage {
     public Map<String, List<Integer>> wordPosMap = null;
     public Map<String, List<Integer>> wordScoreMap = null;
 
+    /**
+     * Variables used to adjust the frequency of fetching the web page content.
+     */
+    public int fetchSkipLimit = 1;
+    public int fetchSkipCount = 0;
+
 
     //
     // Member methods
@@ -81,11 +89,17 @@ public class WebPage {
      * @param doc JSON-like document representing the web page
      */
     public WebPage(Document doc) {
+        if (doc == null) {
+            return;
+        }
+
         id = (ObjectId) doc.getOrDefault(Constants.FIELD_ID, null);
         url = (String) doc.getOrDefault(Constants.FIELD_URL, null);
         rank = (double) doc.getOrDefault(Constants.FIELD_RANK, 1.0);
         content = (String) doc.getOrDefault(Constants.FIELD_PAGE_CONTENT, null);
         wordsCount = (int) doc.getOrDefault(Constants.FIELD_WORDS_COUNT, 0);
+        fetchSkipLimit = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_LIMIT, 1);
+        fetchSkipCount = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_COUNT, 0);
         outLinks = (List<String>) doc.getOrDefault(Constants.FIELD_CONNECTED_TO, null);
         parseWordsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_WORDS_INDEX, null));
     }
@@ -108,6 +122,8 @@ public class WebPage {
         doc.append(Constants.FIELD_PAGE_CONTENT, content);
         doc.append(Constants.FIELD_WORDS_COUNT, wordsCount);
         doc.append(Constants.FIELD_WORDS_INDEX, getWordsIndex());
+        doc.append(Constants.FILED_FETCH_SKIP_LIMIT, fetchSkipLimit);
+        doc.append(Constants.FILED_FETCH_SKIP_COUNT, fetchSkipCount);
 
         return doc;
     }

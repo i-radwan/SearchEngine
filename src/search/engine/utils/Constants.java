@@ -35,7 +35,8 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 5000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 100;
+    public static final int MAX_WEB_PAGES_COUNT = 20;
+    public static final int MAX_FETCH_SKIP_LIMIT = 8;
 
     // ================================================================================================
     //
@@ -69,6 +70,8 @@ public class Constants {
     public static final String FIELD_POSITIONS = "positions";
     public static final String FIELD_SCORES = "scores";
     public static final String FILED_SYNONYMS = "synonyms";
+    public static final String FILED_FETCH_SKIP_LIMIT = "fetch_skip_limit";
+    public static final String FILED_FETCH_SKIP_COUNT = "fetch_skip_count";
 
     /**
      * Common fields lists

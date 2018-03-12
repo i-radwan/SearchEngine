@@ -78,6 +78,15 @@ public class Indexer {
     }
 
     /**
+     * Removes the given web page from the indexer.
+     *
+     * @param url the web page url string to remove
+     */
+    public void removeWebPage(String url) {
+        mWebPagesCollection.deleteOne(eq(Constants.FIELD_URL, url));
+    }
+
+    /**
      * Updates the words dictionary in the database.
      * <p>
      * Words dictionary is a map from a stemmed word to
@@ -97,6 +106,10 @@ public class Indexer {
                     addEachToSet(Constants.FILED_SYNONYMS, it.getValue()),
                     options
             ));
+        }
+
+        if (operations.isEmpty()) {
+            return;
         }
 
         mDictionaryCollection.bulkWrite(operations);
@@ -137,6 +150,10 @@ public class Indexer {
                     eq(Constants.FIELD_ID, page.id),
                     set(Constants.FIELD_RANK, page.rank)
             ));
+        }
+
+        if (operations.isEmpty()) {
+            return;
         }
 
         mWebPagesCollection.bulkWrite(operations);
@@ -189,6 +206,52 @@ public class Indexer {
         );
 
         return doc.getObjectId(Constants.FIELD_ID);
+    }
+
+    /**
+     * Increments the fetch skip count of the given web page.
+     * Used to mange the frequency of fetching the content of the web page.
+     *
+     * @param url the web page url string to update
+     */
+    public void incrementFetchSkipCount(String url) {
+        mWebPagesCollection.updateOne(
+                eq(Constants.FIELD_URL, url),
+                inc(Constants.FILED_FETCH_SKIP_COUNT, 1)
+        );
+    }
+
+    /**
+     * Updates the fetch skip limit of the given web page and
+     * resets the fetch skip count.
+     * Used to mange the frequency of fetching the content of the web page.
+     *
+     * @param url the web page url string to update
+     */
+    public void updateFetchSkipLimit(String url, int limit) {
+        mWebPagesCollection.updateOne(
+                eq(Constants.FIELD_URL, url),
+                combine(
+                        set(Constants.FILED_FETCH_SKIP_LIMIT, limit),
+                        set(Constants.FILED_FETCH_SKIP_COUNT, 0)
+                )
+        );
+    }
+
+    /**
+     * Searches for a specific web pages by their ids.
+     *
+     * @param url         the web page url string to search for
+     * @param projections the desired fields to be returned. To return all fields just pass null
+     * @return the matching web page, or null if not exist
+     */
+    public WebPage getWebPageByURL(String url, String... projections) {
+        Document res = mWebPagesCollection
+                .find(eq(Constants.FIELD_URL, url))
+                .projection(include(projections))
+                .first();
+
+        return new WebPage(res);
     }
 
     /**
@@ -257,7 +320,7 @@ public class Indexer {
     /**
      * Converts the results of find query into a list of web pages.
      *
-     * @param documents List of documents to be converted
+     * @param documents list of documents to be converted
      * @return list of web pages
      */
     private List<WebPage> toWebPages(FindIterable<Document> documents) {

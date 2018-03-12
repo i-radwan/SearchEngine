@@ -98,9 +98,7 @@ public class Main {
 
         Map<String, List<String>> dictionary = new HashMap<>();
         dictionary.put("comput", Arrays.asList("computer", "computing", "computers", "hehe"));
-
         indexer.updateWordsDictionary(dictionary);
-
         System.out.println(indexer.getWordsDictionary(Arrays.asList("comput", "archiv")));
     }
 

@@ -4,6 +4,7 @@ import org.jsoup.nodes.Document;
 import search.engine.indexer.Indexer;
 import search.engine.models.WebPage;
 import search.engine.utils.Constants;
+import search.engine.utils.Utilities;
 import search.engine.utils.WebPageParser;
 import search.engine.utils.WebUtilities;
 
@@ -11,7 +12,7 @@ import java.net.URL;
 import java.util.concurrent.*;
 
 
-public class CrawlerThread extends java.lang.Thread {
+public class CrawlerThread extends Thread {
 
     //
     // Static variables
@@ -24,18 +25,18 @@ public class CrawlerThread extends java.lang.Thread {
     //
     // Member variables
     //
-    private RobotsTextManager mRobotTextManager;
+    private RobotsTextManager mRobotsTextManager;
     private Indexer mIndexer;
 
 
     /**
      * Constructs a new crawler thread.
      *
-     * @param robotManager robots text manger object to handle robots text parsing and retrieving
-     * @param indexer      an indexer object in order to store the crawled web pages
+     * @param robotsMan robots text manger object to handle robots text parsing and retrieving
+     * @param indexer   an indexer object in order to store the crawled web pages
      */
-    CrawlerThread(RobotsTextManager robotManager, Indexer indexer) {
-        mRobotTextManager = robotManager;
+    CrawlerThread(RobotsTextManager robotsMan, Indexer indexer) {
+        mRobotsTextManager = robotsMan;
         mIndexer = indexer;
     }
 
@@ -74,38 +75,97 @@ public class CrawlerThread extends java.lang.Thread {
         String urlStr = url.toString();
         String baseUrlStr = WebUtilities.getBaseURL(url);
 
+        // ===========================================================================
         //
-        // If the following check placed earlier then the crawler would be more interested in
-        // fetching robots.txt rather than fetching the web pages themselves.
+        // Check for the frequency of visiting the current web page
         //
+        WebPage lastPage = mIndexer.getWebPageByURL(urlStr);
 
-        // TODO: check for web page visiting frequency from the database
-
-        // If the current web page URL is not allowed by robots text then continue
-        if (!mRobotTextManager.allowedURL(url)) {
+        // If fetch skip count does not reach the limit then skip fetching this page
+        // and increment fetch skip count by one
+        if (lastPage.fetchSkipCount + 1 < lastPage.fetchSkipLimit) {
+            mIndexer.incrementFetchSkipCount(lastPage.url);
+            extractOutLinks(lastPage);
             removeURLFromCnt(baseUrlStr);
-            Output.log("Not allowed by robots.txt : " + urlStr);
+            Output.log("Not fetched due to skip limits : " + urlStr);
+            System.out.println("Not fetched due to skip limits : " + urlStr);
             return;
         }
-
+        // ===========================================================================
         //
-        Output.log("Crawling : " + urlStr);
+        // Check robots text rules
+        //
+
+        // If the current web page URL is not allowed by robots text then
+        // remove it from the indexer and continue
+        if (!mRobotsTextManager.allowedURL(url)) {
+            mIndexer.removeWebPage(lastPage.url);
+            removeURLFromCnt(baseUrlStr);
+            Output.log("Not allowed by robots.txt : " + urlStr);
+            System.out.println("Not allowed by robots.txt : " + urlStr);
+            return;
+        }
+        // ===========================================================================
+        //
+        // Check robots text rules
+        //
 
         // Fetch the current web page content
+        Output.log("Fetching : " + urlStr);
+        System.out.println("Fetching: " + urlStr);
         Document doc = WebUtilities.fetchWebPage(urlStr);
 
         // If any errors occurred during connection then continue
         if (doc == null || doc.body() == null) {
             removeURLFromCnt(baseUrlStr);
             Output.log("Empty HTML document returned : " + urlStr);
+            System.out.println("Empty HTML document returned : " + urlStr);
             return;
         }
 
+        // ===========================================================================
+        //
         // Process the current fetched web page
-        // 1. Extract its out links
-        // 2. Process the textual content and index the page in the database
-        processWebPage(doc);
+        //
+
+        WebPage page = WebPageParser.parse(doc);
+        extractOutLinks(page);
+        processWebPage(page, lastPage);
         Output.logVisitedURL(urlStr);
+    }
+
+    /**
+     * Processes the given web page by comparing its content with the previously
+     * fetched content from the previous crawler run and
+     * updates the values accordingly.
+     *
+     * @param curPage the currently fetched web page
+     * @param prvPage the fetched web page from the indexer
+     */
+    private void processWebPage(WebPage curPage, WebPage prvPage) {
+        curPage.rank = prvPage.rank;
+        curPage.fetchSkipLimit = prvPage.fetchSkipLimit;
+        curPage.fetchSkipCount = 0;
+
+        // If no changes happens to the content of the web page then
+        // increase the skip fetch limit and return
+        if (curPage.wordsCount == prvPage.wordsCount
+                && curPage.outLinks.equals(prvPage.outLinks)
+                && curPage.content.equals(prvPage.content)
+                && curPage.wordPosMap.equals(prvPage.wordPosMap)
+                && curPage.wordScoreMap.equals(prvPage.wordScoreMap)) {
+
+            curPage.fetchSkipLimit = Math.min(Constants.MAX_FETCH_SKIP_LIMIT, prvPage.fetchSkipLimit * 2);
+            mIndexer.updateFetchSkipLimit(curPage.url, curPage.fetchSkipLimit);
+
+            Output.log("Same page content  : " + curPage.url);
+            System.out.println("Same page content  : " + curPage.url);
+            return;
+        }
+
+        // Update the indexer
+        mIndexer.indexWebPage(curPage);
+        mIndexer.updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
     }
 
     /**
@@ -113,14 +173,9 @@ public class CrawlerThread extends java.lang.Thread {
      * and inserting them in the queue,
      * and indexing the web page in the database.
      *
-     * @param doc the web page document to process
+     * @param page the web page to process
      */
-    private void processWebPage(Document doc) {
-        WebPage page = WebPageParser.parse(doc);
-
-        //
-        // Extract web page URLs
-        //
+    private void extractOutLinks(WebPage page) {
         for (String urlStr : page.outLinks) {
             URL url = WebUtilities.getURL(urlStr);
             String baseUrlStr = WebUtilities.getBaseURL(url);
@@ -138,8 +193,6 @@ public class CrawlerThread extends java.lang.Thread {
                 }
             }
         }
-
-        //mIndexer.indexWebPage(page);
     }
 
     /**
