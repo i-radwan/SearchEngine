@@ -9,6 +9,7 @@ import search.engine.utils.WebPageParser;
 import search.engine.utils.WebUtilities;
 
 import java.net.URL;
+import java.util.List;
 import java.util.concurrent.*;
 
 
@@ -27,6 +28,7 @@ public class CrawlerThread extends Thread {
     //
     private RobotsTextManager mRobotsTextManager;
     private Indexer mIndexer;
+    private WebPageParser mWebPageParser;
 
 
     /**
@@ -38,6 +40,7 @@ public class CrawlerThread extends Thread {
     CrawlerThread(RobotsTextManager robotsMan, Indexer indexer) {
         mRobotsTextManager = robotsMan;
         mIndexer = indexer;
+        mWebPageParser = new WebPageParser();
     }
 
     /**
@@ -85,7 +88,7 @@ public class CrawlerThread extends Thread {
         // and increment fetch skip count by one
         if (lastPage.fetchSkipCount + 1 < lastPage.fetchSkipLimit) {
             mIndexer.incrementFetchSkipCount(lastPage.url);
-            extractOutLinks(lastPage);
+            enqueueOutLinks(lastPage.outLinks);
             removeURLFromCnt(baseUrlStr);
             Output.log("Not fetched due to skip limits : " + urlStr);
             System.out.println("Not fetched due to skip limits : " + urlStr);
@@ -107,7 +110,7 @@ public class CrawlerThread extends Thread {
         }
         // ===========================================================================
         //
-        // Check robots text rules
+        // Fetch the content of the web page
         //
 
         // Fetch the current web page content
@@ -122,14 +125,14 @@ public class CrawlerThread extends Thread {
             System.out.println("Empty HTML document returned : " + urlStr);
             return;
         }
-
         // ===========================================================================
         //
         // Process the current fetched web page
         //
 
-        WebPage page = WebPageParser.parse(doc);
-        extractOutLinks(page);
+
+        WebPage page = mWebPageParser.parse(doc);
+        enqueueOutLinks(page.outLinks);
         processWebPage(page, lastPage);
         Output.logVisitedURL(urlStr);
     }
@@ -173,10 +176,10 @@ public class CrawlerThread extends Thread {
      * and inserting them in the queue,
      * and indexing the web page in the database.
      *
-     * @param page the web page to process
+     * @param outLinks the web page out links to enqueue
      */
-    private void extractOutLinks(WebPage page) {
-        for (String urlStr : page.outLinks) {
+    private void enqueueOutLinks(List<String> outLinks) {
+        for (String urlStr : outLinks) {
             URL url = WebUtilities.getURL(urlStr);
             String baseUrlStr = WebUtilities.getBaseURL(url);
 

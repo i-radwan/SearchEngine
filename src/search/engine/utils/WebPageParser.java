@@ -16,11 +16,11 @@ public class WebPageParser {
     //
     // Static Member variables
     //
-    private static int sCurIdx;
-    private static StringBuilder sContent;
-    private static Map<String, List<Integer>> sWordPosMap;
-    private static Map<String, List<Integer>> sWordScoreMap;
-    private static Set<String> sOutLinks;
+    private int sCurIdx;
+    private StringBuilder sContent;
+    private Map<String, List<Integer>> sWordPosMap;
+    private Map<String, List<Integer>> sWordScoreMap;
+    private Set<String> sOutLinks;
 
 
     /**
@@ -30,7 +30,7 @@ public class WebPageParser {
      * @param doc a web page document to parse
      * @return a web page object constructed from the given document
      */
-    public static WebPage parse(Document doc) {
+    public WebPage parse(Document doc) {
         // Initializing variables
         sCurIdx = 0;
         sContent = new StringBuilder();
@@ -61,7 +61,7 @@ public class WebPageParser {
      *
      * @param doc web page raw content
      */
-    private static void extractOutLinks(Document doc) {
+    private void extractOutLinks(Document doc) {
         Elements links = doc.body().select("link[href], a[href]");
 
         for (Element element : links) {
@@ -81,7 +81,7 @@ public class WebPageParser {
      * @param cur         current node in the DFS
      * @param previousTag the parent node tag name
      */
-    private static void dfs(Node cur, String previousTag) {
+    private void dfs(Node cur, String previousTag) {
         // If its a text node then process its text
         if (cur instanceof TextNode) {
             TextNode node = (TextNode) cur;
@@ -112,7 +112,7 @@ public class WebPageParser {
      * @param str the string to process
      * @param tag the string tag
      */
-    private static void processText(String str, String tag) {
+    private void processText(String str, String tag) {
         if (str.isEmpty()) {
             return;
         }

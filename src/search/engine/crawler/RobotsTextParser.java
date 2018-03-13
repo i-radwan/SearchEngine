@@ -15,7 +15,7 @@ public class RobotsTextParser {
      * @param robotsTxt a list of strings of a robots text
      * @return the disallowed rules of the given user agent
      */
-    public static List<String> parseRobotsText(List<String> robotsTxt, String userAgent) {
+    public static List<String> parse(List<String> robotsTxt, String userAgent) {
         List<String> parsedRobotTxt = new ArrayList<>();
         String curUserAgent = null;
 

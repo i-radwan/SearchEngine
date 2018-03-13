@@ -2,23 +2,24 @@ package search.engine.crawler;
 
 import search.engine.utils.Constants;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.*;
 
 
 public class Input {
-    // TODO: change Scanner to BufferedReader as it is much more faster
 
     /**
      * Reads the URL seeds and fills the URLs queue and the visited URLs set.
      */
     public static void readSeed() {
         try {
-            Scanner file = new Scanner(new FileReader(Constants.SEED_FILE_NAME));
 
-            while (file.hasNextLine()) {
-                String url = file.nextLine();
+            BufferedReader file = new BufferedReader(new FileReader(Constants.SEED_FILE_NAME));
+
+            while (file.ready()) {
+                String url = file.readLine();
 
                 if (!CrawlerThread.sVisitedURLs.contains(url)) {
                     CrawlerThread.sURLsQueue.add(url);
@@ -29,6 +30,8 @@ public class Input {
             file.close();
         } catch (FileNotFoundException e) {
             System.out.println(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -42,6 +45,8 @@ public class Input {
             CrawlerThread.sURLsQueue.addAll(readURLs());
         } catch (FileNotFoundException e) {
             System.out.println(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -50,17 +55,15 @@ public class Input {
      *
      * @return set of visited URLs.
      */
-    private static Set<String> readVisitedURLs() throws FileNotFoundException {
+    private static Set<String> readVisitedURLs() throws Exception {
         Set<String> ret = new HashSet<>();
+        BufferedReader file = new BufferedReader(new FileReader(Constants.VISITED_URLS_FILE_NAME));
 
-        Scanner file = new Scanner(new FileReader(Constants.VISITED_URLS_FILE_NAME));
-
-        while (file.hasNextLine()) {
-            ret.add(file.nextLine());
+        while (file.ready()) {
+            ret.add(file.readLine());
         }
 
         file.close();
-
         return ret;
     }
 
@@ -69,13 +72,12 @@ public class Input {
      *
      * @return a list of URLs to be crawled
      */
-    private static List<String> readURLs() throws FileNotFoundException {
+    private static List<String> readURLs() throws Exception {
         List<String> ret = new ArrayList<>();
+        BufferedReader file = new BufferedReader(new FileReader(Constants.URLS_FILE_NAME));
 
-        Scanner file = new Scanner(new FileReader(Constants.URLS_FILE_NAME));
-
-        while (file.hasNextLine()) {
-            String url = file.nextLine();
+        while (file.ready()) {
+            String url = file.readLine();
 
             if (!CrawlerThread.sVisitedURLs.contains(url)) {
                 ret.add(url);
@@ -84,7 +86,6 @@ public class Input {
         }
 
         file.close();
-
         return ret;
     }
 }

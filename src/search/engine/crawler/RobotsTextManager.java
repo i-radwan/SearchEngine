@@ -27,7 +27,7 @@ public class RobotsTextManager {
         String baseURL = WebUtilities.getBaseURL(url);
 
         // Prepare robots text file of the given website
-        prepareRobotText(url, baseURL);
+        prepareRobotsText(url, baseURL);
 
         // Match the given URL with the disallowed rules
         boolean disallowed = RobotsTextParser.matchRules(
@@ -49,7 +49,7 @@ public class RobotsTextManager {
      * @param url     the web page URL object to prepare its robots text
      * @param baseURL the web page base URL string
      */
-    private void prepareRobotText(URL url, String baseURL) {
+    private void prepareRobotsText(URL url, String baseURL) {
         // Atomic insert & get from the map
         RobotsRules rules = mWebsiteRules.putIfAbsent(baseURL, new RobotsRules(false));
 
@@ -61,7 +61,7 @@ public class RobotsTextManager {
             updateRules(
                     baseURL,
                     // Parse robots text and extract only the disallowed rules of the current user agent
-                    RobotsTextParser.parseRobotsText(WebUtilities.fetchRobotsText(url), mUserAgent)
+                    RobotsTextParser.parse(WebUtilities.fetchRobotsText(url), mUserAgent)
             );
             return;
         }

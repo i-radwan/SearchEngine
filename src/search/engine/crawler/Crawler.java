@@ -15,7 +15,7 @@ public class Crawler {
     // Member variables
     //
     private List<Thread> mCrawlerThreads;
-    private RobotsTextManager mRobotManager;
+    private RobotsTextManager mRobotsTextManager;
     private Indexer mIndexer;
 
 
@@ -26,7 +26,7 @@ public class Crawler {
      */
     public Crawler(Indexer indexer) {
         mIndexer = indexer;
-        mRobotManager = new RobotsTextManager();
+        mRobotsTextManager = new RobotsTextManager();
     }
 
     /**
@@ -51,7 +51,7 @@ public class Crawler {
     }
 
     /**
-     * Read previous data of the last crawling run.
+     * Read the data of the last crawling run.
      */
     public void readPreviousData() {
         System.out.println("Reading previous run data...");
@@ -105,7 +105,7 @@ public class Crawler {
         mCrawlerThreads = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
-            mCrawlerThreads.add(new CrawlerThread(mRobotManager, mIndexer));
+            mCrawlerThreads.add(new CrawlerThread(mRobotsTextManager, mIndexer));
             mCrawlerThreads.get(i).setName(String.valueOf((i + 1)));
             mCrawlerThreads.get(i).start();
         }

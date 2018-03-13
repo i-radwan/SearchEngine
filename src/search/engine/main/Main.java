@@ -77,11 +77,13 @@ public class Main {
 
         Indexer indexer = new Indexer();
         Crawler crawler = new Crawler(indexer);
-        crawler.readPreviousData();
+        crawler.start(cnt);
 
-        while (true) {
-            crawler.start(cnt);
-        }
+//        crawler.readPreviousData();
+//
+//        while (true) {
+//            crawler.start(cnt);
+//        }
     }
 
     /**
@@ -137,7 +139,9 @@ public class Main {
     private static void testWebPageParse() throws IOException {
         Document doc = WebUtilities.fetchWebPage("http://codeforces.com/problemset/problem/950/B");
         System.out.println("Fetched");
-        WebPage page = WebPageParser.parse(doc);
+
+        WebPageParser parser = new WebPageParser();
+        WebPage page = parser.parse(doc);
 
         PrintWriter writer = new PrintWriter(new FileWriter("data/tmp.txt"));
 
