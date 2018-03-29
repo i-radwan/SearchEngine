@@ -20,23 +20,22 @@ public class WebPageParser {
     private StringBuilder sContent;
     private Map<String, List<Integer>> sWordPosMap;
     private Map<String, List<Integer>> sWordScoreMap;
-    private Set<String> sOutLinks;
 
 
     /**
      * Parses the given web page document and returns a {@code WebPage} object
      * with the parsed data.
      *
-     * @param doc a web page document to parse
+     * @param url the web page URL object
+     * @param doc the web page document to parse
      * @return a web page object constructed from the given document
      */
-    public WebPage parse(Document doc) {
+    public WebPage parse(URL url, Document doc) {
         // Initializing variables
         sCurIdx = 0;
         sContent = new StringBuilder();
         sWordPosMap = new HashMap<>();
         sWordScoreMap = new HashMap<>();
-        sOutLinks = new HashSet<>();
 
         // Parsing
         extractOutLinks(doc);
@@ -44,9 +43,7 @@ public class WebPageParser {
 
         // Assigning variables
         WebPage ret = new WebPage();
-        ret.url = WebUtilities.normalizeURL(WebUtilities.getURL(doc.baseUri()));
-        ret.outLinks = new ArrayList<>();
-        ret.outLinks.addAll(sOutLinks);
+        ret.url = WebUtilities.normalizeURL(url);
         ret.content = sContent.toString().trim();
         ret.wordsCount = sCurIdx;
         ret.wordPosMap = sWordPosMap;
@@ -61,17 +58,21 @@ public class WebPageParser {
      *
      * @param doc web page raw content
      */
-    private void extractOutLinks(Document doc) {
+    public static List<String> extractOutLinks(Document doc) {
+        Set<String> outLinks = new HashSet<>();
+
         Elements links = doc.body().select("link[href], a[href]");
 
         for (Element element : links) {
             String link = element.attr("abs:href");
             URL url = WebUtilities.getURL(link);
 
-            if (url != null && WebUtilities.validURL(link)) {
-                sOutLinks.add(WebUtilities.normalizeURL(url));
+            if (url != null && WebUtilities.crawlable(link)) {
+                outLinks.add(WebUtilities.normalizeURL(url));
             }
         }
+
+        return new ArrayList<>(outLinks);
     }
 
     /**

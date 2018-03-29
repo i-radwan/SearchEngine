@@ -106,7 +106,7 @@ public class Crawler {
 
         for (int i = 0; i < count; i++) {
             mCrawlerThreads.add(new CrawlerThread(mRobotsTextManager, mIndexer));
-            mCrawlerThreads.get(i).setName(String.valueOf((i + 1)));
+            mCrawlerThreads.get(i).setName("Crawler-Thread-" + String.valueOf(i + 1));
             mCrawlerThreads.get(i).start();
         }
     }

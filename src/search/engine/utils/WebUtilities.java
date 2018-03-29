@@ -1,12 +1,14 @@
 package search.engine.utils;
 
 import org.jsoup.Jsoup;
+import org.jsoup.UncheckedIOException;
 import org.jsoup.nodes.Document;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -108,6 +110,12 @@ public final class WebUtilities {
 
         try {
             ret = Jsoup.connect(url).get();
+        } catch (SocketTimeoutException e) {
+            System.out.println("Timeout Error while fetching " + url);
+        } catch (IOException e) {
+            System.out.println("IO Error while fetching " + url);
+        } catch (UncheckedIOException e) {
+            System.out.println("Unchecked IO Error while fetching " + url);
         } catch (Exception e) {
             //e.printStackTrace();
         }
@@ -116,12 +124,12 @@ public final class WebUtilities {
     }
 
     /**
-     * Returns true if the given URL is of valid type to be fetched.
+     * Returns true if the given URL is of valid type to be crawled.
      *
      * @param url a web page URL string to check
      * @return {@code true} if the given url is valid to be fetched, {@code false} otherwise
      */
-    public static boolean validURL(String url) {
+    public static boolean crawlable(String url) {
         return !url.isEmpty()
                 && !url.contains(".css")
                 && !url.contains(".jpg")

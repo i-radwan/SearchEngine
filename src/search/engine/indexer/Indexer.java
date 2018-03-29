@@ -7,9 +7,13 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import search.engine.crawler.Output;
 import search.engine.models.WebPage;
 import search.engine.utils.Constants;
+import search.engine.utils.Utilities;
+import search.engine.utils.WebPageParser;
 
+import java.net.URL;
 import java.util.*;
 
 import static com.mongodb.client.model.Filters.*;
@@ -89,11 +93,75 @@ public class Indexer {
     }
 
     /**
-     * Indexes the given web page in the search engine inverted database.
+     * Indexes the given web page document in the search engine inverted database asynchronously.
+     * Starts a new thread to parse and index the web page in the database.
+     *
+     * @param url      the web page URL object
+     * @param pageDoc  the web page raw content
+     * @param outLinks the web page out links
+     * @param prvPage  the previous version of the web page, retrieved from the database
+     */
+    public void indexWebPageAsync(URL url, org.jsoup.nodes.Document pageDoc, List<String> outLinks, WebPage prvPage) {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                indexWebPage(url, pageDoc, outLinks, prvPage);
+            }
+        });
+
+        t.setName("Indexer-Thread");
+        t.start();
+    }
+
+    /**
+     * Indexes the given web page document in the search engine inverted database.
+     *
+     * @param url      the web page URL object
+     * @param pageDoc  the web page raw content
+     * @param outLinks the web page out links
+     * @param prvPage  the previous version of the web page, retrieved from the database
+     */
+    private void indexWebPage(URL url, org.jsoup.nodes.Document pageDoc, List<String> outLinks, WebPage prvPage) {
+        // Parse the raw web page document
+        WebPageParser parser = new WebPageParser();
+        WebPage curPage = parser.parse(url, pageDoc);
+
+        curPage.outLinks = outLinks;
+        curPage.rank = prvPage.rank;
+        curPage.fetchSkipLimit = prvPage.fetchSkipLimit;
+        curPage.fetchSkipCount = 0;
+
+        // Compare the newly fetched page with its previous version from the database.
+        if (curPage.wordsCount == prvPage.wordsCount
+                && curPage.content.equals(prvPage.content)
+                && curPage.wordPosMap.equals(prvPage.wordPosMap)
+                && curPage.wordScoreMap.equals(prvPage.wordScoreMap)) {
+
+            // If no changes happens to the content of the web page then
+            // increase the skip fetch limit and return
+            curPage.fetchSkipLimit = Math.min(Constants.MAX_FETCH_SKIP_LIMIT, prvPage.fetchSkipLimit * 2);
+            updateFetchSkipLimit(prvPage.id, curPage.fetchSkipLimit);
+
+            Output.log("Same page content  : " + curPage.url);
+            System.out.println("Same page content  : " + curPage.url);
+            return;
+        }
+
+        // Insert new content in the database
+        updateWebPage(curPage);
+        updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
+
+        //
+        Output.log("Indexed : " + curPage.url);
+        System.out.println("Indexed: " + curPage.url);
+    }
+
+    /**
+     * Inserts the given web page in the search engine inverted database.
      *
      * @param page a web page to be indexed or updated
      */
-    public void indexWebPage(WebPage page) {
+    public void updateWebPage(WebPage page) {
         // Filter document by web page url
         Document filter = new Document(Constants.FIELD_URL, page.url);
         // Create the web page document to be indexed
@@ -113,11 +181,11 @@ public class Indexer {
      * Increments the fetch skip count of the given web page.
      * Used to mange the frequency of fetching the content of the web page.
      *
-     * @param url the web page url string to update
+     * @param id the web page id to update
      */
-    public void incrementFetchSkipCount(String url) {
+    public void incrementFetchSkipCount(ObjectId id) {
         mWebPagesCollection.updateOne(
-                eq(Constants.FIELD_URL, url),
+                eq(Constants.FIELD_ID, id),
                 inc(Constants.FILED_FETCH_SKIP_COUNT, 1)
         );
     }
@@ -127,11 +195,11 @@ public class Indexer {
      * resets the fetch skip count.
      * Used to mange the frequency of fetching the content of the web page.
      *
-     * @param url the web page url string to update
+     * @param id the web page id to update
      */
-    public void updateFetchSkipLimit(String url, int limit) {
+    public void updateFetchSkipLimit(ObjectId id, int limit) {
         mWebPagesCollection.updateOne(
-                eq(Constants.FIELD_URL, url),
+                eq(Constants.FIELD_ID, id),
                 combine(
                         set(Constants.FILED_FETCH_SKIP_LIMIT, limit),
                         set(Constants.FILED_FETCH_SKIP_COUNT, 0)
@@ -142,10 +210,10 @@ public class Indexer {
     /**
      * Removes the given web page from the indexer.
      *
-     * @param url the web page url string to remove
+     * @param id the web page id to remove
      */
-    public void removeWebPage(String url) {
-        mWebPagesCollection.deleteOne(eq(Constants.FIELD_URL, url));
+    public void removeWebPage(ObjectId id) {
+        mWebPagesCollection.deleteOne(eq(Constants.FIELD_ID, id));
     }
 
     /**

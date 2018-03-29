@@ -15,7 +15,6 @@ public class Input {
      */
     public static void readSeed() {
         try {
-
             BufferedReader file = new BufferedReader(new FileReader(Constants.SEED_FILE_NAME));
 
             while (file.ready()) {

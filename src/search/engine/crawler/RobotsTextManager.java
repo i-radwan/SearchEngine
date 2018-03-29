@@ -74,9 +74,9 @@ public class RobotsTextManager {
             while (!rules.status) {
                 // The robots.txt is still not ready
                 try {
-                    Output.log("Waiting for url : " + baseURL);
+                    Output.log("Waiting for robots.txt : " + baseURL);
                     rules.wait();
-                    Output.log("Woke up and " + (rules.status ? "did" : "didn't") + " find url : " + baseURL);
+                    Output.log("Woke up and " + (rules.status ? "did" : "didn't") + " find robots.txt : " + baseURL);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -103,7 +103,7 @@ public class RobotsTextManager {
             robotsRules.rules = rules;
             robotsRules.status = true;
             robotsRules.notifyAll();
-            Output.log("Notifying for url : " + baseURL);
+            Output.log("Notifying for robots.txt : " + baseURL);
         }
     }
 }
