@@ -12,6 +12,7 @@ import search.engine.utils.WebUtilities;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +100,35 @@ public class Main {
     }
 
     private static void testIndexer() {
+        Indexer indexer = new Indexer();
 
+        try {
+            System.out.println("Fetching web page...");
+
+            URL url = new URL("http://codeforces.com/problemset/");
+            Document doc = WebUtilities.fetchWebPage(url.toString());
+
+            System.out.println("Fetched!");
+
+            WebPageParser parser = new WebPageParser();
+            WebPage page = parser.parse(url, doc);
+
+            Map<String, List<String>> dictionary = Utilities.getWordsDictionary(page.wordPosMap.keySet());
+
+            for (int i = 0; i < 20; ++i) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        System.out.println(Thread.currentThread().getName() + " starting...");
+                        indexer.updateWordsDictionary(dictionary);
+                        System.out.println(Thread.currentThread().getName() + " finished!");
+                    }
+                }).start();
+            }
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void testRanker() {

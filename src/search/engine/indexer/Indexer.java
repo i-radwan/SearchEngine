@@ -34,6 +34,11 @@ public class Indexer {
      */
     private MongoCollection<Document> mDictionaryCollection;
 
+    /**
+     * Lock object used to lock bulk upsertions.
+     */
+    private final Object mLock = new Object();
+
     //
     // Member methods
     //
@@ -107,7 +112,7 @@ public class Indexer {
             }
         });
 
-        t.setName("Indexer-Thread");
+        t.setName("Indexer-Thread\t");
         t.start();
     }
 
@@ -240,7 +245,11 @@ public class Indexer {
             return;
         }
 
-        mDictionaryCollection.bulkWrite(operations);
+        synchronized (mLock) {
+            // Synchronization needed due to a MongoDB issue reported here:
+            // https://jira.mongodb.org/browse/SERVER-14322
+            mDictionaryCollection.bulkWrite(operations);
+        }
     }
 
     /**

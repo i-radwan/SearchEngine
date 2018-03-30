@@ -22,7 +22,7 @@ public class CrawlerThread extends Thread {
     public static ConcurrentSkipListSet<String> sVisitedURLs = new ConcurrentSkipListSet<>();
     public static ConcurrentHashMap<String, Integer> sBaseURLVisitedCnt = new ConcurrentHashMap<>();
 
-    private static Object sLock = new Object();
+    private static final Object sLock = new Object();
 
     //
     // Member variables
