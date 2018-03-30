@@ -15,8 +15,11 @@ public class URLNormalizer {
      * [3]  IP address to domain name.
      * [4]  Remove default port.
      * [5]  Remove "/index.html"
-     * [6] https -> http
-     * [7] Remove "www."
+     * [6]  https -> http
+     * [7]  Remove "www."
+     * [8]  Sorting
+     * [9]  Remove empty
+     * [10] Capitalize percent-encoded octets (e.g. %XX)
      *
      * @param url a web page URL object
      * @return normalized URL string representing
@@ -26,7 +29,8 @@ public class URLNormalizer {
                 obtainProtocol(url.getProtocol()) + "://" +
                         obtainDomainName(url.getHost()) +
                         obtainPort(url.getPort()) +
-                        obtainPath(url.getPath());
+                        obtainPath(url.getPath()) +
+                        obtainQueryParameters(url.getQuery());
     }
 
     /**
@@ -103,5 +107,26 @@ public class URLNormalizer {
                 .replace("index.htm", "")
                 .replace("index.php", "")
                 .toLowerCase();
+    }
+
+    /**
+     * Obtain query parameter by applying:
+     * [1] Sorting
+     * [2] Remove empty
+     * [3] Capitalize percent-encoded octets (e.g. %XX)
+     *
+     * @param URLQueryParameters the original URL query parameters
+     * @return the fixed query parameters
+     */
+    private static String obtainQueryParameters(String URLQueryParameters) {
+        // ToDo
+        // Separate
+        // Remove empty
+        // Sort
+        // To lower
+        // Capitalize %XX
+        // if empty result remove the "?"
+        // Join
+        return "?" + URLQueryParameters;
     }
 }
