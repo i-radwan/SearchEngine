@@ -20,19 +20,25 @@ public class PageRank {
     private ArrayList<Double> pagesRank;
 
     /* The dumping factor */
-    private final Double alpha = 0.85;
+    private final Double ALPHA = 0.85;
 
     /* The maximum number iterations */
-    private final Integer maxIterations = 100;
+    private final Integer MAX_ITERATIONS = 100;
 
-    /* Add an arc to the graph */
+    /**
+     * Add an arc to the graph
+     * @param from a node
+     * @param to another node
+     */
     private void addArc(int from, int to) {
         if (inList.containsKey(to))
             inList.get(to).add(from);
         outDegrees.set(from, outDegrees.get(from) + 1);
     }
 
-    /* Initialize all vectors */
+    /**
+     * Initialize all vectors
+     */
     private void initializeLists() {
         outDegrees = new ArrayList<Integer>();
         pagesRank = new ArrayList<Double>();
@@ -48,7 +54,10 @@ public class PageRank {
         }
     }
 
-    /* Read edges list from a file */
+    /**
+     * Read edges list from a file
+     * @param filePath
+     */
     private void readFile(String filePath) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(filePath));
@@ -74,11 +83,13 @@ public class PageRank {
         }
     }
 
-    /* PageRank calculations */
+    /**
+     * PageRank calculations
+     */
     private void rankPages() {
         Double danglingSum, pagesRankSum = 1.0;
 
-        for (int iteration = 0; iteration < maxIterations; iteration++) {
+        for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
             danglingSum = 0.0;
 
             // Normalize the PR(i) needed for the power method calculations
@@ -94,8 +105,8 @@ public class PageRank {
 
             pagesRankSum = 0.0;
 
-            Double aPage = alpha * danglingSum * (1.0 / pagesCount); // Same for all pages
-            Double oneProb = (1.0 - alpha) * (1.0 / pagesCount) * 1.0; // Same for all pages
+            Double aPage = ALPHA * danglingSum * (1.0 / pagesCount); // Same for all pages
+            Double oneProb = (1.0 - ALPHA) * (1.0 / pagesCount) * 1.0; // Same for all pages
 
             // Loop over all pages
             ArrayList<Double> newPagesRank = new ArrayList<Double>();
@@ -107,7 +118,7 @@ public class PageRank {
                     for (Integer from : inList.get(page)) {
                         hPage += (1.0 * pagesRank.get(from) / (1.0 * outDegrees.get(from)));
                     }
-                    hPage *= alpha; // Multiply by dumping factor.
+                    hPage *= ALPHA; // Multiply by dumping factor.
                 }
 
                 newPagesRank.add(hPage + aPage + oneProb);
@@ -121,7 +132,9 @@ public class PageRank {
         }
     }
 
-    /* Print page ranks */
+    /**
+     * Print page ranks on console
+     */
     private void printPR() {
         Double checkSum = 0.0;
         for (Integer page = 0; page < pagesCount; page++) {
@@ -131,9 +144,11 @@ public class PageRank {
         System.out.println("checkSum = " + checkSum.toString());
     }
 
-    /* Save page ranks to a file*/
+    /**
+     * Save page ranks to the output pageRanks.txt file
+     */
     private void savePR() {
-        try (PrintWriter out = new PrintWriter("Output/pageranks.txt")) {
+        try (PrintWriter out = new PrintWriter("Output/pageRanks.txt")) {
             for (Integer page = 0; page < pagesCount; page++) {
                 out.println(page.toString() + " = " + pagesRank.get(page));
             }
