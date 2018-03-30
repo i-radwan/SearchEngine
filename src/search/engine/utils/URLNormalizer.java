@@ -1,7 +1,5 @@
 package search.engine.utils;
 
-import spark.utils.StringUtils;
-
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -112,10 +110,6 @@ public class URLNormalizer {
      * @return the fixed path
      */
     private static String obtainPath(String path) {
-        if (!path.endsWith("/")) {
-            path = path + "/";
-        }
-
         return capitalizePercentEncodedOctets(
                 path
                         .replace("index.html", "")
