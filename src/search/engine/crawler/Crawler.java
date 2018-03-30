@@ -3,7 +3,6 @@ package search.engine.crawler;
 import search.engine.indexer.Indexer;
 import search.engine.utils.WebUtilities;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,7 +54,7 @@ public class Crawler {
      */
     public void readPreviousData() {
         System.out.println("Reading previous run data...");
-        Input.readPreviousRunData();
+        Input.readPreviousData();
         System.out.println(CrawlerThread.sURLsQueue.size() + " URL(s) has been added to the queue");
     }
 
@@ -69,21 +68,18 @@ public class Crawler {
         CrawlerThread.sBaseURLVisitedCnt = new ConcurrentHashMap<>();
 
         // Calculate current counts
-        for (String link : CrawlerThread.sVisitedURLs) {
-            URL url = WebUtilities.getURL(link);
+        for (String url : CrawlerThread.sVisitedURLs) {
+            String baseURL = WebUtilities.getHostName(url);
 
-            if (url == null) {
+            if (baseURL == null) {
                 continue;
             }
 
-            String baseURL = WebUtilities.getBaseURL(url);
-
+            CrawlerThread.sWebPagesCnt++;
             CrawlerThread.sBaseURLVisitedCnt.put(
                     baseURL,
                     CrawlerThread.sBaseURLVisitedCnt.getOrDefault(baseURL, 0) + 1
             );
-
-            CrawlerThread.sWebPagesCnt++;
         }
     }
 
@@ -106,7 +102,7 @@ public class Crawler {
 
         for (int i = 0; i < count; i++) {
             mCrawlerThreads.add(new CrawlerThread(mRobotsTextManager, mIndexer));
-            mCrawlerThreads.get(i).setName(String.valueOf((i + 1)));
+            mCrawlerThreads.get(i).setName("Crawler-Thread-" + String.valueOf(i + 1));
             mCrawlerThreads.get(i).start();
         }
     }

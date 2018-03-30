@@ -35,7 +35,7 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 10000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 50;
+    public static final int MAX_WEB_PAGES_COUNT = 100;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
 
     // ================================================================================================
@@ -97,7 +97,7 @@ public class Constants {
     //
 
     public static final String[] STOP_WORDS = {
-            "I", "a", "about", "an", "are", "as", "at", "be", "by", "com", "for",
+            "i", "a", "about", "an", "are", "as", "at", "be", "by", "com", "for",
             "from", "how", "in", "is", "it", "of", "on", "or", "that", "the",
             "this", "to", "was", "what", "when", "where", "who", "will",
             "with", "the", "www", "can", "and"

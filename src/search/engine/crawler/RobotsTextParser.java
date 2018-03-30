@@ -21,6 +21,9 @@ public class RobotsTextParser {
 
         // Loop on each line of the file
         for (String line : robotsTxt) {
+            // Change the robots text line to lower case
+            line = line.toLowerCase();
+
             // If it starts with "user-agent" then it's a new user agent
             if (line.startsWith("user-agent")) {
                 curUserAgent = line.split(":")[1].trim();

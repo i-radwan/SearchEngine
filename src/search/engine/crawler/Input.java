@@ -15,7 +15,6 @@ public class Input {
      */
     public static void readSeed() {
         try {
-
             BufferedReader file = new BufferedReader(new FileReader(Constants.SEED_FILE_NAME));
 
             while (file.ready()) {
@@ -39,7 +38,7 @@ public class Input {
      * Reads the data of the previous runs in case of interruption.
      * Used to continue from the same state as before.
      */
-    public static void readPreviousRunData() {
+    public static void readPreviousData() {
         try {
             CrawlerThread.sVisitedURLs.addAll(readVisitedURLs());
             CrawlerThread.sURLsQueue.addAll(readURLs());

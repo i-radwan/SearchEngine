@@ -3,16 +3,21 @@ package search.engine.main;
 import org.jsoup.nodes.Document;
 import search.engine.crawler.Crawler;
 import search.engine.indexer.Indexer;
-import search.engine.models.WebPage;
+import search.engine.indexer.WebPage;
+import search.engine.indexer.WebPageParser;
 import search.engine.server.Server;
+import search.engine.utils.URLNormalizer;
 import search.engine.utils.Utilities;
-import search.engine.utils.WebPageParser;
 import search.engine.utils.WebUtilities;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 
 
 public class Main {
@@ -98,33 +103,33 @@ public class Main {
     private static void testIndexer() {
         Indexer indexer = new Indexer();
 
-        //
-        // Testing web graph and updating ranks
-        //
-        Map<String, WebPage> map = indexer.getWebGraph();
-        Collection<WebPage> collection = new ArrayList<>(map.values());
-        for (WebPage page : collection) {
-            page.rank = 9;
-            System.out.println(page.toDocument());
+        try {
+            System.out.println("Fetching web page...");
+
+            URL url = new URL("http://codeforces.com/problemset/");
+            Document doc = WebUtilities.fetchWebPage(url.toString());
+
+            System.out.println("Fetched!");
+
+            WebPageParser parser = new WebPageParser();
+            WebPage page = parser.parse(url, doc);
+
+            Map<String, List<String>> dictionary = Utilities.getWordsDictionary(page.wordPosMap.keySet());
+
+            for (int i = 0; i < 20; ++i) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        System.out.println(Thread.currentThread().getName() + " starting...");
+                        indexer.updateWordsDictionary(dictionary);
+                        System.out.println(Thread.currentThread().getName() + " finished!");
+                    }
+                }).start();
+            }
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
         }
-        indexer.updatePageRanks(map.values());
-
-        //
-        // Testing search
-        //
-        List<WebPage> list = indexer.searchByPhrase(Arrays.asList("hello", "world"));
-        for (WebPage page : list) {
-            System.out.println(page.toDocument());
-        }
-
-        //
-        // Testing dictionary
-        //
-
-        Map<String, List<String>> dictionary = new HashMap<>();
-        dictionary.put("comput", Arrays.asList("computer", "computing", "computers", "hehe"));
-        indexer.updateWordsDictionary(dictionary);
-        System.out.println(indexer.getWordsDictionary(Arrays.asList("comput", "archiv")));
     }
 
     private static void testRanker() {
@@ -137,11 +142,12 @@ public class Main {
     }
 
     private static void testWebPageParse() throws IOException {
-        Document doc = WebUtilities.fetchWebPage("http://codeforces.com/problemset/problem/950/B");
+        URL url = new URL("http://codeforces.com/problemset/problem/950/B");
+        Document doc = WebUtilities.fetchWebPage(url.toString());
         System.out.println("Fetched");
 
         WebPageParser parser = new WebPageParser();
-        WebPage page = parser.parse(doc);
+        WebPage page = parser.parse(url, doc);
 
         PrintWriter writer = new PrintWriter(new FileWriter("data/tmp.txt"));
 
@@ -155,8 +161,8 @@ public class Main {
         //
         writer.printf("Out Links:\n");
         int idx = 0;
-        for (String url : page.outLinks) {
-            writer.printf("\t%-3d: %s\n", idx++, url);
+        for (String link : page.outLinks) {
+            writer.printf("\t%-3d: %s\n", idx++, link);
         }
         writer.printf("\n");
 
