@@ -1,8 +1,15 @@
 package search.engine.utils;
 
+import spark.utils.StringUtils;
+
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class URLNormalizer {
@@ -63,7 +70,7 @@ public class URLNormalizer {
 
         // Check for www, www2, www3, ...etc -> Then remove them
         if (domainName.length() > 3 && domainName.startsWith("www")) {
-            domainName = domainName.substring(domainName.indexOf(".") + 1);
+            domainName = domainName.substring(domainName.indexOf(".") + 1, domainName.length());
         }
 
         return domainName;
@@ -105,18 +112,23 @@ public class URLNormalizer {
      * @return the fixed path
      */
     private static String obtainPath(String path) {
-        return path
-                .replace("index.html", "")
-                .replace("index.htm", "")
-                .replace("index.php", "")
-                .toLowerCase();
+        if (!path.endsWith("/")) {
+            path = path + "/";
+        }
+
+        return capitalizePercentEncodedOctets(
+                path
+                        .replace("index.html", "")
+                        .replace("index.htm", "")
+                        .replace("index.php", "")
+                        .toLowerCase());
     }
 
     /**
-     * Obtains query parameter by applying:
+     * Obtains query parameter by apply:
      * [1] Sorting
-     * [2] Remove empty
-     * [3] Capitalize percent-encoded octets (e.g. %XX)
+     * [2] Removing empty
+     * [3] Capitalizing percent-encoded octets (e.g. %XX)
      *
      * @param queryParams the original URL query parameters
      * @return the fixed query parameters
@@ -126,14 +138,38 @@ public class URLNormalizer {
             return "";
         }
 
-        // ToDo
-        // Separate
-        // Remove empty
-        // Sort
         // To lower
+        queryParams = queryParams.toLowerCase();
+
+        // Split queries
+        ArrayList<String> queries = new ArrayList<>(Arrays.asList(queryParams.split("&")));
+
+        // Remove empty queries
+        queries.removeIf(q -> q.endsWith("=") && q.chars().filter(ch -> ch == '=').count() == 1);
+
+        // Sort queries
+        Collections.sort(queries);
+
+        return capitalizePercentEncodedOctets(queries.isEmpty() ? "" : ("?" + String.join("&", queries)));
+    }
+
+    /**
+     * Capitalize percent encoded octets (e.g. %3A)
+     *
+     * @param s the input string
+     * @return the capitalized string
+     */
+    private static String capitalizePercentEncodedOctets(String s) {
         // Capitalize %XX
-        // if empty result remove the "?"
-        // Join
-        return "?" + queryParams;
+        Pattern pattern = Pattern.compile("%[0-9a-z]{2}");
+        Matcher matcher = pattern.matcher(s);
+
+        // Check all occurrences
+        while (matcher.find()) {
+            String substring = s.substring(matcher.start(), matcher.end());
+            s = s.replace(substring, substring.toUpperCase());
+        }
+
+        return s;
     }
 }
