@@ -24,9 +24,9 @@ public class URLNormalizer {
     public static String normalizeURL(URL url) {
         return
                 obtainProtocol(url.getProtocol()) + "://" +
-                obtainDomainName(url.getHost()) +
-                obtainPort(url.getPort()) +
-                obtainPath(url.getPath());
+                        obtainDomainName(url.getHost()) +
+                        obtainPort(url.getPort()) +
+                        obtainPath(url.getPath());
     }
 
     /**
@@ -65,7 +65,7 @@ public class URLNormalizer {
      * @return the fixed protocol
      */
     private static String obtainProtocol(String URLProtocol) {
-        return (URLProtocol.equals("https") ? "http" : URLProtocol).toLowerCase();
+        return URLProtocol.replace("https", "http").toLowerCase();
     }
 
     /**
@@ -83,7 +83,7 @@ public class URLNormalizer {
         }
 
         // Check for www, www2, www3, ...etc -> Then remove them
-        if (domainName.length() > 3 && domainName.substring(0, 3).equals("www")) {
+        if (domainName.length() > 3 && domainName.startsWith("www")) {
             domainName = domainName.substring(domainName.indexOf(".") + 1, domainName.length());
         }
 
@@ -98,14 +98,10 @@ public class URLNormalizer {
      * @return the fixed path
      */
     private static String obtainPath(String URLPath) {
-        String path = URLPath.toLowerCase();
-
-        if (path.endsWith("index.html")) {
-            path = path.substring(0, path.length() - ("index.html").length());
-        } else if (path.endsWith("index.htm")) {
-            path = path.substring(0, path.length() - ("index.htm").length());
-        }
-
-        return path;
+        return URLPath
+                .replace("index.html", "")
+                .replace("index.htm", "")
+                .replace("index.php", "")
+                .toLowerCase();
     }
 }
