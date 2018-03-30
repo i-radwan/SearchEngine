@@ -40,6 +40,8 @@ public class Main {
 
             choice = scanner.nextInt();
 
+            long startTime = System.nanoTime();
+
             switch (choice) {
                 case 1:
                     startCrawler();
@@ -67,6 +69,11 @@ public class Main {
                     choice = -1;
                     break;
             }
+
+            long endTime = System.nanoTime();
+            long secs = (endTime - startTime) / 1000000000;
+
+            System.out.printf("Elapsed Time: %02d:%02d seconds\n", secs / 60, secs % 60);
         }
 
         scanner.close();
@@ -132,7 +139,15 @@ public class Main {
     }
 
     private static void testRanker() {
+        try {
+            URL url = new URL("http://linkedin.com");
 
+            System.out.println(WebUtilities.fetchRobotsText(url));
+
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private static void testQueryProcessor() {
