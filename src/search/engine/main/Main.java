@@ -6,6 +6,7 @@ import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.indexer.WebPageParser;
 import search.engine.server.Server;
+import search.engine.utils.URLNormalizer;
 import search.engine.utils.Utilities;
 import search.engine.utils.WebUtilities;
 
@@ -24,6 +25,10 @@ public class Main {
     private static Scanner scanner;
 
     public static void main(String[] args) throws IOException {
+        System.out.println(URLNormalizer.normalize(new URL("https://www.google.com/?q=asd&sort=asc&a=1%2A")));
+        System.out.println(URLNormalizer.normalize(new URL("https://www.google.com/?q=asd&sort=")));
+        System.out.println(URLNormalizer.normalize(new URL("https://www.google.com/?q=&sort=asc")));
+        System.out.println(URLNormalizer.normalize(new URL("https://www.google2.com/?q=&sort=")));
         scanner = new Scanner(System.in);
 
         int choice = -1;

@@ -1,8 +1,15 @@
 package search.engine.utils;
 
+import spark.utils.StringUtils;
+
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class URLNormalizer {
@@ -130,14 +137,28 @@ public class URLNormalizer {
             return "";
         }
 
-        // ToDo
-        // Separate
-        // Remove empty
-        // Sort
         // To lower
+        queryParams = queryParams.toLowerCase();
+
         // Capitalize %XX
-        // if empty result remove the "?"
-        // Join
-        return "?" + queryParams;
+        Pattern pattern = Pattern.compile("%[0-9a-z]{2}");
+        Matcher matcher = pattern.matcher(queryParams);
+
+        // Check all occurrences
+        while (matcher.find()) {
+            String substring = queryParams.substring(matcher.start(), matcher.end());
+            queryParams = queryParams.replace(substring, substring.toUpperCase());
+        }
+
+        // Split queries
+        ArrayList<String> queries = new ArrayList<>(Arrays.asList(queryParams.split("&")));
+
+        // Remove empty queries
+        queries.removeIf(q -> q.endsWith("=") && q.chars().filter(ch -> ch == '=').count() == 1);
+
+        // Sort queries
+        Collections.sort(queries);
+
+        return (queries.isEmpty() ? "" : ("?" + String.join("&", queries)));
     }
 }
