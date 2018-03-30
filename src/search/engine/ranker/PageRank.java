@@ -82,7 +82,7 @@ public class PageRank {
             danglingSum = 0.0;
 
             // Normalize the PR(i) needed for the power method calculations
-            if (iteration > 0)
+            if (iteration > 0) {
                 for (int page = 0; page < pagesCount; page++) {
                     Double rank = pagesRank.get(page) * 1.0 / pagesRankSum;
                     pagesRank.set(page, rank);
@@ -90,6 +90,7 @@ public class PageRank {
                         danglingSum += rank;
                     }
                 }
+            }
 
             pagesRankSum = 0.0;
 
@@ -97,6 +98,7 @@ public class PageRank {
             Double oneProb = (1.0 - alpha) * (1.0 / pagesCount) * 1.0; // Same for all pages
 
             // Loop over all pages
+            ArrayList<Double> newPagesRank = new ArrayList<Double>();
             for (int page = 0; page < pagesCount; page++) {
 
                 Double hPage = 0.0;
@@ -108,8 +110,13 @@ public class PageRank {
                     hPage *= alpha; // Multiply by dumping factor.
                 }
 
-                pagesRank.set(page, hPage + aPage + oneProb);
-                pagesRankSum += hPage + aPage + oneProb;
+                newPagesRank.add(hPage + aPage + oneProb);
+            }
+
+            // Update new ranks
+            for (int page = 0; page < pagesCount; page++) {
+                pagesRank.set(page, newPagesRank.get(page));
+                pagesRankSum += newPagesRank.get(page);
             }
         }
     }
