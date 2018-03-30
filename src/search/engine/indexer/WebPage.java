@@ -1,4 +1,4 @@
-package search.engine.models;
+package search.engine.indexer;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;

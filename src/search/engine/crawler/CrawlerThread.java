@@ -2,9 +2,9 @@ package search.engine.crawler;
 
 import org.jsoup.nodes.Document;
 import search.engine.indexer.Indexer;
-import search.engine.models.WebPage;
+import search.engine.indexer.WebPage;
+import search.engine.indexer.WebPageParser;
 import search.engine.utils.Constants;
-import search.engine.utils.WebPageParser;
 import search.engine.utils.WebUtilities;
 
 import java.net.URL;
@@ -45,23 +45,28 @@ public class CrawlerThread extends Thread {
     /**
      * Crawler main function.
      * As long as there exists URLs to crawl, the function would be
-     * running getting documents and new URLs.
+     * running fetching web page documents and adding new URLs.
      */
     @Override
     public void run() {
         System.out.println("Crawler " + this.getName() + " started");
 
         while (true) {
-            // Pop the first URL in the queue
-            URL curUrl = getNextURL();
+            try {
+                // Pop the first URL in the queue
+                String url = sURLsQueue.poll(Constants.MAX_POLL_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
 
-            // If no URL was found in the queue then break
-            if (curUrl == null) {
-                break;
+                // If no URL was returned then exit
+                if (url == null) {
+                    break;
+                }
+
+                // Start crawling the current web page
+                crawl(new URL(url));
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-            // Start crawling the current web page
-            crawl(curUrl);
         }
 
         System.out.println("Crawler " + this.getName() + " is exiting...");
@@ -75,7 +80,7 @@ public class CrawlerThread extends Thread {
     private void crawl(URL url) {
         // Get URL string and base URL string for further uses
         String urlStr = url.toString();
-        String baseUrlStr = WebUtilities.getBaseURL(url);
+        String baseUrlStr = url.getHost();
 
         // ===========================================================================
         //
@@ -140,45 +145,21 @@ public class CrawlerThread extends Thread {
     }
 
     /**
-     * Processes the given HTML document by extracting its out links
-     * and inserting them in the queue,
-     * and indexing the web page in the database.
+     * Enqueues the given list of links into the crawlers shared queue.
      *
      * @param outLinks the web page out links to enqueue
      */
     private void enqueueOutLinks(List<String> outLinks) {
-        for (String urlStr : outLinks) {
-            URL url = WebUtilities.getURL(urlStr);
-            String baseUrlStr = WebUtilities.getBaseURL(url);
+        for (String url : outLinks) {
+            String baseURL = WebUtilities.getHostName(url);
 
-            // Lock the arrays and insert in them
+            // Lock the resources and enqueue the link
             synchronized (sLock) {
-                if (crawlable(urlStr, baseUrlStr)) {
-                    addURL(urlStr, baseUrlStr);
+                if (crawlable(url, baseURL)) {
+                    addURL(url, baseURL);
                 }
-                //else {
-                //    Output.log("Skipped : " + urlStr);
-                //}
             }
         }
-    }
-
-    /**
-     * Gets the front URL of the queue and returns it.
-     * Throws an exception if it couldn't poll any URLs in {@code MAX_POLL_WAIT_TIME_MS} millis.
-     *
-     * @return the front url string of the queue
-     */
-    private URL getNextURL() {
-        String url = "";
-
-        try {
-            url = sURLsQueue.poll(Constants.MAX_POLL_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
-            Output.log(e.getMessage());
-        }
-
-        return WebUtilities.getURL(url);
     }
 
     /**

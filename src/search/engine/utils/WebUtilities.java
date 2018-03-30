@@ -20,7 +20,7 @@ public final class WebUtilities {
      * Returns a URL object from the given URL string.
      *
      * @param url a web page URL string
-     * @return URL object representing the given string, or null not valid.
+     * @return URL object representing the given string, or null if invalid URL was given
      */
     public static URL getURL(String url) {
         URL ret = null;
@@ -35,27 +35,20 @@ public final class WebUtilities {
     }
 
     /**
-     * Returns the base URL string of the given web page URL object.
+     * Returns the host name of the given web page URL string.
      *
-     * @param url a web page URL object
-     * @return string representing the base address
+     * @param urlStr a web page URL string
+     * @return string representing the base address, or null if invalid URL was given
      */
-    public static String getBaseURL(URL url) {
-        //return string containing the base url
-        return url.getProtocol() + "://" + url.getHost();
-    }
+    public static String getHostName(String urlStr) {
+        try {
+            URL url = new URL(urlStr);
+            return url.getHost();
+        } catch (MalformedURLException e) {
+            //e.printStackTrace();
+        }
 
-    /**
-     * Returns the robots text URL of the given web page URL object.
-     *
-     * @param url a web page URL object
-     * @return string representing the robots text URL.
-     * <p>
-     * (i.e base_address/robots.txt)
-     */
-    public static URL getRobotsTextURL(URL url) {
-        String baseUrl = getBaseURL(url);
-        return getURL(baseUrl + "/robots.txt");
+        return null;
     }
 
     /**
@@ -66,13 +59,13 @@ public final class WebUtilities {
      * @return list of strings representing the robots text of the given web page
      */
     public static List<String> fetchRobotsText(URL url) {
-        // Get web page robots text url
-        url = getRobotsTextURL(url);
-
         // List of lines to hold robots.txt
         List<String> ret = new ArrayList<>();
 
         try {
+            // Get web page robots text url
+            url = new URL(url.getProtocol() + "://" + url.getHost() + "/robots.txt");
+
             //opens the robots.txt file as a buffered stream and start reading line by line.
             BufferedReader inp = new BufferedReader(new InputStreamReader(url.openStream()));
             String line;
@@ -100,11 +93,11 @@ public final class WebUtilities {
         try {
             ret = Jsoup.connect(url).get();
         } catch (SocketTimeoutException e) {
-            System.out.println("Timeout Error while fetching " + url);
+            //System.out.println("Timeout Error while fetching " + url);
         } catch (IOException e) {
-            System.out.println("IO Error while fetching " + url);
+            //System.out.println("IO Error while fetching " + url);
         } catch (UncheckedIOException e) {
-            System.out.println("Unchecked IO Error while fetching " + url);
+            //System.out.println("Unchecked IO Error while fetching " + url);
         } catch (Exception e) {
             //e.printStackTrace();
         }

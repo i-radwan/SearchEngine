@@ -1,11 +1,14 @@
-package search.engine.utils;
+package search.engine.indexer;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import search.engine.models.WebPage;
+import search.engine.utils.Constants;
+import search.engine.utils.URLNormalizer;
+import search.engine.utils.Utilities;
+import search.engine.utils.WebUtilities;
 
 import java.net.URL;
 import java.util.*;
@@ -43,7 +46,7 @@ public class WebPageParser {
 
         // Assigning variables
         WebPage ret = new WebPage();
-        ret.url = (URLNormalizer.normalizeURL(url));
+        ret.url = URLNormalizer.normalize(url);
         ret.content = sContent.toString().trim();
         ret.wordsCount = sCurIdx;
         ret.wordPosMap = sWordPosMap;
@@ -61,14 +64,17 @@ public class WebPageParser {
     public static List<String> extractOutLinks(Document doc) {
         Set<String> outLinks = new HashSet<>();
 
-        Elements links = doc.body().select("link[href], a[href]");
+        Elements links = doc.body().select("a[href]");
 
         for (Element element : links) {
             String link = element.attr("abs:href");
-            URL url = WebUtilities.getURL(link);
 
-            if (url != null && WebUtilities.crawlable(link)) {
-                outLinks.add(URLNormalizer.normalizeURL(url));
+            if (WebUtilities.crawlable(link)) {
+                try {
+                    outLinks.add(URLNormalizer.normalize(new URL(link)));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
 

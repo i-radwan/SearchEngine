@@ -4,12 +4,14 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 
+
 public class URLNormalizer {
 
     /**
      * Returns a normalized URL string of the given web page URL object.
      * <p>
-     * Apply the following rules:
+     * Applies the following rules:
+     * <p>
      * [1]  Remove fragment parts.
      * [2]  Convert to lower case.
      * [3]  IP address to domain name.
@@ -22,11 +24,12 @@ public class URLNormalizer {
      * [10] Capitalize percent-encoded octets (e.g. %XX)
      *
      * @param url a web page URL object
-     * @return normalized URL string representing
+     * @return normalized URL string
      */
-    public static String normalizeURL(URL url) {
+    public static String normalize(URL url) {
         return
-                obtainProtocol(url.getProtocol()) + "://" +
+                //obtainProtocol(url.getProtocol()) + "://" +
+                url.getProtocol() + "://" +
                         obtainDomainName(url.getHost()) +
                         obtainPort(url.getPort()) +
                         obtainPath(url.getPath()) +
@@ -34,46 +37,18 @@ public class URLNormalizer {
     }
 
     /**
-     * Convert given IPAddress to domain name
+     * Obtains fixed protocol from the given protocol
+     * (i.e. convert https -> http).
      *
-     * @param IPAddress the address to be converted
-     * @return the hostname, or the IP address if getting host name failed
-     */
-    private static String IPAddressToHostName(String IPAddress) {
-        // Convert IP to host name
-        try {
-            return InetAddress.getByName(IPAddress).getHostName();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-
-        return IPAddress;
-    }
-
-    /**
-     * Obtain fixed port from the given port
-     * (i.e. remove default port)
-     *
-     * @param URLPort port to be fixed
-     * @return the fixed port
-     */
-    private static String obtainPort(int URLPort) {
-        return (URLPort == 80 || URLPort == -1) ? "" : (":" + String.valueOf(URLPort));
-    }
-
-    /**
-     * Obtain fixed protocol from the given protocol
-     * (i.e. convert https -> http)
-     *
-     * @param URLProtocol protocol to be fixed
+     * @param protocol protocol to be fixed
      * @return the fixed protocol
      */
-    private static String obtainProtocol(String URLProtocol) {
-        return URLProtocol.replace("https", "http").toLowerCase();
+    private static String obtainProtocol(String protocol) {
+        return protocol.replace("https", "http").toLowerCase();
     }
 
     /**
-     * Obtain domain name from host name
+     * Obtains domain name from host name.
      *
      * @param host host name to be converted
      * @return the domain name
@@ -95,14 +70,46 @@ public class URLNormalizer {
     }
 
     /**
-     * Obtain fixed path from given path
-     * (i.e. remove directory index.html)
+     * Converts given IPAddress to domain name.
      *
-     * @param URLPath path to be fixed
+     * @param IPAddress the address to be converted
+     * @return the hostname, or the IP address if getting host name failed
+     */
+    private static String IPAddressToHostName(String IPAddress) {
+        // Convert IP to host name
+        try {
+            return InetAddress.getByName(IPAddress).getHostName();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+
+        return IPAddress;
+    }
+
+    /**
+     * Obtains fixed port from the given port
+     * (i.e. removes default port).
+     *
+     * @param port port to be fixed
+     * @return the fixed port
+     */
+    private static String obtainPort(int port) {
+        return (port == 80 || port == -1) ? "" : (":" + String.valueOf(port));
+    }
+
+    /**
+     * Obtains fixed path from given path
+     * (i.e. removes directory index.html).
+     *
+     * @param path path to be fixed
      * @return the fixed path
      */
-    private static String obtainPath(String URLPath) {
-        return URLPath
+    private static String obtainPath(String path) {
+        if (!path.endsWith("/")) {
+            path = path + "/";
+        }
+
+        return path
                 .replace("index.html", "")
                 .replace("index.htm", "")
                 .replace("index.php", "")
@@ -110,15 +117,19 @@ public class URLNormalizer {
     }
 
     /**
-     * Obtain query parameter by applying:
+     * Obtains query parameter by applying:
      * [1] Sorting
      * [2] Remove empty
      * [3] Capitalize percent-encoded octets (e.g. %XX)
      *
-     * @param URLQueryParameters the original URL query parameters
+     * @param queryParams the original URL query parameters
      * @return the fixed query parameters
      */
-    private static String obtainQueryParameters(String URLQueryParameters) {
+    private static String obtainQueryParameters(String queryParams) {
+        if (queryParams == null || queryParams.isEmpty()) {
+            return "";
+        }
+
         // ToDo
         // Separate
         // Remove empty
@@ -127,6 +138,6 @@ public class URLNormalizer {
         // Capitalize %XX
         // if empty result remove the "?"
         // Join
-        return "?" + URLQueryParameters;
+        return "?" + queryParams;
     }
 }

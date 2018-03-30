@@ -3,11 +3,10 @@ package search.engine.main;
 import org.jsoup.nodes.Document;
 import search.engine.crawler.Crawler;
 import search.engine.indexer.Indexer;
-import search.engine.models.WebPage;
+import search.engine.indexer.WebPage;
+import search.engine.indexer.WebPageParser;
 import search.engine.server.Server;
-import search.engine.utils.URLNormalizer;
 import search.engine.utils.Utilities;
-import search.engine.utils.WebPageParser;
 import search.engine.utils.WebUtilities;
 
 import java.io.FileWriter;

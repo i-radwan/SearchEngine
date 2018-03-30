@@ -8,10 +8,8 @@ import com.mongodb.client.model.*;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import search.engine.crawler.Output;
-import search.engine.models.WebPage;
 import search.engine.utils.Constants;
 import search.engine.utils.Utilities;
-import search.engine.utils.WebPageParser;
 
 import java.net.URL;
 import java.util.*;

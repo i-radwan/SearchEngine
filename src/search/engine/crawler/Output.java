@@ -25,7 +25,7 @@ public class Output {
      */
     public static void log(String str) {
         synchronized (sLogFile) {
-            sLogFile.println(Thread.currentThread().getName() + " => " + str);
+            sLogFile.println(Thread.currentThread().getName() + "\t\t=> " + str);
             sLogFile.flush();
         }
     }

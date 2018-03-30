@@ -24,7 +24,7 @@ public class RobotsTextManager {
      * @return {@code true} if the given URL is allowed to be crawled, {@code false} otherwise
      */
     public boolean allowedURL(URL url) {
-        String baseURL = WebUtilities.getBaseURL(url);
+        String baseURL = url.getHost();
 
         // Prepare robots text file of the given website
         prepareRobotsText(url, baseURL);
