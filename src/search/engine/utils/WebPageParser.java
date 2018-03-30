@@ -43,7 +43,7 @@ public class WebPageParser {
 
         // Assigning variables
         WebPage ret = new WebPage();
-        ret.url = WebUtilities.normalizeURL(url);
+        ret.url = (URLNormalizer.normalizeURL(url));
         ret.content = sContent.toString().trim();
         ret.wordsCount = sCurIdx;
         ret.wordPosMap = sWordPosMap;
@@ -68,7 +68,7 @@ public class WebPageParser {
             URL url = WebUtilities.getURL(link);
 
             if (url != null && WebUtilities.crawlable(link)) {
-                outLinks.add(WebUtilities.normalizeURL(url));
+                outLinks.add(URLNormalizer.normalizeURL(url));
             }
         }
 
