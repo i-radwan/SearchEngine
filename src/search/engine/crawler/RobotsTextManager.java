@@ -95,11 +95,7 @@ public class RobotsTextManager {
      * @param rules   list of new robots rules
      */
     private void updateRules(String baseURL, List<String> rules) {
-        RobotsRules robotsRules;
-
-        synchronized (mWebsiteRules) {
-            robotsRules = mWebsiteRules.get(baseURL);
-        }
+        RobotsRules robotsRules = mWebsiteRules.get(baseURL);
 
         synchronized (robotsRules) {
             robotsRules.rules = rules;

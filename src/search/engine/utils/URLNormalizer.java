@@ -68,7 +68,7 @@ public class URLNormalizer {
 
         // Check for www, www2, www3, ...etc -> Then remove them
         if (domainName.length() > 3 && domainName.startsWith("www")) {
-            domainName = domainName.substring(domainName.indexOf(".") + 1, domainName.length());
+            domainName = domainName.substring(domainName.indexOf(".") + 1);
         }
 
         return domainName;

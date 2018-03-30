@@ -24,13 +24,11 @@ public final class WebUtilities {
      */
     public static URL getURL(String url) {
         URL ret = null;
-
         try {
             ret = new URL(url);
         } catch (MalformedURLException e) {
             //e.printStackTrace();
         }
-
         return ret;
     }
 
@@ -41,14 +39,14 @@ public final class WebUtilities {
      * @return string representing the base address, or null if invalid URL was given
      */
     public static String getHostName(String urlStr) {
+        String ret = null;
         try {
             URL url = new URL(urlStr);
-            return url.getHost();
+            ret =  url.getHost();
         } catch (MalformedURLException e) {
             //e.printStackTrace();
         }
-
-        return null;
+        return ret;
     }
 
     /**
@@ -67,10 +65,10 @@ public final class WebUtilities {
             url = new URL(url.getProtocol() + "://" + url.getHost() + "/robots.txt");
 
             //opens the robots.txt file as a buffered stream and start reading line by line.
-            BufferedReader inp = new BufferedReader(new InputStreamReader(url.openStream()));
+            BufferedReader input = new BufferedReader(new InputStreamReader(url.openStream()));
             String line;
 
-            while ((line = inp.readLine()) != null) {
+            while ((line = input.readLine()) != null) {
                 ret.add(line.toLowerCase());
             }
         } catch (IOException e) {

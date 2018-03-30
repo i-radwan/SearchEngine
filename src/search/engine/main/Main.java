@@ -139,15 +139,7 @@ public class Main {
     }
 
     private static void testRanker() {
-        try {
-            URL url = new URL("http://linkedin.com");
 
-            System.out.println(WebUtilities.fetchRobotsText(url));
-
-
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
     }
 
     private static void testQueryProcessor() {

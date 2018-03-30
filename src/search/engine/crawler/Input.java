@@ -5,7 +5,10 @@ import search.engine.utils.Constants;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 public class Input {
@@ -16,10 +19,9 @@ public class Input {
     public static void readSeed() {
         try {
             BufferedReader file = new BufferedReader(new FileReader(Constants.SEED_FILE_NAME));
+            String url;
 
-            while (file.ready()) {
-                String url = file.readLine();
-
+            while ((url = file.readLine()) != null) {
                 if (!CrawlerThread.sVisitedURLs.contains(url)) {
                     CrawlerThread.sURLsQueue.add(url);
                     CrawlerThread.sVisitedURLs.add(url);
@@ -57,9 +59,10 @@ public class Input {
     private static Set<String> readVisitedURLs() throws Exception {
         Set<String> ret = new HashSet<>();
         BufferedReader file = new BufferedReader(new FileReader(Constants.VISITED_URLS_FILE_NAME));
+        String url;
 
-        while (file.ready()) {
-            ret.add(file.readLine());
+        while ((url = file.readLine()) != null) {
+            ret.add(url);
         }
 
         file.close();
@@ -74,10 +77,9 @@ public class Input {
     private static List<String> readURLs() throws Exception {
         List<String> ret = new ArrayList<>();
         BufferedReader file = new BufferedReader(new FileReader(Constants.URLS_FILE_NAME));
+        String url;
 
-        while (file.ready()) {
-            String url = file.readLine();
-
+        while ((url = file.readLine()) != null) {
             if (!CrawlerThread.sVisitedURLs.contains(url)) {
                 ret.add(url);
                 CrawlerThread.sVisitedURLs.add(url);
