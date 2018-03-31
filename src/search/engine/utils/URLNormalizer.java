@@ -147,10 +147,14 @@ public class URLNormalizer {
             }
         }
 
+        if (queries.isEmpty()) {
+            return "";
+        }
+
         // Sort queries
         Collections.sort(queries);
 
-        return capitalizePercentEncodedOctets(queries.isEmpty() ? "" : ("?" + String.join("&", queries)));
+        return "?" + capitalizePercentEncodedOctets(String.join("&", queries));
     }
 
     /**
@@ -160,7 +164,7 @@ public class URLNormalizer {
      * @return the capitalized string
      */
     private static String capitalizePercentEncodedOctets(String str) {
-        // Capitalize %XX
+        // Pattern matching for %XX
         Pattern pattern = Pattern.compile("%[0-9a-z]{2}");
         Matcher matcher = pattern.matcher(str);
 
