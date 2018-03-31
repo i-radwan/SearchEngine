@@ -66,6 +66,7 @@ public class RobotsTextParser {
                 }
             } catch (PatternSyntaxException e) {
                 System.err.println(rule + ": pattern exception, " + e.getMessage());
+                Output.log(rule + ": pattern exception, " + e.getMessage());
             }
         }
 
