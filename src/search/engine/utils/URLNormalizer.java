@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -111,11 +112,11 @@ public class URLNormalizer {
      */
     private static String obtainPath(String path) {
         return capitalizePercentEncodedOctets(
-                path
+                path.toLowerCase()
                         .replace("index.html", "")
                         .replace("index.htm", "")
                         .replace("index.php", "")
-                        .toLowerCase());
+        );
     }
 
     /**
@@ -136,10 +137,15 @@ public class URLNormalizer {
         queryParams = queryParams.toLowerCase();
 
         // Split queries
-        ArrayList<String> queries = new ArrayList<>(Arrays.asList(queryParams.split("&")));
+        String[] queryArr = queryParams.split("&");
+        List<String> queries = new ArrayList<>();
 
         // Remove empty queries
-        queries.removeIf(q -> q.endsWith("=") && q.chars().filter(ch -> ch == '=').count() == 1);
+        for (String q : queryArr) {
+            if (!q.endsWith("=") || q.chars().filter(ch -> ch == '=').count() != 1) {
+                queries.add(q);
+            }
+        }
 
         // Sort queries
         Collections.sort(queries);
@@ -148,22 +154,22 @@ public class URLNormalizer {
     }
 
     /**
-     * Capitalize percent encoded octets (e.g. %3A)
+     * Capitalizes percent encoded octets (e.g. %3A).
      *
-     * @param s the input string
+     * @param str the input string
      * @return the capitalized string
      */
-    private static String capitalizePercentEncodedOctets(String s) {
+    private static String capitalizePercentEncodedOctets(String str) {
         // Capitalize %XX
         Pattern pattern = Pattern.compile("%[0-9a-z]{2}");
-        Matcher matcher = pattern.matcher(s);
+        Matcher matcher = pattern.matcher(str);
 
         // Check all occurrences
         while (matcher.find()) {
-            String substring = s.substring(matcher.start(), matcher.end());
-            s = s.replace(substring, substring.toUpperCase());
+            String substring = str.substring(matcher.start(), matcher.end());
+            str = str.replace(substring, substring.toUpperCase());
         }
 
-        return s;
+        return str;
     }
 }

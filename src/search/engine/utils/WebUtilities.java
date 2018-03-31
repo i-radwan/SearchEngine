@@ -70,7 +70,7 @@ public final class WebUtilities {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setReadTimeout(60000);
 
-            //opens the robots.txt file as a buffered stream and start reading line by line.
+            // Open the robots.txt file as a buffered stream and start reading it line by line.
             BufferedReader input = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String line;
 
