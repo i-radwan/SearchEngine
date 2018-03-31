@@ -124,7 +124,7 @@ public class Indexer {
      * @param outLinks the web page out links
      * @param prvPage  the previous version of the web page, retrieved from the database
      */
-    private void indexWebPage(URL url, org.jsoup.nodes.Document pageDoc, List<String> outLinks, WebPage prvPage) {
+    public void indexWebPage(URL url, org.jsoup.nodes.Document pageDoc, List<String> outLinks, WebPage prvPage) {
         // Parse the raw web page document
         WebPageParser parser = new WebPageParser();
         WebPage curPage = parser.parse(url, pageDoc);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 
 public class RobotsTextParser {
@@ -56,11 +57,16 @@ public class RobotsTextParser {
     public static boolean matchRules(String url, List<String> rules) {
         // Loop through each rule and start matching it using the regex
         for (String rule : rules) {
-            Pattern pat = Pattern.compile(rule);
-            Matcher matcher = pat.matcher(url);
+            try {
+                Pattern pat = Pattern.compile(rule);
+                Matcher matcher = pat.matcher(url);
 
-            if (matcher.find()) {
-                return true;
+                if (matcher.find()) {
+                    return true;
+                }
+            } catch (PatternSyntaxException e) {
+                System.err.println(rule + ": pattern exception, " + e.getMessage());
+                Output.log(rule + ": pattern exception, " + e.getMessage());
             }
         }
 

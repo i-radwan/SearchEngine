@@ -44,7 +44,7 @@ public final class WebUtilities {
         String ret = null;
         try {
             URL url = new URL(urlStr);
-            ret =  url.getHost();
+            ret = url.getHost();
         } catch (MalformedURLException e) {
             //e.printStackTrace();
         }
@@ -78,8 +78,10 @@ public final class WebUtilities {
                 ret.add(line.toLowerCase());
             }
         } catch (SocketTimeoutException e) {
-            System.err.println(e.getMessage());
-            Output.log("Fetching " + url.toString() + " read timeout");
+            //System.err.println(e.getMessage());
+            Output.log("Fetching " + url.toString() + " timeout");
+        } catch (ClassCastException e) {
+            //e.printStackTrace();
         } catch (IOException e) {
             //e.printStackTrace();
         } catch (Exception e) {
@@ -102,11 +104,12 @@ public final class WebUtilities {
         try {
             ret = Jsoup.connect(url).get();
         } catch (SocketTimeoutException e) {
-            //System.out.println("Timeout Error while fetching " + url);
+            //System.err.println(e.getMessage());
+            Output.log("Fetching " + url + " timeout");
         } catch (IOException e) {
-            //System.out.println("IO Error while fetching " + url);
+            //e.printStackTrace();
         } catch (UncheckedIOException e) {
-            //System.out.println("Unchecked IO Error while fetching " + url);
+            //e.printStackTrace();
         } catch (Exception e) {
             //e.printStackTrace();
         }
