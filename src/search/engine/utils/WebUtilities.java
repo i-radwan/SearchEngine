@@ -71,7 +71,7 @@ public final class WebUtilities {
             connection.setReadTimeout(60000);
 
             //opens the robots.txt file as a buffered stream and start reading line by line.
-            BufferedReader input = new BufferedReader(new InputStreamReader(url.openStream()));
+            BufferedReader input = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String line;
 
             while ((line = input.readLine()) != null) {
@@ -81,6 +81,8 @@ public final class WebUtilities {
             System.err.println(e.getMessage());
             Output.log("Fetching " + url.toString() + " read timeout");
         } catch (IOException e) {
+            //e.printStackTrace();
+        } catch (Exception e) {
             //e.printStackTrace();
         }
 
