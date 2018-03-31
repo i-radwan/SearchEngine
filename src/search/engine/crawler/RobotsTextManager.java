@@ -101,7 +101,7 @@ public class RobotsTextManager {
             robotsRules.rules = rules;
             robotsRules.status = true;
             robotsRules.notifyAll();
-            Output.log("Notifying for robots.txt : " + baseURL);
+            Output.log("Notifying about robots.txt : " + baseURL);
         }
     }
 }

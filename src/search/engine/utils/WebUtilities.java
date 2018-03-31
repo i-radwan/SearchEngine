@@ -3,10 +3,12 @@ package search.engine.utils;
 import org.jsoup.Jsoup;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.nodes.Document;
+import search.engine.crawler.Output;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -64,6 +66,10 @@ public final class WebUtilities {
             // Get web page robots text url
             url = new URL(url.getProtocol() + "://" + url.getHost() + "/robots.txt");
 
+            // Get connection and set read timeout to avoid hanging
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setReadTimeout(60000);
+
             //opens the robots.txt file as a buffered stream and start reading line by line.
             BufferedReader input = new BufferedReader(new InputStreamReader(url.openStream()));
             String line;
@@ -71,6 +77,9 @@ public final class WebUtilities {
             while ((line = input.readLine()) != null) {
                 ret.add(line.toLowerCase());
             }
+        } catch (SocketTimeoutException e) {
+            System.err.println(e.getMessage());
+            Output.log("Fetching " + url.toString() + " read timeout");
         } catch (IOException e) {
             //e.printStackTrace();
         }

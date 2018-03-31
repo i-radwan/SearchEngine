@@ -25,17 +25,17 @@ public class RobotsTextParser {
             line = line.toLowerCase();
 
             // If it starts with "user-agent" then it's a new user agent
-            if (line.startsWith("user-agent")) {
+            if (line.startsWith("user-agent:")) {
                 //curUserAgent = line.split(":")[1].trim();
                 curUserAgent = line.substring(line.indexOf(":") + 1).trim();
             }
             // If it starts with "allow"/"disallow" then it's a new rule for the current user agent
-            else if (userAgent.equals(curUserAgent) && line.startsWith("disallow")) {
+            else if (userAgent.equals(curUserAgent) && line.startsWith("disallow:")) {
                 //String tmp = line.split(":", 2)[1].trim();
                 String tmp = line.substring(line.indexOf(":") + 1).trim();
 
-                tmp = tmp.replaceAll("\\*", ".*");
-                tmp = tmp.replaceAll("\\?", "[?]");
+                tmp = tmp.replaceAll("\\*", ".*");  // Matches any sequence of chars of length at least one
+                tmp = tmp.replaceAll("\\?", "[?]"); // Matched any single character
 
                 if (tmp.length() > 0) {
                     parsedRobotTxt.add(tmp);
@@ -51,7 +51,7 @@ public class RobotsTextParser {
      *
      * @param url   a web page URL string to check
      * @param rules list of robots rules to match against
-     * @return {@code true} if there is a match between the given URL and rules, {@code flase} otherwise.
+     * @return {@code true} if there is a match between the given URL and rules, {@code false} otherwise.
      */
     public static boolean matchRules(String url, List<String> rules) {
         // Loop through each rule and start matching it using the regex
