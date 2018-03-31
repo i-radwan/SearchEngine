@@ -6,15 +6,14 @@ import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.indexer.WebPageParser;
 import search.engine.server.Server;
-import search.engine.utils.URLNormalizer;
 import search.engine.utils.Utilities;
 import search.engine.utils.WebUtilities;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -24,6 +23,11 @@ public class Main {
 
     private static Scanner scanner;
 
+    /**
+     * The main driver function.
+     *
+     * @param args External arguments passed from the operating system
+     */
     public static void main(String[] args) throws IOException {
         scanner = new Scanner(System.in);
 
@@ -140,15 +144,75 @@ public class Main {
     }
 
     private static void testRanker() {
-        try {
-            URL url = new URL("http://linkedin.com");
+        List<Thread> threads = new ArrayList<>();
 
-            System.out.println(WebUtilities.fetchRobotsText(url));
+        for (int i = 0; i < 25; i++) {
+            threads.add(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < 5; ++i) {
+                        System.out.printf("%s\t=>\t fetching web page...\n", Thread.currentThread().getName());
+                        fetchWebPageFixed("https://en.wikipedia.org/wiki/Regular_expression");
+                        System.out.printf("%s\t=>\t fetched %d web page(s)\n", Thread.currentThread().getName(), i + 1);
+                    }
 
+                    System.out.printf("%s\t=>\t complete\n", Thread.currentThread().getName());
+                }
+            }));
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+            threads.get(i).setName("Test-Thread-" + String.valueOf(i + 1));
+            threads.get(i).start();
         }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static List<String> fetchWebPage(String link) {
+        List<String> ret = new ArrayList<>();
+
+        try {
+            URL url = new URL(link);
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(url.openStream()));
+            String line;
+
+            while ((line = input.readLine()) != null) {
+                ret.add(line.toLowerCase());
+            }
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+
+        return ret;
+    }
+
+    public static List<String> fetchWebPageFixed(String link) {
+        List<String> ret = new ArrayList<>();
+
+        try {
+            URL url = new URL(link);
+
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setReadTimeout(20000);
+
+            //opens the robots.txt file as a buffered stream and start reading line by line.
+            BufferedReader input = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String line;
+
+            while ((line = input.readLine()) != null) {
+                ret.add(line.toLowerCase());
+            }
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+
+        return ret;
     }
 
     private static void testQueryProcessor() {

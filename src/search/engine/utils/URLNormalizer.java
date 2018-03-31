@@ -1,7 +1,5 @@
 package search.engine.utils;
 
-import spark.utils.StringUtils;
-
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -70,7 +68,7 @@ public class URLNormalizer {
 
         // Check for www, www2, www3, ...etc -> Then remove them
         if (domainName.length() > 3 && domainName.startsWith("www")) {
-            domainName = domainName.substring(domainName.indexOf(".") + 1, domainName.length());
+            domainName = domainName.substring(domainName.indexOf(".") + 1);
         }
 
         return domainName;
@@ -112,10 +110,6 @@ public class URLNormalizer {
      * @return the fixed path
      */
     private static String obtainPath(String path) {
-        if (!path.endsWith("/")) {
-            path = path + "/";
-        }
-
         return capitalizePercentEncodedOctets(
                 path
                         .replace("index.html", "")

@@ -3,10 +3,12 @@ package search.engine.utils;
 import org.jsoup.Jsoup;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.nodes.Document;
+import search.engine.crawler.Output;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -24,13 +26,11 @@ public final class WebUtilities {
      */
     public static URL getURL(String url) {
         URL ret = null;
-
         try {
             ret = new URL(url);
         } catch (MalformedURLException e) {
             //e.printStackTrace();
         }
-
         return ret;
     }
 
@@ -41,14 +41,14 @@ public final class WebUtilities {
      * @return string representing the base address, or null if invalid URL was given
      */
     public static String getHostName(String urlStr) {
+        String ret = null;
         try {
             URL url = new URL(urlStr);
-            return url.getHost();
+            ret =  url.getHost();
         } catch (MalformedURLException e) {
             //e.printStackTrace();
         }
-
-        return null;
+        return ret;
     }
 
     /**
@@ -66,13 +66,20 @@ public final class WebUtilities {
             // Get web page robots text url
             url = new URL(url.getProtocol() + "://" + url.getHost() + "/robots.txt");
 
+            // Get connection and set read timeout to avoid hanging
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setReadTimeout(60000);
+
             //opens the robots.txt file as a buffered stream and start reading line by line.
-            BufferedReader inp = new BufferedReader(new InputStreamReader(url.openStream()));
+            BufferedReader input = new BufferedReader(new InputStreamReader(url.openStream()));
             String line;
 
-            while ((line = inp.readLine()) != null) {
+            while ((line = input.readLine()) != null) {
                 ret.add(line.toLowerCase());
             }
+        } catch (SocketTimeoutException e) {
+            System.err.println(e.getMessage());
+            Output.log("Fetching " + url.toString() + " read timeout");
         } catch (IOException e) {
             //e.printStackTrace();
         }
