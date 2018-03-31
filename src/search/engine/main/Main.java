@@ -6,7 +6,6 @@ import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.indexer.WebPageParser;
 import search.engine.server.Server;
-import search.engine.utils.URLNormalizer;
 import search.engine.utils.Utilities;
 import search.engine.utils.WebUtilities;
 
@@ -41,6 +40,8 @@ public class Main {
 
             choice = scanner.nextInt();
 
+            long startTime = System.nanoTime();
+
             switch (choice) {
                 case 1:
                     startCrawler();
@@ -68,6 +69,11 @@ public class Main {
                     choice = -1;
                     break;
             }
+
+            long endTime = System.nanoTime();
+            long secs = (endTime - startTime) / 1000000000;
+
+            System.out.printf("Elapsed Time: %02d:%02d seconds\n", secs / 60, secs % 60);
         }
 
         scanner.close();

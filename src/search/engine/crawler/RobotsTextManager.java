@@ -58,6 +58,8 @@ public class RobotsTextManager {
         // and mark that the robots text is being fetched so that no other threads do the same job
         //
         if (rules == null) {
+            Output.log("Fetching robots.txt of " + url.toString());
+
             updateRules(
                     baseURL,
                     // Parse robots text and extract only the disallowed rules of the current user agent
@@ -93,11 +95,7 @@ public class RobotsTextManager {
      * @param rules   list of new robots rules
      */
     private void updateRules(String baseURL, List<String> rules) {
-        RobotsRules robotsRules;
-
-        synchronized (mWebsiteRules) {
-            robotsRules = mWebsiteRules.get(baseURL);
-        }
+        RobotsRules robotsRules = mWebsiteRules.get(baseURL);
 
         synchronized (robotsRules) {
             robotsRules.rules = rules;

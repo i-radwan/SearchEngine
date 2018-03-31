@@ -26,11 +26,13 @@ public class RobotsTextParser {
 
             // If it starts with "user-agent" then it's a new user agent
             if (line.startsWith("user-agent")) {
-                curUserAgent = line.split(":")[1].trim();
+                //curUserAgent = line.split(":")[1].trim();
+                curUserAgent = line.substring(line.indexOf(":") + 1).trim();
             }
             // If it starts with "allow"/"disallow" then it's a new rule for the current user agent
             else if (userAgent.equals(curUserAgent) && line.startsWith("disallow")) {
-                String tmp = line.split(":", 2)[1].trim();
+                //String tmp = line.split(":", 2)[1].trim();
+                String tmp = line.substring(line.indexOf(":") + 1).trim();
 
                 tmp = tmp.replaceAll("\\*", ".*");
                 tmp = tmp.replaceAll("\\?", "[?]");
