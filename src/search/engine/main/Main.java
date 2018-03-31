@@ -78,7 +78,7 @@ public class Main {
             long endTime = System.nanoTime();
             long secs = (endTime - startTime) / 1000000000;
 
-            System.out.printf("Elapsed Time: %02d:%02d seconds\n", secs / 60, secs % 60);
+            System.out.printf("Elapsed Time: %02d:%02d minutes\n", secs / 60, secs % 60);
         }
 
         scanner.close();
