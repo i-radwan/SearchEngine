@@ -2,9 +2,7 @@ package search.engine.ranker;
 
 import search.engine.indexer.WebPage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Ranker {
 
@@ -15,7 +13,6 @@ public class Ranker {
      * @return
      */
     public ArrayList<WebPage> rankPages(ArrayList<WebPage> webPages, List<String> queryFilterWords){
-
         HashMap<String, Double> pagesScores = new HashMap<String, Double>();
 
         // For each page calculate its TF-IDF score
@@ -25,7 +22,7 @@ public class Ranker {
         }
 
         // Sort webPages
-
+        Collections.sort(webPages, new SortByRank(pagesScores));
 
         return webPages;
     }
@@ -37,7 +34,7 @@ public class Ranker {
      * @return
      */
     public Double calculatePageScore (WebPage webPage, List<String> queryFilerWords) {
-        Double pageScore = 0.0;
+        Double pagePopularity = 0.0;
 
         // For each word in the query filter words
         for (int iWord = 0; iWord < queryFilerWords.size(); iWord++) {
@@ -46,11 +43,25 @@ public class Ranker {
             int wordTF = webPage.wordPosMap.get(word).size();
             double wordIDF = 1.0; // TODO @Samir55 see this
 
-            pageScore +=  wordTF * wordIDF;
+            pagePopularity += wordTF * wordIDF;
         }
 
-        return pageScore;
+        return pagePopularity * webPage.rank; // pagePopularity * pageRank(Relevance)
     }
 
+}
+
+class SortByRank implements Comparator<WebPage>
+{
+    private HashMap<String, Double> pagesScores;
+
+    public SortByRank(HashMap<String, Double> scores) {
+        pagesScores = scores;
+    }
+
+    @Override
+    public int compare(WebPage page1, WebPage page2) {
+        return Double.compare(pagesScores.get(page1.id.toString()), pagesScores.get(page2.id.toString()));
+    }
 
 }
