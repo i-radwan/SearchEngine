@@ -6,6 +6,7 @@ A Simple Search Engine written in Java
 - Spark
 - Jsoup
 - Snowball
+- CUDA
 
 ### How to use?
 - Clone this repository.
