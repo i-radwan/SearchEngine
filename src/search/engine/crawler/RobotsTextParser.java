@@ -35,8 +35,8 @@ public class RobotsTextParser {
                 //String tmp = line.split(":", 2)[1].trim();
                 String tmp = line.substring(line.indexOf(":") + 1).trim();
 
-                tmp = tmp.replaceAll("\\*", ".*");  // Matches any sequence of chars of length at least one
-                tmp = tmp.replaceAll("\\?", "[?]"); // Matched any single character
+                tmp = tmp.replaceAll("\\*", ".*");  // Matches any sequence of chars
+                tmp = tmp.replaceAll("\\?", "[?]"); // Matches the question mark char
 
                 if (tmp.length() > 0) {
                     parsedRobotTxt.add(tmp);
@@ -52,7 +52,7 @@ public class RobotsTextParser {
      *
      * @param url   a web page URL string to check
      * @param rules list of robots rules to match against
-     * @return {@code true} if there is a match between the given URL and rules, {@code false} otherwise.
+     * @return {@code true} if there is a match between the given URL and any of the rules, {@code false} otherwise.
      */
     public static boolean matchRules(String url, List<String> rules) {
         // Loop through each rule and start matching it using the regex
