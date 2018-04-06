@@ -22,7 +22,7 @@ public class Ranker {
         }
 
         // Sort webPages
-        Collections.sort(webPages, new SortByRank(pagesScores));
+        Collections.sort(webPages, new SortPagesByRank(pagesScores));
 
         return webPages;
     }
@@ -42,26 +42,9 @@ public class Ranker {
 
             int wordTF = webPage.wordPosMap.get(word).size();
             double wordIDF = 1.0; // TODO @Samir55 see this
-
             pagePopularity += wordTF * wordIDF;
         }
 
         return pagePopularity * webPage.rank; // pagePopularity * pageRank(Relevance)
     }
-
-}
-
-class SortByRank implements Comparator<WebPage>
-{
-    private HashMap<String, Double> pagesScores;
-
-    public SortByRank(HashMap<String, Double> scores) {
-        pagesScores = scores;
-    }
-
-    @Override
-    public int compare(WebPage page1, WebPage page2) {
-        return Double.compare(pagesScores.get(page1.id.toString()), pagesScores.get(page2.id.toString()));
-    }
-
 }
