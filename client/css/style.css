@@ -5,6 +5,14 @@
     margin: 50px auto;
 }
 
+p {
+    margin: 0;
+    padding: 0;
+}
+
+/****************************/
+/*     Search Bar Style     */
+/****************************/
 /* Bootstrap 4 text input with search icon */
 .has-search .form-control-feedback {
     position: relative;
@@ -18,3 +26,24 @@
     padding-left: 34px;
 }
 
+/****************************/
+/*     Results Style        */
+/****************************/
+.webpage {
+    padding: 10px 0 10px 0;
+}
+
+.webpage_title {
+    font-size: 25px;
+    text-decoration: underline;
+    color: #0000d4;
+}
+
+.webpage_url {
+    color: #9e0000;
+}
+
+.webpage_snippet {
+    font-size: 13px;
+    color: gray;
+}

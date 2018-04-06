@@ -21,18 +21,24 @@
     <!--Results box-->
     <div id="results_container"></div>
     <!--Pagination bar-->
-
+    <div id="pagination_container"></div>
 
 </div>
 
 <!--Templates-->
 
 <script id="results-temp" type="text/x-handlebars-template">
-    {{#each pages}}
-    <div>
-        Title {{title}}. URL {{url}}... Snippet {{snippet}}
+    {{#each webpages}}
+    <div class="webpage">
+        <p class="webpage_title"><a href="{{url}}">{{title}}</a></p>
+        <p class="webpage_url">{{url}}</p>
+        <p class="webpage_snippet">{{{snippet}}}</p>
     </div>
     {{/each}}
+</script>
+
+<script id="pagination-temp" type="text/x-handlebars-template">
+    {{pagination.current_page}}/{{pagination.pages_count}}
 </script>
 
 <!-- Scripts -->
