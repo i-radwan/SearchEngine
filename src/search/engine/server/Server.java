@@ -22,6 +22,7 @@ public class Server {
 
         get("/search", (Request req, Response res) -> {
             String queryString = req.queryParams("q");
+            String pageNumber = req.queryParams("page");
 
             // Process the query
             boolean isPhraseSearch = Utilities.isPhraseSearch(queryString);
@@ -31,7 +32,20 @@ public class Server {
 
             // Call the ranker
 
-            return queryString;
+            // ToDo: to be replaced with actual data
+
+            String webpagesResponse = "app.webpagesCallBack({\"pages\":[ {\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"}], \"pagination\":{\"pages_count\": 10, \"current_page\": " + pageNumber + "}})";
+
+            return webpagesResponse;
+        });
+
+        get("/suggestions", (Request req, Response res) -> {
+            String queryString = req.queryParams("q");
+
+            // ToDo: to be replaced with actual data
+            String suggestionsResponse = "app.suggestionsCallBack([\"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\"])";
+
+            return suggestionsResponse;
         });
     }
 }

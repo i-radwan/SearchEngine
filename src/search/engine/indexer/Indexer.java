@@ -145,8 +145,8 @@ public class Indexer {
             curPage.fetchSkipLimit = Math.min(Constants.MAX_FETCH_SKIP_LIMIT, prvPage.fetchSkipLimit * 2);
             updateFetchSkipLimit(prvPage.id, curPage.fetchSkipLimit);
 
-            Output.log("Same page content  : " + curPage.url);
-            System.out.println("Same page content  : " + curPage.url);
+            Output.log("Same page content : " + curPage.url);
+            System.out.println("Same page content : " + curPage.url);
             return;
         }
 
