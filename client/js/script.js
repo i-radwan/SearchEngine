@@ -51,6 +51,10 @@ let app = {
      * @param response
      */
     webpagesCallBack: function (response) {
+        // Slide search bar to top
+        $(".main").animate({'marginTop': '10vh'}, 1000);
+
+        // Fill containers
         app.displayResults(response.pages);
         app.displayPagination(response.pagination);
     },
@@ -71,8 +75,6 @@ let app = {
      * @param pagination
      */
     displayPagination: function (pagination) {
-        // Get range around current page
-
         // Check if current page in the first/last segment
         let isFirstSegment = (pagination.current_page <= 6);
         let isLastSegment = (pagination.current_page >= pagination.pages_count - 5);
@@ -81,8 +83,7 @@ let app = {
         let pagesNumbers = [{
             number: 1,
             active: true,
-            current: pagination.current_page === 1,
-            link: linkTemp.replace("{page}", 1)
+            current: pagination.current_page === 1
         }];
 
         // Push (...) if pages are in need to be hidden

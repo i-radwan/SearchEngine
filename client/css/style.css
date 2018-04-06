@@ -2,7 +2,7 @@
 
 .main {
     width: 50%;
-    margin: 50px auto;
+    margin: 45vh auto;
 }
 
 p {
@@ -14,6 +14,7 @@ p {
 /*     Search Bar Style     */
 /****************************/
 /* Bootstrap 4 text input with search icon */
+
 .has-search .form-control-feedback {
     position: relative;
     top: 30px;
