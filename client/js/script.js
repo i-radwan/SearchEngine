@@ -12,6 +12,7 @@ let app = {
     run: function () {
         app.searchBox = $("#search_box");
         app.suggestions = [];
+        app.didTheUserSearch = false;
 
         app.config();
 
@@ -40,11 +41,16 @@ let app = {
      * @param page
      */
     getWebpagesRequest: function (query, page = 1) {
+        if (app.didTheUserSearch) // Check to prevent the effect the first time only
+            $("#results_container").fadeTo("fast", 0.3); // Fade out to give refresh animation
+
         $.ajax({
             url: SERVER_SEARCH_LINK.replace("{query}", query).replace("{page}", page),
             type: 'GET',
             dataType: 'jsonp'
         });
+
+        app.didTheUserSearch = true;
     },
 
     /**
@@ -182,7 +188,6 @@ let app = {
         // Send search request when enter key gets pressed
         app.searchBox.bind('keypress', function (e) {
             if (e.keyCode === 13 && app.searchBox.val().trim().length > 0) {
-                $("#results_container").fadeTo("fast", 0.3); // Fade out to give refresh animation
                 app.getWebpagesRequest(app.searchBox.val());
             }
         });
