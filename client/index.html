@@ -38,7 +38,23 @@
 </script>
 
 <script id="pagination-temp" type="text/x-handlebars-template">
-    {{pagination.current_page}}/{{pagination.pages_count}}
+    <ul class="pagination">
+        {{#each page_numbers}}
+
+            {{#if current}}
+                <li class="page-item active"><a href="{{link}}" class="active page-link">{{number}}</a></li>
+            {{else}}
+
+                {{#if active}}
+                    <li class="page-item"><a href="{{link}}" class="page-link">{{number}}</a></li>
+                {{else}}
+                    <li class="page-item"><a class="disabled page-link">...</a></li>
+                {{/if}}
+
+            {{/if}}
+
+        {{/each}}
+    </ul>
 </script>
 
 <!-- Scripts -->

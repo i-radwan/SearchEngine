@@ -51,7 +51,51 @@ let app = {
         app.resultsContainer.html(app.resultsTemplateScript({webpages: webpages}));
     },
     displayPagination: function (pagination) {
-        app.paginationContainer.html(app.paginationTemplateScript({pagination: pagination}));
+        pagination.pages_count = 30;
+        pagination.current_page = 24;
+        let linkTemp = SERVER_LINK.replace("{query}", app.searchBox.val());
+
+        // Get range around current page
+        let isFirstSegment = (pagination.current_page <= 6);
+        let isLastSegment = (pagination.current_page >= pagination.pages_count - 5);
+
+        let pagesNumbers = [{
+            number: 1,
+            active: true,
+            current: pagination.current_page === 1,
+            link: linkTemp.replace("{page}", 1)
+        }];
+
+        if (!isFirstSegment) pagesNumbers.push({active: false, current: false});
+
+        for (let i = Math.max(2, pagination.current_page - 4); i <= pagination.current_page; i++)
+            pagesNumbers.push({
+                number: i,
+                active: true,
+                current: i === pagination.current_page,
+                link: linkTemp.replace("{page}", i)
+            });
+
+
+        for (let i = pagination.current_page + 1; i <= Math.min(pagination.pages_count - 1, pagination.current_page + 4); i++)
+            pagesNumbers.push({
+                number: i,
+                active: true,
+                current: i === pagination.current_page,
+                link: linkTemp.replace("{page}", i)
+            });
+
+        if (!isLastSegment) pagesNumbers.push({active: false, current: false});
+
+        pagesNumbers.push({
+            number: pagination.pages_count,
+            current: pagination.current_page === pagination.pages_count,
+            active: true,
+            link: linkTemp.replace("{page}", pagination.pages_count)
+        });
+        console.log(pagesNumbers);
+
+        app.paginationContainer.html(app.paginationTemplateScript({page_numbers: pagesNumbers}));
     },
     // ToDo: check if will get it ready from the server
     styleSnippet: function (webpages, keywords) {
@@ -77,18 +121,6 @@ let app = {
     config: function () {
         // Bind event listener
         app.bindEventListeners();
-
-        //
-        // Configure handlebars
-        //
-
-        // Support for loop
-        // Handlebars.registerHelper('for', function (n, block) {
-        //     let accum = '';
-        //     for (let i = 0; i < n; ++i)
-        //         accum += block.fn(i);
-        //     return accum;
-        // });
     }
 };
 

@@ -47,3 +47,16 @@ p {
     font-size: 13px;
     color: gray;
 }
+
+/****************************/
+/*     Pagination Style     */
+/****************************/
+.pagination_container {
+    text-align: center;
+}
+
+.pagination {
+    padding-top: 30px;
+    justify-content: center;
+    color: #007bff;
+}
