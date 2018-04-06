@@ -15,7 +15,7 @@ A Simple Search Engine written in Java
 - Choose `Clear Database` in order to setup the database and collections.
 - Finally choose `Crawler` and enter the needed number of threads to start crawling the web.
 
-### How to the search GUI?
+### How to use the search GUI?
 - Make sure you have python installed (for light webserver).
 - Apply the `How to use` section described above but choose `Test Query Processor`.
 - Make sure that the server is listening to `http://0.0.0.0:8080` (change the code in both client and server sides to use different port)
