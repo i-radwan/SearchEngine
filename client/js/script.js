@@ -52,7 +52,7 @@ let app = {
      */
     webpagesCallBack: function (response) {
         // Slide search bar to top
-        $(".main").animate({'marginTop': '10vh'}, 1000);
+        $(".main").animate({'marginTop': '10vh'}, 700);
 
         // Fill containers
         app.displayResults(response.pages);
