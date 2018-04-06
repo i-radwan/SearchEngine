@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>SearchEngine</title>
+    <link rel="stylesheet" href="css/vendor/jquery-ui.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/vendor/bootstrap.css">
     <link rel="stylesheet" href="css/style.css">
@@ -14,7 +15,7 @@
     <!-- Search box -->
     <div class="form-group has-feedback has-search">
         <span class="fa fa-search form-control-feedback"></span>
-        <input type="text" class="form-control" placeholder="Search" id="search_box">
+        <input type="text" class="form-control" placeholder="Search" id="search_box" autocomplete="off" autofocus>
     </div>
 
 
@@ -59,6 +60,7 @@
 
 <!-- Scripts -->
 <script src="js/vendor/jquery.min.js"></script>
+<script src="js/vendor/jquery-ui.min.js"></script>
 <script src="js/vendor/bootstrap.js"></script>
 <script src="js/vendor/handlebars-v4.0.11.js"></script>
 <script src="js/script.js"></script>

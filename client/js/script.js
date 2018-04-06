@@ -1,8 +1,9 @@
 //
 // Constants
 //
-const SERVER_LINK = "http://0.0.0.0:8080/search?q={query}&page={page}";
-
+const SERVER_SEARCH_LINK = "http://0.0.0.0:8080/search?q={query}&page={page}";
+const SERVER_SUGGESTIONS_LINK = "http://0.0.0.0:8080/suggestions?q={query}";
+const MIN_SUGGESTION_CHARS_COUNT = 3;
 
 //
 // Main App Code
@@ -10,6 +11,7 @@ const SERVER_LINK = "http://0.0.0.0:8080/search?q={query}&page={page}";
 let app = {
     run: function () {
         app.searchBox = $("#search_box");
+        app.suggestions = [];
 
         app.config();
 
@@ -39,14 +41,28 @@ let app = {
      */
     getWebpagesRequest: function (query, page = 1) {
         $.ajax({
-            url: SERVER_LINK.replace("{query}", query).replace("{page}", page),
+            url: SERVER_SEARCH_LINK.replace("{query}", query).replace("{page}", page),
             type: 'GET',
             dataType: 'jsonp'
         });
     },
 
     /**
-     * JSON callback which is passed in the URL
+     * Server request
+     *
+     * @param query
+     * @param page
+     */
+    getSuggestionsRequest: function (query) {
+        $.ajax({
+            url: SERVER_SUGGESTIONS_LINK.replace("{query}", query),
+            type: 'GET',
+            dataType: 'jsonp'
+        });
+    },
+
+    /**
+     * JSON callback which is passed in the URL to handle webpages
      *
      * @param response
      */
@@ -60,6 +76,16 @@ let app = {
     },
 
     /**
+     * JSON callback which is passed in the URL to handle suggestions
+     *
+     * @param response
+     */
+    suggestionsCallBack: function (response) {
+        app.suggestions = response;
+        app.updateSearchBoxAutoCompleteList();
+    },
+
+    /**
      * Render webpages into results container
      *
      * @param webpages
@@ -67,6 +93,8 @@ let app = {
     displayResults: function (webpages) {
         app.styleSnippet(webpages, app.searchBox.val().split(" "));
         app.resultsContainer.html(app.resultsTemplateScript({webpages: webpages}));
+
+        $("#results_container").fadeTo("fast", 1);
     },
 
     /**
@@ -150,18 +178,26 @@ let app = {
     /**
      * Catch pressing enter to search
      */
-    bindEventListeners: function () {
-        // Call search function of enter key press
+    configureSearchBox: function () {
+        // Send search request when enter key gets pressed
         app.searchBox.bind('keypress', function (e) {
-            if (e.keyCode === 13) {
+            if (e.keyCode === 13 && app.searchBox.val().trim().length > 0) {
+                $("#results_container").fadeTo("fast", 0.3); // Fade out to give refresh animation
                 app.getWebpagesRequest(app.searchBox.val());
+            }
+        });
+
+        // Send suggestions retrieval request if the content exceeds limit
+        app.searchBox.bind('keyup', function (e) {
+            if (app.searchBox.val().length > MIN_SUGGESTION_CHARS_COUNT) {
+                app.getSuggestionsRequest();
             }
         });
     },
 
     config: function () {
         // Bind event listener
-        app.bindEventListeners();
+        app.configureSearchBox();
     },
 
     /**
@@ -171,6 +207,16 @@ let app = {
         $(".pagination .valid").click(function (event) {
             event.preventDefault();
             app.getWebpagesRequest(app.searchBox.val(), $(this).data("page"));
+        });
+    },
+
+    /**
+     * Update the autocomplete list after fetching from server
+     */
+    updateSearchBoxAutoCompleteList: function () {
+        // Set autocomplete list
+        app.searchBox.autocomplete({
+            source: app.suggestions
         });
     }
 };

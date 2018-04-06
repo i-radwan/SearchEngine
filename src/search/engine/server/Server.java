@@ -38,5 +38,14 @@ public class Server {
 
             return webpagesResponse;
         });
+
+        get("/suggestions", (Request req, Response res) -> {
+            String queryString = req.queryParams("q");
+
+            // ToDo: to be replaced with actual data
+            String suggestionsResponse = "app.suggestionsCallBack([\"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\"])";
+
+            return suggestionsResponse;
+        });
     }
 }
