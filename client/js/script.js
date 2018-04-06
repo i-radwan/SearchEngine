@@ -51,8 +51,6 @@ let app = {
         app.resultsContainer.html(app.resultsTemplateScript({webpages: webpages}));
     },
     displayPagination: function (pagination) {
-        pagination.pages_count = 30;
-        pagination.current_page = 24;
         let linkTemp = SERVER_LINK.replace("{query}", app.searchBox.val());
 
         // Get range around current page
@@ -87,15 +85,20 @@ let app = {
 
         if (!isLastSegment) pagesNumbers.push({active: false, current: false});
 
-        pagesNumbers.push({
-            number: pagination.pages_count,
-            current: pagination.current_page === pagination.pages_count,
-            active: true,
-            link: linkTemp.replace("{page}", pagination.pages_count)
-        });
-        console.log(pagesNumbers);
+        if (pagination.pages_count > pagination.current_page)
+            pagesNumbers.push({
+                number: pagination.pages_count,
+                active: true,
+                current: pagination.current_page === pagination.pages_count,
+                link: linkTemp.replace("{page}", pagination.pages_count)
+            });
 
         app.paginationContainer.html(app.paginationTemplateScript({page_numbers: pagesNumbers}));
+
+        app.setPaginationLinksHandler();
+
+        // Back to top
+        $("html, body").animate({scrollTop: 0}, "fast");
     },
     // ToDo: check if will get it ready from the server
     styleSnippet: function (webpages, keywords) {
@@ -121,6 +124,12 @@ let app = {
     config: function () {
         // Bind event listener
         app.bindEventListeners();
+    },
+    setPaginationLinksHandler: function () {
+        $(".pagination .valid").click(function (event) {
+            event.preventDefault();
+            app.getWebpagesRequest(app.searchBox.val(), $(this).data("page"));
+        });
     }
 };
 

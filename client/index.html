@@ -42,11 +42,11 @@
         {{#each page_numbers}}
 
             {{#if current}}
-                <li class="page-item active"><a href="{{link}}" class="active page-link">{{number}}</a></li>
+                <li class="page-item active"><a href="#" data-page="{{number}}" class="active page-link valid">{{number}}</a></li>
             {{else}}
 
                 {{#if active}}
-                    <li class="page-item"><a href="{{link}}" class="page-link">{{number}}</a></li>
+                    <li class="page-item"><a href="#" data-page="{{number}}" class="page-link valid">{{number}}</a></li>
                 {{else}}
                     <li class="page-item"><a class="disabled page-link">...</a></li>
                 {{/if}}
