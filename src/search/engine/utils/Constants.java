@@ -86,6 +86,12 @@ public class Constants {
 
     // ================================================================================================
     //
+    // Ranker
+    //
+    public static final int SINGLE_PAGE_RESULTS_COUNT = 12;
+
+    // ================================================================================================
+    //
     // Server
     //
 
@@ -129,17 +135,19 @@ public class Constants {
      */
     public static final Map<String, Integer> TAG_TO_SCORE_MAP = new HashMap<String, Integer>() {
         {
-            put("title", 20);
-            put("h1", 10);
-            put("h2", 9);
+            put("title", 30);
+            put("h1", 15);
+            put("h2", 10);
+            put("i", 10);
+
             put("h3", 8);
-            put("h4", 7);
-            put("h5", 6);
-            put("h6", 5);
-            put("b", 4);
-            put("em", 4);
-            put("strong", 4);
-            put("i", 3);
+            put("em", 5);
+            put("b", 5);
+            put("strong", 5);
+
+            put("h4", 4);
+            put("h5", 3);
+            put("h6", 3);
         }
     };
 }
