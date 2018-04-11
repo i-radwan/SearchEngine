@@ -274,6 +274,22 @@ public class Indexer {
     }
 
     /**
+     *
+     * @return
+     */
+    public int getDocumentsCount() {
+        return 1;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public int getWordDocumentsCount(String word) {
+        return 1;
+    }
+
+    /**
      * Updates the web pages ranks according to the given inputs.
      * TODO: To be used by @Samir
      *

@@ -1,12 +1,15 @@
 package search.engine.ranker;
 
+import search.engine.indexer.Indexer;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class PageRank {
+
+public class PageRanker {
     /* The number of pages in the graph*/
     private Integer pagesCount;
 
@@ -27,6 +30,7 @@ public class PageRank {
 
     /**
      * Add an arc to the graph
+     *
      * @param from a node
      * @param to another node
      */
@@ -38,6 +42,7 @@ public class PageRank {
 
     /**
      * Initialize all vectors
+     *
      */
     private void initializeLists() {
         outDegrees = new ArrayList<Integer>();
@@ -55,7 +60,17 @@ public class PageRank {
     }
 
     /**
+     * Save edges list from a file
+     *
+     * @param filepath
+     */
+    public void saveFile(String filepath) {
+
+    }
+
+    /**
      * Read edges list from a file
+     *
      * @param filePath
      */
     private void readFile(String filePath) {
@@ -84,7 +99,8 @@ public class PageRank {
     }
 
     /**
-     * PageRank calculations
+     * PageRanker calculations
+     *
      */
     private void rankPages() {
         Double danglingSum, pagesRankSum = 1.0;
@@ -134,6 +150,7 @@ public class PageRank {
 
     /**
      * Print page ranks on console
+     *
      */
     private void printPR() {
         Double checkSum = 0.0;
@@ -146,6 +163,7 @@ public class PageRank {
 
     /**
      * Save page ranks to the output pageRanks.txt file
+     *
      */
     private void savePR() {
         try (PrintWriter out = new PrintWriter("Output/pageRanks.txt")) {
