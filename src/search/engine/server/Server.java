@@ -8,6 +8,7 @@ import spark.Response;
 import java.util.List;
 
 import static spark.Spark.get;
+import static spark.SparkBase.externalStaticFileLocation;
 import static spark.SparkBase.port;
 
 
@@ -17,9 +18,19 @@ public class Server {
      * Starts serving the clients.
      */
     public static void serve() {
+        // Setup static files link
+        externalStaticFileLocation(System.getProperty("user.dir") + "/client");
+
         // Server
         port(Constants.SEARCH_ENGINE_PORT_NUMBER);
 
+        // Main html page
+        get("/", (Request req, Response res) -> {
+            res.redirect("index.html");
+            return null;
+        });
+
+        // Search end point
         get("/search", (Request req, Response res) -> {
             String queryString = req.queryParams("q");
             String pageNumber = req.queryParams("page");
@@ -39,6 +50,7 @@ public class Server {
             return webpagesResponse;
         });
 
+        // Suggestions endpoint
         get("/suggestions", (Request req, Response res) -> {
             String queryString = req.queryParams("q");
 
