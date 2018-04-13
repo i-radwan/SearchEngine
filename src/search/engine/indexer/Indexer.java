@@ -448,7 +448,7 @@ public class Indexer {
     }
 
     /**
-     * Checks if the given value is in the given list.
+     * Checks if the given value is in the given sorted list using binary search.
      *
      * @param list the list of integers to find the value in
      * @param val the value needed to find it
