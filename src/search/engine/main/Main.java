@@ -39,7 +39,7 @@ public class Main {
             System.out.println("2. Clear Database");
             System.out.println("3. Test Indexer");
             System.out.println("4. Test Ranker");
-            System.out.println("5. Test Query Processor");
+            System.out.println("5. Start Server");
             System.out.println("6. Test Web Page Parser");
             System.out.println("7. Exit");
 

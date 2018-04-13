@@ -16,11 +16,7 @@ A Simple Search Engine written in Java
 - Finally choose `Crawler` and enter the needed number of threads to start crawling the web.
 
 ### How to use the search GUI?
-- Make sure you have python installed (for light webserver).
-- Apply the `How to use` section described above but choose `Test Query Processor`.
+- Apply the `How to use` section described above but choose `Start Server`.
 - Make sure that the server is listening to `http://0.0.0.0:8080` (change the code in both client and server sides to use different port)
-- Open terminal window.
-- Navigate to the client module folder.
-- Execute `python -m SimpleHTTPServer 8000`
 - Open your browser and visit `http://0.0.0.0:8000`
 
