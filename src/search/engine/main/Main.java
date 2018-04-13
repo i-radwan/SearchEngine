@@ -119,7 +119,13 @@ public class Main {
      */
     private static void test() {
         try {
+//            testWebPageParse();
+
+            // Testing Ranker TODO @Samir55 remove
+            testRanker();
+
             testSuggestions();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -127,8 +133,7 @@ public class Main {
 
     private static void testRanker() {
         PageRanker pageRanker = new PageRanker();
-        pageRanker.saveGraph();
-        pageRanker.run();
+        pageRanker.start();
     }
 
     private static void testIndexer() {
@@ -171,7 +176,6 @@ public class Main {
         indexer.insertSuggestion("hello world");
         indexer.insertSuggestion("hello world from egypt");
         indexer.insertSuggestion("hello omar");
-
         indexer.insertSuggestion("htc one x");
 
         System.out.println(indexer.getSuggestions("hello"));
