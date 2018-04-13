@@ -27,6 +27,17 @@ public class WebPage {
     public String url = null;
 
     /**
+     * Web page title.
+     */
+    public String title = null;
+
+    /**
+     * Web page document content.
+     * Used when displaying the results to the users.
+     */
+    public String content = null;
+
+    /**
      * Web page rank.
      * <p>
      * To be calculated as follows:
@@ -47,12 +58,6 @@ public class WebPage {
     public List<String> outLinks = null;
 
     /**
-     * Web page document content.
-     * Used when displaying the results to the users.
-     */
-    public String content = null;
-
-    /**
      * Web page words count after removing stop words.
      * Used in normalizing terms frequencies.
      */
@@ -70,7 +75,6 @@ public class WebPage {
      */
     public int fetchSkipLimit = 1;
     public int fetchSkipCount = 0;
-
 
     //
     // Member methods
@@ -94,12 +98,16 @@ public class WebPage {
         }
 
         id = (ObjectId) doc.getOrDefault(Constants.FIELD_ID, null);
+
         url = (String) doc.getOrDefault(Constants.FIELD_URL, null);
-        rank = (double) doc.getOrDefault(Constants.FIELD_RANK, 1.0);
+        title = (String) doc.getOrDefault(Constants.FIELD_TITLE, null);
         content = (String) doc.getOrDefault(Constants.FIELD_PAGE_CONTENT, null);
+
+        rank = (double) doc.getOrDefault(Constants.FIELD_RANK, 1.0);
         wordsCount = (int) doc.getOrDefault(Constants.FIELD_WORDS_COUNT, 0);
         fetchSkipLimit = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_LIMIT, 1);
         fetchSkipCount = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_COUNT, 0);
+
         outLinks = (List<String>) doc.getOrDefault(Constants.FIELD_CONNECTED_TO, null);
         parseWordsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_WORDS_INDEX, null));
     }
@@ -117,11 +125,14 @@ public class WebPage {
         }
 
         doc.append(Constants.FIELD_URL, url);
+        doc.append(Constants.FIELD_TITLE, title);
+        doc.append(Constants.FIELD_PAGE_CONTENT, content);
+
         doc.append(Constants.FIELD_RANK, rank);
         doc.append(Constants.FIELD_CONNECTED_TO, outLinks);
-        doc.append(Constants.FIELD_PAGE_CONTENT, content);
         doc.append(Constants.FIELD_WORDS_COUNT, wordsCount);
         doc.append(Constants.FIELD_WORDS_INDEX, getWordsIndex());
+
         doc.append(Constants.FILED_FETCH_SKIP_LIMIT, fetchSkipLimit);
         doc.append(Constants.FILED_FETCH_SKIP_COUNT, fetchSkipCount);
 

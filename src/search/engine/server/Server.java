@@ -22,7 +22,7 @@ public class Server {
         externalStaticFileLocation(System.getProperty("user.dir") + "/client");
 
         // Server
-        port(Constants.PORT);
+        port(Constants.SEARCH_ENGINE_PORT_NUMBER);
 
         // Main html page
         get("/", (Request req, Response res) -> {
