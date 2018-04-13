@@ -22,7 +22,7 @@ public class PageRanker {
     /**
      * Indexer object
      */
-    Indexer indexer;
+    Indexer indexer = new Indexer();
 
     /**
      * All web pages in the database
@@ -95,7 +95,6 @@ public class PageRanker {
         outDegrees = new ArrayList<>();
         pagesRank = new ArrayList<>();
         pagesIDS = new HashMap<>();
-        indexer = new Indexer();
 
         for (int i = 0; i < pagesCount; i++) {
 
