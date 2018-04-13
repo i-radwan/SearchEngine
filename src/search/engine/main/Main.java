@@ -28,7 +28,7 @@ public class Main {
      *
      * @param args External arguments passed from the operating system
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         scanner = new Scanner(System.in);
 
         int choice = -1;
@@ -116,7 +116,11 @@ public class Main {
      * Just for testing.
      */
     private static void test() {
-
+        try {
+            testWebPageParse();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static void testIndexer() {
@@ -158,13 +162,15 @@ public class Main {
 
         WebPageParser parser = new WebPageParser();
         WebPage page = parser.parse(url, doc);
+        page.outLinks = WebPageParser.extractOutLinks(doc);
 
         PrintWriter writer = new PrintWriter(new FileWriter("data/tmp.txt"));
 
         //
-        // Web page URL
+        // Web page URL & Title
         //
-        writer.printf("Web Page URL:\n\t%s\n\n", page.url);
+        writer.printf("Web Page URL:\n\t%s\n", page.url);
+        writer.printf("Web Page Title:\n\t%s\n\n", page.title);
 
         //
         // Out links

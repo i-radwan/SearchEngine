@@ -35,7 +35,7 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 10000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 5000;
+    public static final int MAX_WEB_PAGES_COUNT = 100;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
 
     // ================================================================================================
@@ -61,9 +61,10 @@ public class Constants {
      */
     public static final String FIELD_ID = "_id";
     public static final String FIELD_URL = "url";
+    public static final String FIELD_TITLE = "title";
+    public static final String FIELD_PAGE_CONTENT = "content";
     public static final String FIELD_RANK = "rank";
     public static final String FIELD_CONNECTED_TO = "connected_to";
-    public static final String FIELD_PAGE_CONTENT = "content";
     public static final String FIELD_WORDS_COUNT = "words_count";
     public static final String FIELD_WORDS_INDEX = "words_index";
     public static final String FIELD_WORD = "word";
@@ -93,8 +94,7 @@ public class Constants {
      * Allowed tags to be traversed during web page content extraction.
      */
     public static final String[] ALLOWED_TAGS = {
-            "#root", "html", "head", "title", "body",
-            "div", "p", "main", "article", "pre",
+            "body", "div", "p", "main", "article", "pre",
             "h1", "h2", "h3", "h4", "h5", "h6",
             "b", "i", "em", "blockquote", "strong",
             "a", "span", "ol", "ul", "li"
