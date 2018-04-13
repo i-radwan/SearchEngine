@@ -68,9 +68,9 @@ public class Main {
             }
 
             long endTime = System.nanoTime();
-            long secs = (endTime - startTime) / 1000000000;
+            long secs = (endTime - startTime) / (long) 1e9;
 
-            System.out.printf("Elapsed Time: %02d:%02d minutes\n", secs / 60, secs % 60);
+            System.out.printf("Elapsed Time: %02d:%02d\n", secs / 60, secs % 60);
         }
 
         scanner.close();
@@ -82,6 +82,7 @@ public class Main {
     private static void startServer() {
         // Server
         Server.serve();
+        System.out.println("Server is running on port 8080...");
     }
 
     /**

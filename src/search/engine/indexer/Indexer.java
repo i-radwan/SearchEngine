@@ -20,6 +20,7 @@ import static com.mongodb.client.model.Updates.*;
 
 
 public class Indexer {
+
     //
     // Member variables
     //
