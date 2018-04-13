@@ -127,6 +127,18 @@ public class Constants {
     //
     // Ranker
     //
+
+    /**
+     * PageRanker files constants
+     */
+    public static final String RANKER_DATA_PATH = DATA_PATH + "/ranker";
+    public static final String GRPAH_FILE_NAME = RANKER_DATA_PATH + "/graph.txt";
+    public static final String NODES_FILE_NAME = RANKER_DATA_PATH + "/nodes.txt";
+    public static final String PAGE_RANKS_FILE_NAME = RANKER_DATA_PATH + "/ranks.txt";
+
+    /**
+     * Pagination constants
+     */
     public static final int SINGLE_PAGE_RESULTS_COUNT = 12;
 
     // ================================================================================================

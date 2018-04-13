@@ -5,6 +5,8 @@ import search.engine.crawler.Crawler;
 import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.indexer.WebPageParser;
+import search.engine.ranker.PageRanker;
+import search.engine.ranker.Ranker;
 import search.engine.server.Server;
 import search.engine.utils.Utilities;
 import search.engine.utils.WebUtilities;
@@ -144,6 +146,10 @@ public class Main {
     }
 
     private static void testRanker() {
+
+        PageRanker pageRanker = new PageRanker();
+        pageRanker.saveGraph();
+        pageRanker.run();
 
     }
 

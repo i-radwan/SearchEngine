@@ -1,12 +1,15 @@
 package search.engine.ranker;
 
 import search.engine.indexer.Indexer;
+import search.engine.indexer.WebPage;
+import search.engine.utils.Constants;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 
 public class PageRanker {
@@ -61,10 +64,50 @@ public class PageRanker {
 
     /**
      * Save edges list from a file
-     *
-     * @param filepath
      */
-    public void saveFile(String filepath) {
+    public void saveGraph() {
+        Indexer indexer = new Indexer();
+
+        // The web pages ids (from 0 to N, where N is the number of web pages "nodes")
+        Integer nextWebPageID = 0;
+        Map<String, Integer> pagesIDS = new HashMap<>();
+
+        // Get the web pages in the graph (all nodes)
+        Map<String, WebPage> graphWebPages = indexer.getWebGraph();
+
+        // Write to the edges file
+        try (PrintWriter out = new PrintWriter(Constants.GRPAH_FILE_NAME)) {
+            // Write the number of nodes
+            out.println(graphWebPages.size());
+
+            // Write edges
+            for (Map.Entry<String, WebPage> webPageNode : graphWebPages.entrySet()) {
+                if (!pagesIDS.containsKey(webPageNode.getKey()))
+                    pagesIDS.put(webPageNode.getKey(), nextWebPageID++);
+
+                // Loop over all links and write edges to the out file
+                for (String to : webPageNode.getValue().outLinks) {
+                    if (graphWebPages.containsKey(to)) {
+                        if (!pagesIDS.containsKey(to))
+                            pagesIDS.put(to, nextWebPageID++);
+
+                        out.println(pagesIDS.get(webPageNode.getKey()) + " " + pagesIDS.get(to));
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
+        // Write nodes to file TODO @Samir55 Ask about spaces in URL
+        try (PrintWriter out = new PrintWriter(Constants.NODES_FILE_NAME)) {
+            for (Map.Entry<String, WebPage> webPageNode : graphWebPages.entrySet()) {
+                out.println(webPageNode.getKey() + " " + pagesIDS.get(webPageNode.getKey()));
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
 
     }
 
@@ -166,7 +209,7 @@ public class PageRanker {
      *
      */
     private void savePR() {
-        try (PrintWriter out = new PrintWriter("Output/pageRanks.txt")) {
+        try (PrintWriter out = new PrintWriter(Constants.PAGE_RANKS_FILE_NAME)) {
             for (Integer page = 0; page < pagesCount; page++) {
                 out.println(page.toString() + " = " + pagesRank.get(page));
             }
@@ -175,10 +218,11 @@ public class PageRanker {
         }
     }
 
-    public void run(String filePath) {
-        readFile(filePath);
+    public void run() {
+        readFile(Constants.GRPAH_FILE_NAME);
+
         rankPages();
-        printPR();
+
         savePR();
     }
 }
