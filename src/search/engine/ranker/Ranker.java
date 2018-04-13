@@ -71,6 +71,6 @@ public class Ranker {
             //}
         }
 
-        return (0.2 * pageTFIDFScore) * (0.25 * webPage.rank); // pagePopularity * pageRank(Relevance)
+        return (0.75 * pageTFIDFScore) * (0.25 * webPage.rank); // pagePopularity * pageRank(Relevance)
     }
 }
