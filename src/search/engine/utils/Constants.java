@@ -134,7 +134,7 @@ public class Constants {
     // Server
     //
 
-    public static int PORT = 8080;
+    public static int SEARCH_ENGINE_PORT_NUMBER = 8080;
 
     // ================================================================================================
     //

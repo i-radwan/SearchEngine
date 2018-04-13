@@ -36,11 +36,9 @@ public class Main {
         while (choice == -1) {
             System.out.println("Please enter a function to run:");
             System.out.println("1. Crawler");
-            System.out.println("2. Clear Database");
-            System.out.println("3. Test Indexer");
-            System.out.println("4. Test Ranker");
-            System.out.println("5. Test Query Processor");
-            System.out.println("6. Test Web Page Parser");
+            System.out.println("2. Start Server");
+            System.out.println("3. Clear Database");
+            System.out.println("4. Testing");
             System.out.println("7. Exit");
 
             choice = scanner.nextInt();
@@ -52,21 +50,15 @@ public class Main {
                     startCrawler();
                     break;
                 case 2:
-                    clearDatabase();
+                    startServer();
                     break;
                 case 3:
-                    testIndexer();
+                    clearDatabase();
                     break;
                 case 4:
-                    testRanker();
+                    test();
                     break;
                 case 5:
-                    testQueryProcessor();
-                    break;
-                case 6:
-                    testWebPageParse();
-                    break;
-                case 7:
                     System.out.println("Bye!");
                     break;
                 default:
@@ -82,6 +74,14 @@ public class Main {
         }
 
         scanner.close();
+    }
+
+    /**
+     * Start serving the search engine on port 8080.
+     */
+    private static void startServer() {
+        // Server
+        Server.serve();
     }
 
     /**
@@ -109,6 +109,13 @@ public class Main {
         System.out.println("Clearing search engine database...");
         Indexer.migrate();
         System.out.println("Done!");
+    }
+
+    /**
+     * Just for testing.
+     */
+    private static void test() {
+
     }
 
     private static void testIndexer() {
@@ -141,15 +148,6 @@ public class Main {
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-    }
-
-    private static void testRanker() {
-
-    }
-
-    private static void testQueryProcessor() {
-        // Server
-        Server.serve();
     }
 
     private static void testWebPageParse() throws IOException {
