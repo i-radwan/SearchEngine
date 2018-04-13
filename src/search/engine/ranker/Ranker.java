@@ -1,29 +1,31 @@
 package search.engine.ranker;
 
-import org.omg.CORBA.INTERNAL;
 import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+
 
 public class Ranker {
 
-    Indexer indexer;
-    int totalDocsCount;
+    Indexer mIndexer;
+    long mTotalDocsCount;
+
     /**
      * @param webPages
      * @param queryFilterWords
-     * @param page_number
+     * @param pageNumber
      * @return
      */
-    public List<WebPage> get_results(List<WebPage> webPages, List<String> queryFilterWords, int page_number) {
-        indexer = new Indexer();
-        totalDocsCount = indexer.getDocumentsCount();
+    public List<WebPage> getResults(List<WebPage> webPages, List<String> queryFilterWords, int pageNumber) {
+        mIndexer = new Indexer();
+        mTotalDocsCount = mIndexer.getDocumentsCount();
 
         webPages = rankPages(webPages, queryFilterWords);
 
-        int startIndex = Constants.SINGLE_PAGE_RESULTS_COUNT * (page_number - 1);
+        int startIndex = Constants.SINGLE_PAGE_RESULTS_COUNT * (pageNumber - 1);
 
         return webPages.subList(startIndex, startIndex + Constants.SINGLE_PAGE_RESULTS_COUNT);
     }
@@ -34,15 +36,15 @@ public class Ranker {
      * @return
      */
     private List<WebPage> rankPages(List<WebPage> webPages, List<String> queryFilterWords) {
-        HashMap<String, Double> pagesScores = new HashMap<String, Double>();
+        HashMap<String, Double> pagesScores = new HashMap<>();
 
         // For each page calculate its TF-IDF score
         for (WebPage webPage : webPages) {
-            pagesScores.put(webPage.id.toString(), calculatePageScore(webPage, queryFilterWords, totalDocsCount));
+            pagesScores.put(webPage.id.toString(), calculatePageScore(webPage, queryFilterWords));
         }
 
         // Sort webPages
-        Collections.sort(webPages, new SortPagesByRank(pagesScores));
+        webPages.sort(new SortPagesByRank(pagesScores));
 
         return webPages;
     }
@@ -52,7 +54,7 @@ public class Ranker {
      * @param queryFilerWords
      * @return
      */
-    private Double calculatePageScore(WebPage webPage, List<String> queryFilerWords, int totalDocsCount) {
+    private Double calculatePageScore(WebPage webPage, List<String> queryFilerWords) {
         Double pageTFIDFScore = 0.0;
         Double pagePosScore = 0.0;
 
@@ -60,13 +62,13 @@ public class Ranker {
         for (String word : queryFilerWords) {
 
             double wordTF = webPage.wordPosMap.get(word).size() / (double) webPage.wordsCount;
-            double wordIDF =  Math.log(totalDocsCount / (double) indexer.getWordDocumentsCount(word)); // TODO @Samir55 see this
+            double wordIDF = Math.log(mTotalDocsCount / (double) mIndexer.getDocumentsCount(word)); // TODO @Samir55 see this
 
             pageTFIDFScore += wordTF * wordIDF;
 
-//            for (int score : webPage.wordScoreMap.get(word)) {
-//                pagePosScore += score;
-//            }
+            //for (int score : webPage.wordScoreMap.get(word)) {
+            //    pagePosScore += score;
+            //}
         }
 
         return (0.2 * pageTFIDFScore) * (0.25 * webPage.rank); // pagePopularity * pageRank(Relevance)

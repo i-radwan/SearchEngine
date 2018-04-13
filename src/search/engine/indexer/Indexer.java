@@ -274,22 +274,6 @@ public class Indexer {
     }
 
     /**
-     *
-     * @return
-     */
-    public int getDocumentsCount() {
-        return 1;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public int getWordDocumentsCount(String word) {
-        return 1;
-    }
-
-    /**
      * Updates the web pages ranks according to the given inputs.
      * TODO: To be used by @Samir
      *
@@ -335,6 +319,28 @@ public class Indexer {
         }
 
         return map;
+    }
+
+    /**
+     * Returns the number of web pages documents saved in the database.
+     *
+     * @return documents count
+     */
+    public long getDocumentsCount() {
+        return mWebPagesCollection.count();
+    }
+
+    /**
+     * Returns the number of web pages documents saved in the database
+     * containing the given filter word.
+     *
+     * @return documents count
+     */
+    public long getDocumentsCount(String word) {
+        return mWebPagesCollection.count(eq(
+                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
+                word
+        ));
     }
 
     /**

@@ -153,7 +153,26 @@ public class Utilities {
      * @return {@code true} if the given string is surrounded by double quotes, {@code false} otherwise
      */
     public static boolean isPhraseSearch(String queryString) {
-        return queryString.charAt(0) == '"'
-                && queryString.charAt(queryString.length() - 1) == '"';
+        return queryString.charAt(0) == '"' &&
+                queryString.charAt(queryString.length() - 1) == '"';
+    }
+
+    /**
+     * Returns the number of occurrences of the given character in the string.
+     *
+     * @param str the string to search in
+     * @param c   the character to search for
+     * @return the number of occurrences
+     */
+    public static int countCharOccurrence(String str, char c) {
+        int res = 0;
+
+        for (int i = 0; i < str.length(); ++i) {
+            if (str.charAt(i) == c) {
+                res++;
+            }
+        }
+
+        return res;
     }
 }

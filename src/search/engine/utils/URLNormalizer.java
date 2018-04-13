@@ -136,12 +136,12 @@ public class URLNormalizer {
         queryParams = queryParams.toLowerCase();
 
         // Split queries
-        String[] queryArr = queryParams.split("&");
+        String[] queriesArr = queryParams.split("&");
         List<String> queries = new ArrayList<>();
 
-        // Remove empty queries
-        for (String q : queryArr) {
-            if (!q.endsWith("=") || q.chars().filter(ch -> ch == '=').count() != 1) {
+        // Insert only non-empty queries
+        for (String q : queriesArr) {
+            if (!q.endsWith("=") || Utilities.countCharOccurrence(q, '=') != 1) {
                 queries.add(q);
             }
         }

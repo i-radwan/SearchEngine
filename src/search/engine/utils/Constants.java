@@ -86,32 +86,6 @@ public class Constants {
 
     // ================================================================================================
     //
-    // Ranker
-    //
-    public static final int SINGLE_PAGE_RESULTS_COUNT = 12;
-
-    // ================================================================================================
-    //
-    // Server
-    //
-
-    public static int PORT = 8080;
-
-    // ================================================================================================
-    //
-    // Query processing
-    //
-
-    public static final String[] STOP_WORDS = {
-            "i", "a", "about", "an", "are", "as", "at", "be", "by", "com", "for",
-            "from", "how", "in", "is", "it", "of", "on", "or", "that", "the",
-            "this", "to", "was", "what", "when", "where", "who", "will",
-            "with", "the", "www", "can", "and"
-    };
-    public static final Set<String> STOP_WORDS_SET = new HashSet<>(Arrays.asList(STOP_WORDS));
-
-    // ================================================================================================
-    //
     // Web Page Parse
     //
 
@@ -119,13 +93,11 @@ public class Constants {
      * Allowed tags to be traversed during web page content extraction.
      */
     public static final String[] ALLOWED_TAGS = {
-            "#root", "html", "head", "title",
-            "body",
+            "#root", "html", "head", "title", "body",
             "div", "p", "main", "article", "pre",
             "h1", "h2", "h3", "h4", "h5", "h6",
             "b", "i", "em", "blockquote", "strong",
-            "a", "span",
-            "ol", "ul", "li"
+            "a", "span", "ol", "ul", "li"
     };
     public static final Set<String> ALLOWED_TAGS_SET = new HashSet<>(Arrays.asList(ALLOWED_TAGS));
 
@@ -150,4 +122,30 @@ public class Constants {
             put("h6", 3);
         }
     };
+
+    // ================================================================================================
+    //
+    // Ranker
+    //
+    public static final int SINGLE_PAGE_RESULTS_COUNT = 12;
+
+    // ================================================================================================
+    //
+    // Server
+    //
+
+    public static int PORT = 8080;
+
+    // ================================================================================================
+    //
+    // Query processing
+    //
+
+    public static final String[] STOP_WORDS = {
+            "i", "a", "about", "an", "are", "as", "at", "be", "by", "com", "for",
+            "from", "how", "in", "is", "it", "of", "on", "or", "that", "the",
+            "this", "to", "was", "what", "when", "where", "who", "will",
+            "with", "the", "www", "can", "and"
+    };
+    public static final Set<String> STOP_WORDS_SET = new HashSet<>(Arrays.asList(STOP_WORDS));
 }
