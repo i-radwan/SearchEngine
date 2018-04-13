@@ -6,7 +6,6 @@ import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.indexer.WebPageParser;
 import search.engine.ranker.PageRanker;
-import search.engine.ranker.Ranker;
 import search.engine.server.Server;
 import search.engine.utils.Utilities;
 import search.engine.utils.WebUtilities;
@@ -120,6 +119,9 @@ public class Main {
     private static void test() {
         try {
             testWebPageParse();
+
+            // Testing Ranker TODO @Samir55 remove
+            testRanker();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -160,8 +162,7 @@ public class Main {
     private static void testRanker() {
 
         PageRanker pageRanker = new PageRanker();
-        pageRanker.saveGraph();
-        pageRanker.run();
+        pageRanker.start();
 
     }
 
