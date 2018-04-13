@@ -39,7 +39,7 @@ public class Indexer {
      */
     private final Object mLock = new Object();
 
-    // =====================================================================
+    // ===========================================================================
     //
     // Web Pages Collection methods
     //
@@ -172,18 +172,11 @@ public class Indexer {
      * @param page a web page to be indexed or updated
      */
     public void updateWebPage(WebPage page) {
-        // Filter document by web page url
-        Document filter = new Document(Constants.FIELD_URL, page.url);
-        // Create the web page document to be indexed
-        Document update = page.toDocument();
-        // Add upsert option
-        UpdateOptions options = new UpdateOptions().upsert(true);
-
         // Replace or create new document in the web pages collection
         mWebPagesCollection.replaceOne(
-                filter,
-                update,
-                options
+                eq(Constants.FIELD_URL, page.url),  // Filter document by web page url
+                page.toDocument(),                  // Create the web page document to be indexed
+                new UpdateOptions().upsert(true)    // Add upsert option
         );
     }
 
@@ -324,7 +317,7 @@ public class Indexer {
                 .find(in(Constants.FIELD_ID, ids))
                 .projection(include(projections));
 
-        return toWebPages(res);
+        return IndexerUtilities.toWebPages(res);
     }
 
     /**
@@ -341,16 +334,16 @@ public class Indexer {
                 ))
                 .projection(include(Constants.FIELDS_FOR_RANKING));
 
-        return toWebPages(res);
+        return IndexerUtilities.toWebPages(res);
     }
 
     /**
-     * Gets the web pages having all of the given filter words.
+     * Searches for web pages having all of the given filter words in the given order.
      *
-     * @param filterWords list of words to find.
+     * @param filterWords list of words to search for
      * @return list of matching web pages
      */
-    private List<WebPage> findAllFilterWords(List<String> filterWords) {
+    public List<WebPage> searchByPhrase(List<String> filterWords) {
         FindIterable<Document> res = mWebPagesCollection
                 .find(all(
                         Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
@@ -358,113 +351,20 @@ public class Indexer {
                 ))
                 .projection(include(Constants.FIELDS_FOR_RANKING));
 
-        return toWebPages(res);
-    }
-
-    /**
-     * Checks if the given value is in the given sorted list using binary search.
-     *
-     * @param list the list of integers to find the value in
-     * @param val  the value needed to find it
-     * @return {@code true} if the val was found in the list, {@code false} otherwise
-     */
-    private boolean ValueInSortedList(List<Integer> list, Integer val) {
-        int l = 0, r = list.size();
-
-        while (l < r) {
-            int mid = l + (r - l) / 2;
-            if (list.get(mid) > val)
-                r = mid - 1;
-            else
-                l = mid;
-        }
-
-        return (val.equals(list.get(l)));
-    }
-
-    /**
-     * Checks if all of the filter words occurred next to each other in a given web page.
-     *
-     * @param webPage     the page that has all the filter words but needs check if the filter words are concatenated
-     * @param filterWords list of words to find
-     * @return {@code true} if the filter words are concatenated, {@code false} otherwise
-     */
-    private boolean filterWordsConcatenated(WebPage webPage, List<String> filterWords) {
-        if (filterWords.size() == 0) return true;
-
-        int minFilterWordIdx = 0, i = 0;
-        List<Integer> minFilterWordPosMap = webPage.wordPosMap.get(filterWords.get(0));
-
-        // choose the filter word that occurred the least amount of times in the web page
-        for (String filterWord : filterWords) {
-            List<Integer> wordPositions = webPage.wordPosMap.get(filterWord);
-            if (wordPositions.size() < minFilterWordPosMap.size()) {
-                minFilterWordIdx = i;
-                minFilterWordPosMap = wordPositions;
-            }
-            i++;
-        }
-
-        // check that the filter words occur in the correct position
-        for (Integer minFilterWordPos : minFilterWordPosMap) {
-            i = 0;
-            for (String filterWord : filterWords) {
-                if (i == minFilterWordIdx) {
-                    i++;
-                    continue;
-                }
-                int idxToLookFor = (minFilterWordPos - minFilterWordIdx) + i;
-
-                // didn't find the word in the wanted position
-                if (!ValueInSortedList(webPage.wordPosMap.get(filterWord), idxToLookFor))
-                    break;
-
-                i++;
-            }
-
-            // could find all the filter words in the correct positions
-            if (i == filterWords.size()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Searches for web pages having all of the given filter words next to each other.
-     *
-     * @param filterWords list of words to search for
-     * @return list of matching web pages
-     */
-    public List<WebPage> searchByPhrase(List<String> filterWords) {
-        List<WebPage> initPages = findAllFilterWords(filterWords);
         List<WebPage> ret = new ArrayList<>();
 
-        for (WebPage page : initPages) {
-            if (filterWordsConcatenated(page, filterWords))
+        for (Document doc : res) {
+            WebPage page = new WebPage(doc);
+
+            if (IndexerUtilities.filterWordsConcatenated(page.wordPosMap, filterWords)) {
                 ret.add(page);
+            }
         }
 
         return ret;
     }
 
-    /**
-     * Converts the results of find query into a list of web pages.
-     *
-     * @param documents list of documents to be converted
-     * @return list of web pages
-     */
-    private List<WebPage> toWebPages(FindIterable<Document> documents) {
-        List<WebPage> ret = new ArrayList<>();
-
-        for (Document doc : documents) {
-            ret.add(new WebPage(doc));
-        }
-
-        return ret;
-    }
-
-    // =====================================================================
+    // ===========================================================================
     //
     // Dictionary Collection methods
     //
@@ -523,7 +423,7 @@ public class Indexer {
         return dictionary;
     }
 
-    // =====================================================================
+    // ===========================================================================
     //
     // Suggestions Collection methods
     //
