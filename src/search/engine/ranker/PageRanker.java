@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 public class PageRanker {
@@ -17,6 +18,11 @@ public class PageRanker {
     //
     // Member variables
     //
+
+    /**
+     * Indexer object
+     */
+    Indexer indexer;
 
     /**
      * All web pages in the database
@@ -89,6 +95,7 @@ public class PageRanker {
         outDegrees = new ArrayList<>();
         pagesRank = new ArrayList<>();
         pagesIDS = new HashMap<>();
+        indexer = new Indexer();
 
         for (int i = 0; i < pagesCount; i++) {
 
@@ -102,11 +109,9 @@ public class PageRanker {
     }
 
     /**
-     * Get web pages graph and save it to a file
+     * Get web pages graph
      */
     public void getGraph() {
-        Indexer indexer = new Indexer();
-
         // Get the web pages in the graph (all nodes)
         graphNodes = indexer.getWebGraph();
 
@@ -132,9 +137,12 @@ public class PageRanker {
         }
     }
 
+    /**
+     * save web pages graph to a file
+     */
     private void saveGraph() {
         // Write to the edges file
-        try (PrintWriter out = new PrintWriter(Constants.GRPAH_FILE_NAME)) {
+        try (PrintWriter out = new PrintWriter(Constants.GRAPH_FILE_NAME)) {
             // Write the number of nodes
             out.println(this.pagesCount);
 
@@ -146,15 +154,6 @@ public class PageRanker {
                         out.println(from + " " + to);
                     }
                 }
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-
-        // Write nodes to file TODO @Samir55 Ask about spaces in URL
-        try (PrintWriter out = new PrintWriter(Constants.NODES_FILE_NAME)) {
-            for (Map.Entry<String, WebPage> webPageNode : graphNodes.entrySet()) {
-                out.println(webPageNode.getKey() + " " + pagesIDS.get(webPageNode.getKey()));
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -207,6 +206,48 @@ public class PageRanker {
                 pagesRank.set(page, newPagesRank.get(page));
                 pagesRankSum += newPagesRank.get(page);
             }
+        }
+    }
+
+    /**
+     * Read page ranks file, used in case of running on CUDA.
+     *
+     * @param inputPath
+     */
+    private void readPagesRanks(String inputPath) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(inputPath));
+            String strLine;
+
+            // Read file line by line
+            while ((strLine = br.readLine()) != null) {
+
+                String[] strs = strLine.trim().split(" ");
+                Integer pageID = Integer.parseInt(strs[0]);
+                Double rank = Double.parseDouble(strs[2]);
+
+                pagesRank.set(pageID, rank);
+
+            }
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Updates pages ranks in the database
+     */
+    private void updatePagesRanks(boolean cudaInput) {
+        if (cudaInput) readPagesRanks(Constants.CUDA_PAGE_RANKS_FILE_NAME);
+        else {
+            // Reverse a map
+            Map<Integer, String> pagesURL = pagesIDS.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+
+            for (int id = 0; id < this.pagesCount; id++) {
+                graphNodes.get(pagesURL.get(id)).rank = pagesRank.get(id);
+            }
+
+            indexer.updatePageRanks(graphNodes.values());
         }
     }
 
@@ -274,6 +315,8 @@ public class PageRanker {
         saveGraph();
 
         rankPages();
+
+        updatePagesRanks(false);
 
         printPR(true);
         savePR();
