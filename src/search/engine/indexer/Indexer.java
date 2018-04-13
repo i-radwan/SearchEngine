@@ -15,7 +15,9 @@ import java.net.URL;
 import java.util.*;
 
 import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Projections.excludeId;
 import static com.mongodb.client.model.Projections.include;
+import static com.mongodb.client.model.Sorts.ascending;
 import static com.mongodb.client.model.Updates.*;
 
 
@@ -26,22 +28,20 @@ public class Indexer {
     //
 
     /**
-     * Mongo database collection holding the indexed web pages.
+     * Mongo database collections
      */
     private MongoCollection<Document> mWebPagesCollection;
-
-    /**
-     * Mongo database collection holding the crawled dictionary.
-     */
     private MongoCollection<Document> mDictionaryCollection;
+    private MongoCollection<Document> mSuggestionsCollection;
 
     /**
      * Lock object used to lock bulk upsertions.
      */
     private final Object mLock = new Object();
 
+    // =====================================================================
     //
-    // Member methods
+    // Web Pages Collection methods
     //
 
     /**
@@ -74,6 +74,11 @@ public class Indexer {
         database.createCollection(Constants.COLLECTION_DICTIONARY);
         collection = database.getCollection(Constants.COLLECTION_DICTIONARY);
         collection.createIndex(Indexes.ascending(Constants.FIELD_WORD), indexOptions);
+
+        // Create suggestions collection and its indexes
+        database.createCollection(Constants.COLLECTION_SUGGESTIONS);
+        collection = database.getCollection(Constants.COLLECTION_SUGGESTIONS);
+        collection.createIndex(Indexes.ascending(Constants.FIELD_SUGGESTION), indexOptions);
     }
 
     /**
@@ -94,6 +99,7 @@ public class Indexer {
         // Get collections from the database
         mWebPagesCollection = database.getCollection(Constants.COLLECTION_WEB_PAGES);
         mDictionaryCollection = database.getCollection(Constants.COLLECTION_DICTIONARY);
+        mSuggestionsCollection = database.getCollection(Constants.COLLECTION_SUGGESTIONS);
     }
 
     /**
@@ -221,60 +227,6 @@ public class Indexer {
     }
 
     /**
-     * Updates the words dictionary in the database.
-     * <p>
-     * Words dictionary is a map from a stemmed word to
-     * all the words having the same stem.
-     *
-     * @param dictionary the dictionary map form a word to its synonyms to update
-     */
-    public void updateWordsDictionary(Map<String, List<String>> dictionary) {
-        List<WriteModel<Document>> operations = new ArrayList<>();
-
-        // Add upsert option
-        UpdateOptions options = new UpdateOptions().upsert(true);
-
-        for (Map.Entry<String, List<String>> it : dictionary.entrySet()) {
-            operations.add(new UpdateOneModel<>(
-                    eq(Constants.FIELD_WORD, it.getKey()),
-                    addEachToSet(Constants.FILED_SYNONYMS, it.getValue()),
-                    options
-            ));
-        }
-
-        if (operations.isEmpty()) {
-            return;
-        }
-
-        synchronized (mLock) {
-            // Synchronization needed due to a MongoDB issue reported here:
-            // https://jira.mongodb.org/browse/SERVER-14322
-            mDictionaryCollection.bulkWrite(operations);
-        }
-    }
-
-    /**
-     * Returns the dictionary of the given list of words.
-     *
-     * @param words list of words to get their dictionary
-     * @return the dictionary map form a word to its synonyms
-     */
-    public Map<String, List<String>> getWordsDictionary(List<String> words) {
-        Map<String, List<String>> dictionary = new HashMap<>();
-
-        FindIterable<Document> res = mDictionaryCollection.find(in(Constants.FIELD_WORD, words));
-
-        for (Document doc : res) {
-            dictionary.put(
-                    doc.getString(Constants.FIELD_WORD),
-                    (List<String>) doc.get(Constants.FILED_SYNONYMS)
-            );
-        }
-
-        return dictionary;
-    }
-
-    /**
      * Updates the web pages ranks according to the given inputs.
      * TODO: To be used by @Samir
      *
@@ -345,30 +297,6 @@ public class Indexer {
     }
 
     /**
-     * Returns the id of the given web page url.
-     * If the url is not found then a new entry will be inserted in the database.
-     * TODO: Think about concurrency
-     * TODO: NOT USED! to be removed if not needed.
-     *
-     * @param url web page URL string
-     * @return the id of the given web page
-     */
-    public ObjectId getWebPageId(String url) {
-        FindOneAndUpdateOptions options = new FindOneAndUpdateOptions();
-        options.upsert(true);
-        options.returnDocument(ReturnDocument.AFTER);
-        options.projection(include(Constants.FIELD_ID));
-
-        Document doc = mWebPagesCollection.findOneAndUpdate(
-                eq(Constants.FIELD_URL, url),
-                setOnInsert(Constants.FIELD_URL, url),
-                options
-        );
-
-        return doc.getObjectId(Constants.FIELD_ID);
-    }
-
-    /**
      * Searches for a specific web pages by their ids.
      *
      * @param url         the web page url string to search for
@@ -394,9 +322,7 @@ public class Indexer {
     public List<WebPage> searchById(List<ObjectId> ids, String... projections) {
         FindIterable<Document> res = mWebPagesCollection
                 .find(in(Constants.FIELD_ID, ids))
-                .projection(include(
-                        projections
-                ));
+                .projection(include(projections));
 
         return toWebPages(res);
     }
@@ -413,13 +339,7 @@ public class Indexer {
                         Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
                         filterWords
                 ))
-                .projection(include(
-                        Constants.FIELD_ID,
-                        Constants.FIELD_URL,
-                        Constants.FIELD_RANK,
-                        Constants.FIELD_WORDS_COUNT,
-                        Constants.FIELD_WORDS_INDEX
-                ));
+                .projection(include(Constants.FIELDS_FOR_RANKING));
 
         return toWebPages(res);
     }
@@ -436,13 +356,7 @@ public class Indexer {
                         Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
                         filterWords
                 ))
-                .projection(include(
-                        Constants.FIELD_ID,
-                        Constants.FIELD_URL,
-                        Constants.FIELD_RANK,
-                        Constants.FIELD_WORDS_COUNT,
-                        Constants.FIELD_WORDS_INDEX
-                ));
+                .projection(include(Constants.FIELDS_FOR_RANKING));
 
         return toWebPages(res);
     }
@@ -451,7 +365,7 @@ public class Indexer {
      * Checks if the given value is in the given sorted list using binary search.
      *
      * @param list the list of integers to find the value in
-     * @param val the value needed to find it
+     * @param val  the value needed to find it
      * @return {@code true} if the val was found in the list, {@code false} otherwise
      */
     private boolean ValueInSortedList(List<Integer> list, Integer val) {
@@ -471,7 +385,7 @@ public class Indexer {
     /**
      * Checks if all of the filter words occurred next to each other in a given web page.
      *
-     * @param webPage the page that has all the filter words but needs check if the filter words are concatenated
+     * @param webPage     the page that has all the filter words but needs check if the filter words are concatenated
      * @param filterWords list of words to find
      * @return {@code true} if the filter words are concatenated, {@code false} otherwise
      */
@@ -545,6 +459,100 @@ public class Indexer {
 
         for (Document doc : documents) {
             ret.add(new WebPage(doc));
+        }
+
+        return ret;
+    }
+
+    // =====================================================================
+    //
+    // Dictionary Collection methods
+    //
+
+    /**
+     * Updates the words dictionary in the database.
+     * <p>
+     * Words dictionary is a map from a stemmed word to
+     * all the words having the same stem.
+     *
+     * @param dictionary the dictionary map form a word to its synonyms to update
+     */
+    public void updateWordsDictionary(Map<String, List<String>> dictionary) {
+        List<WriteModel<Document>> operations = new ArrayList<>();
+
+        // Add upsert option
+        UpdateOptions options = new UpdateOptions().upsert(true);
+
+        for (Map.Entry<String, List<String>> it : dictionary.entrySet()) {
+            operations.add(new UpdateOneModel<>(
+                    eq(Constants.FIELD_WORD, it.getKey()),
+                    addEachToSet(Constants.FILED_SYNONYMS, it.getValue()),
+                    options
+            ));
+        }
+
+        if (operations.isEmpty()) {
+            return;
+        }
+
+        synchronized (mLock) {
+            // Synchronization needed due to a MongoDB issue reported here:
+            // https://jira.mongodb.org/browse/SERVER-14322
+            mDictionaryCollection.bulkWrite(operations);
+        }
+    }
+
+    /**
+     * Returns the dictionary of the given list of words.
+     *
+     * @param words list of words to get their dictionary
+     * @return the dictionary map form a word to its synonyms
+     */
+    public Map<String, List<String>> getWordsDictionary(List<String> words) {
+        Map<String, List<String>> dictionary = new HashMap<>();
+
+        FindIterable<Document> res = mDictionaryCollection.find(in(Constants.FIELD_WORD, words));
+
+        for (Document doc : res) {
+            dictionary.put(
+                    doc.getString(Constants.FIELD_WORD),
+                    (List<String>) doc.get(Constants.FILED_SYNONYMS)
+            );
+        }
+
+        return dictionary;
+    }
+
+    // =====================================================================
+    //
+    // Suggestions Collection methods
+    //
+
+    public void insertSuggestion(String suggestion) {
+        mSuggestionsCollection.updateOne(
+                eq(Constants.FIELD_SUGGESTION, suggestion),
+                set(Constants.FIELD_SUGGESTION, suggestion),
+                new UpdateOptions().upsert(true)
+        );
+    }
+
+    /**
+     * Returns all suggestions in the database that
+     * the given search query is prefix from.
+     *
+     * @param query the search query
+     * @return a list of matched suggestions sorted in ascending order
+     */
+    public List<String> getSuggestions(String query) {
+        List<String> ret = new ArrayList<>();
+
+        FindIterable<Document> res = mSuggestionsCollection
+                .find(regex(Constants.FIELD_SUGGESTION, query + ".*"))
+                .projection(excludeId())
+                .sort(ascending(Constants.FIELD_SUGGESTION));
+
+        for (Document doc : res) {
+            ret.add(doc.getString(Constants.FIELD_SUGGESTION));
         }
 
         return ret;

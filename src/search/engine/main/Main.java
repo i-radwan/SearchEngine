@@ -78,15 +78,6 @@ public class Main {
     }
 
     /**
-     * Start serving the search engine on port 8080.
-     */
-    private static void startServer() {
-        // Server
-        Server.serve();
-        System.out.println("Server is running on port 8080...");
-    }
-
-    /**
      * Start running the crawling process.
      */
     private static void startCrawler() {
@@ -105,6 +96,15 @@ public class Main {
     }
 
     /**
+     * Start serving the search engine on port 8080.
+     */
+    private static void startServer() {
+        // Server
+        Server.serve();
+        System.out.println("Server is running on port 8080...");
+    }
+
+    /**
      * Clears our database and recreate the indexes.
      */
     private static void clearDatabase() {
@@ -118,13 +118,21 @@ public class Main {
      */
     private static void test() {
         try {
-            testWebPageParse();
+//            testWebPageParse();
 
             // Testing Ranker TODO @Samir55 remove
             testRanker();
+
+            testSuggestions();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static void testRanker() {
+        PageRanker pageRanker = new PageRanker();
+        pageRanker.start();
     }
 
     private static void testIndexer() {
@@ -159,16 +167,15 @@ public class Main {
         }
     }
 
-    private static void testRanker() {
+    private static void testSuggestions() {
+        Indexer indexer = new Indexer();
 
-        PageRanker pageRanker = new PageRanker();
-        pageRanker.start();
+        indexer.insertSuggestion("hello world");
+        indexer.insertSuggestion("hello world from egypt");
+        indexer.insertSuggestion("hello omar");
+        indexer.insertSuggestion("htc one x");
 
-    }
-
-    private static void testQueryProcessor() {
-        // Server
-        Server.serve();
+        System.out.println(indexer.getSuggestions("hello"));
     }
 
     private static void testWebPageParse() throws IOException {
