@@ -17,7 +17,7 @@ public class Constants {
     //
 
     /**
-     * File directories constants
+     * Crawler directories constants
      */
     public static final String CRAWLER_DATA_PATH = DATA_PATH + "/crawler";
     public static final String SEED_FILE_NAME = CRAWLER_DATA_PATH + "/seed.txt";
@@ -55,6 +55,7 @@ public class Constants {
      */
     public static final String COLLECTION_WEB_PAGES = "web_pages";
     public static final String COLLECTION_DICTIONARY = "dictionary";
+    public static final String COLLECTION_SUGGESTIONS = "suggestions";
 
     /**
      * Fields constants
@@ -73,6 +74,7 @@ public class Constants {
     public static final String FILED_SYNONYMS = "synonyms";
     public static final String FILED_FETCH_SKIP_LIMIT = "fetch_skip_limit";
     public static final String FILED_FETCH_SKIP_COUNT = "fetch_skip_count";
+    public static final String FIELD_SUGGESTION = "suggestion";
 
     /**
      * Common fields lists
@@ -103,7 +105,6 @@ public class Constants {
 
     /**
      * Map from an HTML tag to an integer score representing the importance of this tag.
-     * TODO: to be edited
      */
     public static final Map<String, Integer> TAG_TO_SCORE_MAP = new HashMap<String, Integer>() {
         {
@@ -129,7 +130,7 @@ public class Constants {
     //
 
     /**
-     * PageRanker files constants
+     * Page Ranker directories constants
      */
     public static final String RANKER_DATA_PATH = DATA_PATH + "/ranker";
     public static final String GRPAH_FILE_NAME = RANKER_DATA_PATH + "/graph.txt";
@@ -159,5 +160,6 @@ public class Constants {
             "this", "to", "was", "what", "when", "where", "who", "will",
             "with", "the", "www", "can", "and"
     };
+
     public static final Set<String> STOP_WORDS_SET = new HashSet<>(Arrays.asList(STOP_WORDS));
 }
