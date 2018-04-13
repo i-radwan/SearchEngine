@@ -30,7 +30,7 @@ public class Main {
      *
      * @param args External arguments passed from the operating system
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         scanner = new Scanner(System.in);
 
         int choice = -1;
@@ -38,11 +38,9 @@ public class Main {
         while (choice == -1) {
             System.out.println("Please enter a function to run:");
             System.out.println("1. Crawler");
-            System.out.println("2. Clear Database");
-            System.out.println("3. Test Indexer");
-            System.out.println("4. Test Ranker");
-            System.out.println("5. Start Server");
-            System.out.println("6. Test Web Page Parser");
+            System.out.println("2. Start Server");
+            System.out.println("3. Clear Database");
+            System.out.println("4. Testing");
             System.out.println("7. Exit");
 
             choice = scanner.nextInt();
@@ -54,21 +52,15 @@ public class Main {
                     startCrawler();
                     break;
                 case 2:
-                    clearDatabase();
+                    startServer();
                     break;
                 case 3:
-                    testIndexer();
+                    clearDatabase();
                     break;
                 case 4:
-                    testRanker();
+                    test();
                     break;
                 case 5:
-                    testQueryProcessor();
-                    break;
-                case 6:
-                    testWebPageParse();
-                    break;
-                case 7:
                     System.out.println("Bye!");
                     break;
                 default:
@@ -78,12 +70,21 @@ public class Main {
             }
 
             long endTime = System.nanoTime();
-            long secs = (endTime - startTime) / 1000000000;
+            long secs = (endTime - startTime) / (long) 1e9;
 
-            System.out.printf("Elapsed Time: %02d:%02d minutes\n", secs / 60, secs % 60);
+            System.out.printf("Elapsed Time: %02d:%02d\n", secs / 60, secs % 60);
         }
 
         scanner.close();
+    }
+
+    /**
+     * Start serving the search engine on port 8080.
+     */
+    private static void startServer() {
+        // Server
+        Server.serve();
+        System.out.println("Server is running on port 8080...");
     }
 
     /**
@@ -111,6 +112,17 @@ public class Main {
         System.out.println("Clearing search engine database...");
         Indexer.migrate();
         System.out.println("Done!");
+    }
+
+    /**
+     * Just for testing.
+     */
+    private static void test() {
+        try {
+            testWebPageParse();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static void testIndexer() {
@@ -165,13 +177,15 @@ public class Main {
 
         WebPageParser parser = new WebPageParser();
         WebPage page = parser.parse(url, doc);
+        page.outLinks = WebPageParser.extractOutLinks(doc);
 
         PrintWriter writer = new PrintWriter(new FileWriter("data/tmp.txt"));
 
         //
-        // Web page URL
+        // Web page URL & Title
         //
-        writer.printf("Web Page URL:\n\t%s\n\n", page.url);
+        writer.printf("Web Page URL:\n\t%s\n", page.url);
+        writer.printf("Web Page Title:\n\t%s\n\n", page.title);
 
         //
         // Out links

@@ -3,7 +3,6 @@ package search.engine.ranker;
 import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.PrintWriter;
@@ -13,29 +12,50 @@ import java.util.Map;
 
 
 public class PageRanker {
-    /* The number of pages in the graph*/
+
+    //
+    // Member variables
+    //
+
+    /**
+     * The number of pages in the graph.
+     */
     private Integer pagesCount;
 
-    /* The Graph adjacency list */
-    private HashMap<Integer, ArrayList<Integer>> inList = new HashMap<Integer, ArrayList<Integer>>();
+    /**
+     * The graph adjacency list.
+     */
+    private HashMap<Integer, ArrayList<Integer>> inList = new HashMap<>();
 
-    /* The out degrees of each page */
+    /**
+     * The out degrees of each page.
+     */
     private ArrayList<Integer> outDegrees;
 
-    /* The ranks of the pages */
+    /**
+     * The ranks of the pages.
+     */
     private ArrayList<Double> pagesRank;
 
-    /* The dumping factor */
-    private final Double ALPHA = 0.85;
+    /**
+     * The dumping factor.
+     */
+    private static final Double ALPHA = 0.85;
 
-    /* The maximum number iterations */
-    private final Integer MAX_ITERATIONS = 100;
+    /**
+     * The maximum number iterations.
+     */
+    private static final Integer MAX_ITERATIONS = 100;
+
+    //
+    // Member methods
+    //
 
     /**
      * Add an arc to the graph
      *
      * @param from a node
-     * @param to another node
+     * @param to   another node
      */
     private void addArc(int from, int to) {
         if (inList.containsKey(to))
@@ -45,16 +65,15 @@ public class PageRanker {
 
     /**
      * Initialize all vectors
-     *
      */
     private void initializeLists() {
-        outDegrees = new ArrayList<Integer>();
-        pagesRank = new ArrayList<Double>();
+        outDegrees = new ArrayList<>();
+        pagesRank = new ArrayList<>();
 
         for (int i = 0; i < pagesCount; i++) {
 
             // Create a new list for each page
-            ArrayList<Integer> newList = new ArrayList<Integer>();
+            ArrayList<Integer> newList = new ArrayList<>();
             inList.put(i, newList);
 
             outDegrees.add(0);
@@ -136,14 +155,12 @@ public class PageRanker {
                 this.addArc(u, v);
             }
         } catch (Exception e) {
-            //Catch exception if any
             System.err.println("Error: " + e.getMessage());
         }
     }
 
     /**
      * PageRanker calculations
-     *
      */
     private void rankPages() {
         Double danglingSum, pagesRankSum = 1.0;
@@ -168,7 +185,7 @@ public class PageRanker {
             Double oneProb = (1.0 - ALPHA) * (1.0 / pagesCount) * 1.0; // Same for all pages
 
             // Loop over all pages
-            ArrayList<Double> newPagesRank = new ArrayList<Double>();
+            ArrayList<Double> newPagesRank = new ArrayList<>();
             for (int page = 0; page < pagesCount; page++) {
 
                 Double hPage = 0.0;
@@ -193,7 +210,6 @@ public class PageRanker {
 
     /**
      * Print page ranks on console
-     *
      */
     private void printPR() {
         Double checkSum = 0.0;
@@ -206,7 +222,6 @@ public class PageRanker {
 
     /**
      * Save page ranks to the output pageRanks.txt file
-     *
      */
     private void savePR() {
         try (PrintWriter out = new PrintWriter(Constants.PAGE_RANKS_FILE_NAME)) {
