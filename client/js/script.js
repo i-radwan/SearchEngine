@@ -1,8 +1,8 @@
 //
 // Constants
 //
-const SERVER_SEARCH_LINK = "http://0.0.0.0:8080/search?q={query}&page={page}";
-const SERVER_SUGGESTIONS_LINK = "http://0.0.0.0:8080/suggestions?q={query}";
+const SERVER_SEARCH_LINK = "http://localhost:8080/search?q={query}&page={page}";
+const SERVER_SUGGESTIONS_LINK = "http://localhost:8080/suggestions?q={query}";
 const MIN_SUGGESTION_CHARS_COUNT = 3;
 
 //
@@ -195,7 +195,7 @@ let app = {
         // Send suggestions retrieval request if the content exceeds limit
         app.searchBox.bind('keyup', function (e) {
             if (app.searchBox.val().length > MIN_SUGGESTION_CHARS_COUNT) {
-                app.getSuggestionsRequest();
+                app.getSuggestionsRequest(app.searchBox.val());
             }
         });
     },
