@@ -56,7 +56,6 @@ public class Ranker {
      */
     private Double calculatePageScore(WebPage webPage, List<String> queryFilerWords) {
         Double pageTFIDFScore = 0.0;
-        Double pagePosScore = 0.0;
 
         // For each word in the query filter words
         for (String word : queryFilerWords) {
@@ -67,6 +66,6 @@ public class Ranker {
             pageTFIDFScore += wordTF * wordIDF;
         }
 
-        return (0.75 * pageTFIDFScore) * (0.25 * webPage.rank); // pagePopularity * pageRank(Relevance)
+        return (0.75 * pageTFIDFScore) * (0.25 * webPage.rank);
     }
 }
