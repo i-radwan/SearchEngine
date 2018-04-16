@@ -1,8 +1,8 @@
 //
 // Constants
 //
-const SERVER_SEARCH_LINK = "http://0.0.0.0:8080/search?q={query}&page={page}";
-const SERVER_SUGGESTIONS_LINK = "http://0.0.0.0:8080/suggestions?q={query}";
+const SERVER_SEARCH_LINK = "http://localhost:8080/search?q={query}&page={page}";
+const SERVER_SUGGESTIONS_LINK = "http://localhost:8080/suggestions?q={query}";
 const MIN_SUGGESTION_CHARS_COUNT = 3;
 
 //
@@ -73,6 +73,10 @@ let app = {
      * @param response
      */
     webpagesCallBack: function (response) {
+        if (response.hasOwnProperty("error_msg")) {
+            return alert(response["error_msg"]);
+        }
+
         // Slide search bar to top
         $(".main").animate({'marginTop': '10vh'}, 700);
 
@@ -195,7 +199,7 @@ let app = {
         // Send suggestions retrieval request if the content exceeds limit
         app.searchBox.bind('keyup', function (e) {
             if (app.searchBox.val().length > MIN_SUGGESTION_CHARS_COUNT) {
-                app.getSuggestionsRequest();
+                app.getSuggestionsRequest(app.searchBox.val());
             }
         });
     },
