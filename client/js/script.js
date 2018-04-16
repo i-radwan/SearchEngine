@@ -73,6 +73,10 @@ let app = {
      * @param response
      */
     webpagesCallBack: function (response) {
+        if (response.hasOwnProperty("error_msg")) {
+            return alert(response["error_msg"]);
+        }
+
         // Slide search bar to top
         $(".main").animate({'marginTop': '10vh'}, 700);
 
