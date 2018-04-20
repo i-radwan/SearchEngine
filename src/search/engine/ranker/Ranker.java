@@ -27,7 +27,7 @@ public class Ranker {
 
         int startIndex = Constants.SINGLE_PAGE_RESULTS_COUNT * (pageNumber - 1);
 
-        return webPages.subList(startIndex, startIndex + Constants.SINGLE_PAGE_RESULTS_COUNT);
+        return webPages.subList(startIndex, Math.min(startIndex + Constants.SINGLE_PAGE_RESULTS_COUNT, (int)mTotalDocsCount));
     }
 
     /**
@@ -56,7 +56,6 @@ public class Ranker {
      */
     private Double calculatePageScore(WebPage webPage, List<String> queryFilerWords) {
         Double pageTFIDFScore = 0.0;
-        Double pagePosScore = 0.0;
 
         // For each word in the query filter words
         for (String word : queryFilerWords) {
@@ -65,12 +64,8 @@ public class Ranker {
             double wordIDF = Math.log(mTotalDocsCount / (double) mIndexer.getDocumentsCount(word)); // TODO @Samir55 see this
 
             pageTFIDFScore += wordTF * wordIDF;
-
-            //for (int score : webPage.wordScoreMap.get(word)) {
-            //    pagePosScore += score;
-            //}
         }
 
-        return (0.75 * pageTFIDFScore) * (0.25 * webPage.rank); // pagePopularity * pageRank(Relevance)
+        return (0.75 * pageTFIDFScore) * (0.25 * webPage.rank);
     }
 }
