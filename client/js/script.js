@@ -12,6 +12,7 @@ let app = {
     run: function () {
         app.searchBox = $("#search_box");
         app.suggestions = [];
+        app.suggestionsTimeouts = [];
         app.didTheUserSearch = false;
 
         app.config();
@@ -55,11 +56,10 @@ let app = {
 
     /**
      * Server request
-     *
-     * @param query
-     * @param page
      */
-    getSuggestionsRequest: function (query) {
+    getSuggestionsRequest: function () {
+        let query = app.searchBox.val();
+
         $.ajax({
             url: SERVER_SUGGESTIONS_LINK.replace("{query}", query),
             type: 'GET',
@@ -199,9 +199,18 @@ let app = {
         // Send suggestions retrieval request if the content exceeds limit
         app.searchBox.bind('keyup', function (e) {
             if (app.searchBox.val().length > MIN_SUGGESTION_CHARS_COUNT) {
-                app.getSuggestionsRequest(app.searchBox.val());
+                app.clearAllTimeOuts();
+                app.suggestionsTimeouts.push(setTimeout(app.getSuggestionsRequest, 500));
             }
         });
+    },
+
+    clearAllTimeOuts() {
+        for (let i = 0; i < app.suggestionsTimeouts.length; i++) {
+            clearTimeout(app.suggestionsTimeouts[i]);
+        }
+
+        app.suggestionsTimeouts = [];
     },
 
     config: function () {
