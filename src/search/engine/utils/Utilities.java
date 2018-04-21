@@ -113,17 +113,6 @@ public class Utilities {
     }
 
     /**
-     * Checks whether the given search query is a phrase search or not.
-     *
-     * @param queryString the input search query string
-     * @return {@code true} if the given string is surrounded by double quotes, {@code false} otherwise
-     */
-    public static boolean isPhraseSearch(String queryString) {
-        return queryString.charAt(0) == '"' &&
-                queryString.charAt(queryString.length() - 1) == '"';
-    }
-
-    /**
      * Returns the number of occurrences of the given character in the string.
      *
      * @param str the string to search in
