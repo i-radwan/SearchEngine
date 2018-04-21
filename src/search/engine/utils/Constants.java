@@ -35,7 +35,7 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 10000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 100;
+    public static final int MAX_WEB_PAGES_COUNT = 10;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
 
     // ================================================================================================
@@ -89,6 +89,13 @@ public class Constants {
             FIELD_WORDS_COUNT,
             FIELD_WORDS_INDEX,
             FIELD_STEMS_INDEX
+    );
+
+    public static final List<String> FIELDS_FOR_SEARCH_RESULTS = Arrays.asList(
+            FIELD_ID,
+            FIELD_URL,
+            FIELD_TITLE,
+            FIELD_PAGE_CONTENT
     );
 
     // ================================================================================================

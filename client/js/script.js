@@ -4,6 +4,7 @@
 const SERVER_SEARCH_LINK = "http://localhost:8080/search?q={query}&page={page}";
 const SERVER_SUGGESTIONS_LINK = "http://localhost:8080/suggestions?q={query}";
 const MIN_SUGGESTION_CHARS_COUNT = 3;
+const SUGGESTIONS_TIMEOUT_DELAY = 300;
 
 //
 // Main App Code
@@ -200,7 +201,7 @@ let app = {
         app.searchBox.bind('keyup', function (e) {
             if (app.searchBox.val().length > MIN_SUGGESTION_CHARS_COUNT) {
                 app.clearAllTimeOuts();
-                app.suggestionsTimeouts.push(setTimeout(app.getSuggestionsRequest, 500));
+                app.suggestionsTimeouts.push(setTimeout(app.getSuggestionsRequest, SUGGESTIONS_TIMEOUT_DELAY));
             }
         });
     },

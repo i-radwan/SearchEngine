@@ -49,7 +49,7 @@ public class Ranker {
      * @param pageNumber the pagination page number
      * @return list of sorted paginated web pages
      */
-    private List<ObjectId> rank(int pageNumber) {
+    public List<ObjectId> rank(int pageNumber) {
         // For each page calculate its TF-IDF score
         for (WebPage webPage : mWebPages) {
             webPage.rank = calculatePageScore(webPage);
@@ -93,18 +93,26 @@ public class Ranker {
             String stem = mQueryStems.get(i);
 
             // Exact word
-            int wordCnt = webPage.wordPosMap.get(word).size();
-            long wordDocCnt = mIndexer.getWordDocumentsCount(word);
-            double wordTF = wordCnt / (double) webPage.wordsCount;
-            double wordIDF = Math.log(mTotalDocsCount / (double) wordDocCnt);
+            int wordCnt = 0;
+            long wordDocCnt = 0;
+            if (webPage.wordPosMap.containsKey(word)) {
+                wordCnt = webPage.wordPosMap.get(word).size();
+                wordDocCnt = mIndexer.getWordDocumentsCount(word);
+                double wordTF = wordCnt / (double) webPage.wordsCount;
+                double wordIDF = Math.log(mTotalDocsCount / (double) wordDocCnt);
+
+                pageTFIDFScore += wordTF * wordIDF;
+            }
 
             // Synonymous words
-            int stemCnt = webPage.stemWordsCount.get(stem) - wordCnt;
-            long stemDocCnt = mIndexer.getStemDocumentsCount(stem) - wordDocCnt;
-            double stemTF = stemCnt / (double) webPage.wordsCount;
-            double stemIDF = Math.log(mTotalDocsCount / (double) stemDocCnt);
+            if (webPage.stemWordsCount.containsKey(stem)) {
+                int stemCnt = webPage.stemWordsCount.get(stem) - wordCnt;
+                long stemDocCnt = mIndexer.getStemDocumentsCount(stem) - wordDocCnt;
+                double stemTF = stemCnt / (double) webPage.wordsCount;
+                double stemIDF = Math.log(mTotalDocsCount / (double) stemDocCnt);
 
-            pageTFIDFScore += (wordTF * wordIDF) + (stemTF * stemIDF) * (0.5);
+                pageTFIDFScore += (stemTF * stemIDF) * (0.5);
+            }
         }
 
         return (0.75 * pageTFIDFScore) * (0.25 * webPage.rank);

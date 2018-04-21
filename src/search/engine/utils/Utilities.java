@@ -36,46 +36,12 @@ public class Utilities {
     }
 
     /**
-     * Processes user search query.
-     *
-     * @param queryString the input search query string
-     * @return
-     */
-    public static List<List<String>> processQuery(String queryString) {
-        // Trim the query string
-        queryString = queryString.trim();
-
-        // Check if phrase search before processing the string (before removing special chars)
-        boolean isPhraseSeach = isPhraseSearch(queryString);
-
-        List<List<String>> ret = new ArrayList<>();
-
-        // Split the processed query into words
-        String processedQuery = processString(queryString);
-        String[] words = processedQuery.split(" ");
-
-        // Remove stop words
-        List<String> wordsArrayList = removeStopWords(words);
-
-        // Add original query words without stemming
-        ret.add(wordsArrayList);
-
-        // Stem words
-        List<String> stemmedWordsArrayList = stemWords(wordsArrayList);
-        ret.add(stemmedWordsArrayList);
-
-        // ToDo: Spread and  get all possible words
-
-        return ret;
-    }
-
-    /**
      * Removes the stop words from the given list of words.
      *
      * @param words list of words
      * @return a new list of non-stopping words.
      */
-    public static List<String> removeStopWords(String[] words) {
+    public static List<String> removeStopWords(List<String> words) {
         List<String> ret = new ArrayList<>();
 
         for (String word : words) {

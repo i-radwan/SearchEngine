@@ -6,6 +6,7 @@ import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.indexer.WebPageParser;
 import search.engine.ranker.PageRanker;
+import search.engine.ranker.Ranker;
 import search.engine.server.Server;
 import search.engine.utils.Utilities;
 import search.engine.utils.WebUtilities;
@@ -34,11 +35,11 @@ public class Main {
 
         while (choice == -1) {
             System.out.println("Please enter a function to run:");
-            System.out.println("1. Crawler");
+            System.out.println("1. Start Crawler");
             System.out.println("2. Start Server");
             System.out.println("3. Clear Database");
             System.out.println("4. Testing");
-            System.out.println("7. Exit");
+            System.out.println("5. Exit");
 
             choice = scanner.nextInt();
 
@@ -85,6 +86,9 @@ public class Main {
         Indexer indexer = new Indexer();
         Crawler crawler = new Crawler(indexer);
         crawler.start(cnt);
+
+        PageRanker pageRanker = new PageRanker();
+        pageRanker.start();
 
 //        crawler.readPreviousData();
 //

@@ -1,10 +1,19 @@
 package search.engine.server;
 
+import org.bson.Document;
+import org.bson.types.ObjectId;
+import search.engine.indexer.Indexer;
+import search.engine.indexer.WebPage;
+import search.engine.ranker.Ranker;
 import search.engine.utils.Constants;
 import search.engine.utils.Utilities;
 import spark.Request;
 import spark.Response;
 
+import javax.print.Doc;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static spark.Spark.get;
@@ -13,6 +22,8 @@ import static spark.SparkBase.port;
 
 
 public class Server {
+
+    private static Indexer sIndexer = new Indexer();
 
     /**
      * Starts serving the clients.
@@ -35,41 +46,86 @@ public class Server {
             String queryString = req.queryParams("q");
             String pageNumber = req.queryParams("page");
 
-            String webpagesResponse;
-
             // Check for empty queries
-            if (queryString == null || queryString.trim().length() <= 0) {
+            if (queryString == null || queryString.trim().isEmpty()) {
                 return "app.webpagesCallBack({error_msg:\"Please fill valid query!\"})";
             }
 
+            if (queryString.trim().length() <= 3) {
+                return "app.webpagesCallBack({error_msg:\"For better results, use longer query!\"})";
+            }
+
             // Check for empty page number
-            if (pageNumber == null || queryString.trim().length() <= 0) {
+            if (pageNumber == null || pageNumber.trim().isEmpty() || !pageNumber.matches("\\d+")) {
                 pageNumber = "1";
             }
 
             // Process the query
-            boolean isPhraseSearch = Utilities.isPhraseSearch(queryString);
-            List<List<String>> queriesList = Utilities.processQuery(queryString);
+            boolean isPhraseSearch = (queryString.startsWith("\"") && queryString.endsWith("\""));
+            queryString = Utilities.processString(queryString);
+            List<String> queryWords = Arrays.asList(queryString.split(" "));
+            List<String> queryStems = Utilities.stemWords(queryWords);
 
-            // Call the indexer
+            // Get results from the indexer
+            List<WebPage> allMatchedResults;
+
+            if (isPhraseSearch) {
+                allMatchedResults = sIndexer.searchByPhrase(queryWords);
+            } else {
+                queryWords = Utilities.removeStopWords(queryWords);
+                allMatchedResults = sIndexer.searchByWord(queryStems);
+            }
+
+            if (allMatchedResults.isEmpty()) {
+                return "app.webpagesCallBack({error_msg:\"No matching, please use different query!\"})";
+            }
+
+            // Add suggestion
+            sIndexer.insertSuggestion(queryString);
 
             // Call the ranker
+            Ranker ranker = new Ranker(sIndexer, allMatchedResults, queryWords, queryStems);
+            List<ObjectId> rankedWebPagesIds = ranker.rank(Integer.valueOf(pageNumber));
+            List<WebPage> results = sIndexer.searchById(rankedWebPagesIds, Constants.FIELDS_FOR_SEARCH_RESULTS);
 
-            // ToDo: to be replaced with actual data
+            List<Document> pagesDocuments = new ArrayList<>();
 
-            webpagesResponse = "app.webpagesCallBack({\"pages\":[ {\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"},{\"title\":\"Google Inc.\", \"url\":\"http://www.google.com\", \"snippet\":\"Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine Google is a great search engine \"}], \"pagination\":{\"pages_count\": 10, \"current_page\": " + pageNumber + "}})";
+            for (ObjectId id : rankedWebPagesIds) {
+                for (WebPage webPage : results) {
+                    if (webPage.id.equals(id)) {
+                        Document doc = new Document()
+                                .append("title", webPage.title)
+                                .append("url", webPage.url)
+                                .append("snippet", webPage.content.substring(0, 100));
 
-            return webpagesResponse;
+                        pagesDocuments.add(doc);
+                        break;
+                    }
+                }
+            }
+
+            int pagesCount = ((allMatchedResults.size() + Constants.SINGLE_PAGE_RESULTS_COUNT - 1) /
+                    Constants.SINGLE_PAGE_RESULTS_COUNT);
+
+            Document paginationDocument = new Document()
+                    .append("pages_count", pagesCount)
+                    .append("current_page", pageNumber);
+
+            Document webpagesResponse = new Document()
+                    .append("pages", pagesDocuments)
+                    .append("pagination", paginationDocument);
+
+            return "app.webpagesCallBack(" + webpagesResponse.toJson() + ")";
         });
 
         // Suggestions endpoint
         get("/suggestions", (Request req, Response res) -> {
-            String queryString = req.queryParams("q");
+            String queryString = Utilities.processString(req.queryParams("q"));
 
-            // ToDo: to be replaced with actual data
-            String suggestionsResponse = "app.suggestionsCallBack([\"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\", \"Google is a great search engine\"])";
+            // Get suggestions from the indexer
+            List<String> suggestions = sIndexer.getSuggestions(queryString);
 
-            return suggestionsResponse;
+            return "app.suggestionsCallBack(" + suggestions.toString() + ")";
         });
     }
 }

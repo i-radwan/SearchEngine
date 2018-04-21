@@ -328,7 +328,7 @@ public class Indexer {
      * @param projections the desired fields to be returned. To return all fields just pass null
      * @return list of matching web pages
      */
-    public List<WebPage> searchById(List<ObjectId> ids, String... projections) {
+    public List<WebPage> searchById(List<ObjectId> ids, List<String> projections) {
         FindIterable<Document> res = mWebPagesCollection
                 .find(in(Constants.FIELD_ID, ids))
                 .projection(include(projections));
@@ -469,7 +469,7 @@ public class Indexer {
                 .sort(ascending(Constants.FIELD_SUGGESTION));
 
         for (Document doc : res) {
-            ret.add(doc.getString(Constants.FIELD_SUGGESTION));
+            ret.add("\"" + doc.getString(Constants.FIELD_SUGGESTION) + "\"");
         }
 
         return ret;
