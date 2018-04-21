@@ -22,7 +22,7 @@ public class PageRanker {
     /**
      * Indexer object
      */
-    Indexer indexer = new Indexer();
+    Indexer mIndexer = new Indexer();
 
     /**
      * All web pages in the database
@@ -75,6 +75,15 @@ public class PageRanker {
     //
 
     /**
+     * Constructor.
+     *
+     * @param indexer indexer object needed to get the web pages graph and save new ranks.
+     */
+    public PageRanker(Indexer indexer) {
+        mIndexer = indexer;
+    }
+
+    /**
      * Add an arc to the graph
      *
      * @param from a node
@@ -112,7 +121,7 @@ public class PageRanker {
      */
     public void getGraph() {
         // Get the web pages in the graph (all nodes)
-        graphNodes = indexer.getWebGraph();
+        graphNodes = mIndexer.getWebGraph();
 
         this.pagesCount = graphNodes.keySet().size();
 
@@ -246,7 +255,7 @@ public class PageRanker {
                 graphNodes.get(pagesURL.get(id)).rank = pagesRank.get(id);
             }
 
-            indexer.updatePageRanks(graphNodes.values());
+            mIndexer.updatePageRanks(graphNodes.values());
         }
     }
 

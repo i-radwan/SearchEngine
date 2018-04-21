@@ -6,7 +6,6 @@ import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.indexer.WebPageParser;
 import search.engine.ranker.PageRanker;
-import search.engine.ranker.Ranker;
 import search.engine.server.Server;
 import search.engine.utils.Utilities;
 import search.engine.utils.WebUtilities;
@@ -14,7 +13,6 @@ import search.engine.utils.WebUtilities;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
@@ -87,14 +85,14 @@ public class Main {
         Crawler crawler = new Crawler(indexer);
         crawler.start(cnt);
 
-        PageRanker pageRanker = new PageRanker();
+        PageRanker pageRanker = new PageRanker(indexer);
         pageRanker.start();
 
-//        crawler.readPreviousData();
-//
-//        while (true) {
-//            crawler.start(cnt);
-//        }
+        // crawler.readPreviousData();
+        //
+        // while (true) {
+        //     crawler.start(cnt);
+        // }
     }
 
     /**
@@ -127,7 +125,7 @@ public class Main {
     }
 
     private static void testRanker() {
-        PageRanker pageRanker = new PageRanker();
+        PageRanker pageRanker = new PageRanker(new Indexer());
         pageRanker.start();
     }
 
