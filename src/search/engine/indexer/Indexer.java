@@ -160,10 +160,10 @@ public class Indexer {
 
         // Insert new content in the database
         updateWebPage(curPage);
-        updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
+        //updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
 
         //
-        //Output.log("Indexed : " + curPage.url);
+        Output.log("Indexed : " + curPage.url);
         System.out.println("Indexed: " + curPage.url);
     }
 
@@ -279,14 +279,29 @@ public class Indexer {
 
     /**
      * Returns the number of web pages documents saved in the database
-     * containing the given filter word.
+     * containing the given filter word in the word index.
      *
+     * @param word the word to search for
      * @return documents count
      */
-    public long getDocumentsCount(String word) {
+    public long getWordDocumentsCount(String word) {
         return mWebPagesCollection.count(eq(
                 Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
                 word
+        ));
+    }
+
+    /**
+     * Returns the number of web pages documents saved in the database
+     * containing the given filter word in the stem index.
+     *
+     * @param stem the stem word to search for
+     * @return documents count
+     */
+    public long getStemDocumentsCount(String stem) {
+        return mWebPagesCollection.count(eq(
+                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD,
+                stem
         ));
     }
 

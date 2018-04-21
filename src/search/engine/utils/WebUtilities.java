@@ -131,6 +131,7 @@ public final class WebUtilities {
                 && !url.contains(".docs")
                 && !url.contains(".js")
                 && !url.contains(".png")
-                && !url.contains(".ico");
+                && !url.contains(".ico")
+                && !url.contains(".xml");
     }
 }
