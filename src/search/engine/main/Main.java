@@ -15,10 +15,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 
 public class Main {
@@ -110,7 +107,7 @@ public class Main {
      */
     private static void clearDatabase() {
         System.out.println("Clearing search engine database...");
-        Indexer.migrate();
+        Indexer.reset();
         System.out.println("Done!");
     }
 
@@ -119,13 +116,7 @@ public class Main {
      */
     private static void test() {
         try {
-//            testWebPageParse();
-
-            // Testing Ranker TODO @Samir55 remove
-            testRanker();
-
-            testSuggestions();
-
+            testIndexer();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -136,36 +127,18 @@ public class Main {
         pageRanker.start();
     }
 
-    private static void testIndexer() {
+    private static void testIndexer() throws IOException {
         Indexer indexer = new Indexer();
 
-        try {
-            System.out.println("Fetching web page...");
+//        URL url = new URL("http://codeforces.com/problemset/problem/950/B");
+//        Document doc = WebUtilities.fetchWebPage(url.toString());
+//        System.out.println("Fetched");
+//
+//        indexer.indexWebPage(url, doc, WebPageParser.extractOutLinks(doc), new WebPage());
 
-            URL url = new URL("http://codeforces.com/problemset/");
-            Document doc = WebUtilities.fetchWebPage(url.toString());
+        List<WebPage> res = indexer.searchByPhrase(Arrays.asList("message", "is", "a", "sequence"));
 
-            System.out.println("Fetched!");
-
-            WebPageParser parser = new WebPageParser();
-            WebPage page = parser.parse(url, doc);
-
-            Map<String, List<String>> dictionary = Utilities.getWordsDictionary(page.wordPosMap.keySet());
-
-            for (int i = 0; i < 20; ++i) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        System.out.println(Thread.currentThread().getName() + " starting...");
-                        indexer.updateWordsDictionary(dictionary);
-                        System.out.println(Thread.currentThread().getName() + " finished!");
-                    }
-                }).start();
-            }
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+        System.out.println(res.size());
     }
 
     private static void testSuggestions() {

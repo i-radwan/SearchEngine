@@ -69,6 +69,7 @@ public class WebPage {
      */
     public Map<String, List<Integer>> wordPosMap = null;
     public Map<String, List<Integer>> wordScoreMap = null;
+    public Map<String, Integer> stemWordsCount = null;
 
     /**
      * Variables used to adjust the frequency of fetching the web page content.
@@ -110,6 +111,7 @@ public class WebPage {
 
         outLinks = (List<String>) doc.getOrDefault(Constants.FIELD_CONNECTED_TO, null);
         parseWordsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_WORDS_INDEX, null));
+        parseStemsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_STEMS_INDEX, null));
     }
 
     /**
@@ -132,6 +134,7 @@ public class WebPage {
         doc.append(Constants.FIELD_CONNECTED_TO, outLinks);
         doc.append(Constants.FIELD_WORDS_COUNT, wordsCount);
         doc.append(Constants.FIELD_WORDS_INDEX, getWordsIndex());
+        doc.append(Constants.FIELD_STEMS_INDEX, getStemsIndex());
 
         doc.append(Constants.FILED_FETCH_SKIP_LIMIT, fetchSkipLimit);
         doc.append(Constants.FILED_FETCH_SKIP_COUNT, fetchSkipCount);
@@ -142,7 +145,7 @@ public class WebPage {
     /**
      * Returns the words index of this web page.
      *
-     * @return list of documents representing the words index this given web page
+     * @return list of documents representing the words index of this web page
      */
     private List<Document> getWordsIndex() {
         if (wordPosMap == null) {
@@ -165,9 +168,10 @@ public class WebPage {
     }
 
     /**
-     * Parse the given wordsIndex.
+     * Parse the given words index document
+     * and fill {@code wordPosMap} and {@code wordScoreMap}.
      *
-     * @param wordsIndex list of documents representing the dictionary this given web page
+     * @param wordsIndex list of documents representing the dictionary of this web page
      */
     private void parseWordsIndex(List<Document> wordsIndex) {
         if (wordsIndex == null) {
@@ -181,6 +185,46 @@ public class WebPage {
             String word = doc.getString(Constants.FIELD_WORD);
             wordPosMap.put(word, (List<Integer>) doc.get(Constants.FIELD_POSITIONS));
             wordScoreMap.put(word, (List<Integer>) doc.get(Constants.FIELD_SCORES));
+        }
+    }
+
+    /**
+     * Returns the stem words index of this web page.
+     * (i.e. just a map from the stem word to its occurrence count in the web page)
+     *
+     * @return list of documents representing the stem index of this web page
+     */
+    private List<Document> getStemsIndex() {
+        List<Document> ret = new ArrayList<>();
+
+        for (Map.Entry<String, Integer> entry : stemWordsCount.entrySet()) {
+            Document doc = new Document()
+                    .append(Constants.FIELD_STEM_WORD, entry.getKey())
+                    .append(Constants.FIELD_STEM_COUNT, entry.getValue());
+
+            ret.add(doc);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Parse the given stem words count document and fill {@code stemWordsCount}.
+     *
+     * @param stemsIndex list of documents representing the stems index of this web page
+     */
+    private void parseStemsIndex(List<Document> stemsIndex) {
+        if (stemsIndex == null) {
+            return;
+        }
+
+        stemWordsCount = new HashMap<>();
+
+        for (Document doc : stemsIndex) {
+            stemWordsCount.put(
+                    doc.getString(Constants.FIELD_STEM_WORD),
+                    doc.getInteger(Constants.FIELD_STEM_COUNT)
+            );
         }
     }
 }

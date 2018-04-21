@@ -71,6 +71,9 @@ public class Constants {
     public static final String FIELD_WORD = "word";
     public static final String FIELD_POSITIONS = "positions";
     public static final String FIELD_SCORES = "scores";
+    public static final String FIELD_STEMS_INDEX = "stems_index";
+    public static final String FIELD_STEM_WORD = "stem";
+    public static final String FIELD_STEM_COUNT = "count";
     public static final String FILED_SYNONYMS = "synonyms";
     public static final String FILED_FETCH_SKIP_LIMIT = "fetch_skip_limit";
     public static final String FILED_FETCH_SKIP_COUNT = "fetch_skip_count";
@@ -84,7 +87,8 @@ public class Constants {
             FIELD_URL,
             FIELD_RANK,
             FIELD_WORDS_COUNT,
-            FIELD_WORDS_INDEX
+            FIELD_WORDS_INDEX,
+            FIELD_STEMS_INDEX
     );
 
     // ================================================================================================

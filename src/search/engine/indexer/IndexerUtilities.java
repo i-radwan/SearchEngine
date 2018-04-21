@@ -35,7 +35,7 @@ public class IndexerUtilities {
      * @param filterWords list of words to find their occurrence in order
      * @return {@code true} if the filter words are occurred in order, {@code false} otherwise
      */
-    public static boolean filterWordsConcatenated(Map<String, List<Integer>> wordPosMap, List<String> filterWords) {
+    public static boolean checkPhraseOccurred(Map<String, List<Integer>> wordPosMap, List<String> filterWords) {
         if (filterWords.size() < 2) {
             return true;
         }

@@ -47,7 +47,7 @@ public class Indexer {
     /**
      * Clears the current search engine database and recreate the indexes.
      */
-    public static void migrate() {
+    public static void reset() {
         // Create Mongo Client
         MongoClient mongoClient = new MongoClient(
                 Constants.DATABASE_HOST_ADDRESS,
@@ -69,6 +69,7 @@ public class Indexer {
         collection = database.getCollection(Constants.COLLECTION_WEB_PAGES);
         collection.createIndex(Indexes.ascending(Constants.FIELD_URL), indexOptions);
         collection.createIndex(Indexes.ascending(Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD));
+        collection.createIndex(Indexes.ascending(Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD));
 
         // Create dictionary collection and its indexes
         database.createCollection(Constants.COLLECTION_DICTIONARY);
@@ -162,7 +163,7 @@ public class Indexer {
         updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
 
         //
-        Output.log("Indexed : " + curPage.url);
+        //Output.log("Indexed : " + curPage.url);
         System.out.println("Indexed: " + curPage.url);
     }
 
@@ -322,6 +323,7 @@ public class Indexer {
 
     /**
      * Searches for web pages having any of the given filter words.
+     * TODO: project only needed words
      *
      * @param filterWords list of words to search for
      * @return list of matching web pages
@@ -329,7 +331,7 @@ public class Indexer {
     public List<WebPage> searchByWord(List<String> filterWords) {
         FindIterable<Document> res = mWebPagesCollection
                 .find(in(
-                        Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
+                        Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD,
                         filterWords
                 ))
                 .projection(include(Constants.FIELDS_FOR_RANKING));
@@ -356,7 +358,7 @@ public class Indexer {
         for (Document doc : res) {
             WebPage page = new WebPage(doc);
 
-            if (IndexerUtilities.filterWordsConcatenated(page.wordPosMap, filterWords)) {
+            if (IndexerUtilities.checkPhraseOccurred(page.wordPosMap, filterWords)) {
                 ret.add(page);
             }
         }

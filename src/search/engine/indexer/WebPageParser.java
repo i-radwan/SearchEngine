@@ -5,6 +5,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
+import org.tartarus.snowball.SnowballStemmer;
+import org.tartarus.snowball.ext.englishStemmer;
 import search.engine.utils.Constants;
 import search.engine.utils.URLNormalizer;
 import search.engine.utils.Utilities;
@@ -17,12 +19,15 @@ import java.util.*;
 public class WebPageParser {
 
     //
-    // Static Member variables
+    // Static variables
     //
-    private int sCurIdx;
+    SnowballStemmer sWordStemmer = new englishStemmer();
+
+    //
+    // Member variables
+    //
     private StringBuilder sContent;
-    private Map<String, List<Integer>> sWordPosMap;
-    private Map<String, List<Integer>> sWordScoreMap;
+    private WebPage mPage;
 
 
     /**
@@ -35,26 +40,23 @@ public class WebPageParser {
      */
     public WebPage parse(URL url, Document doc) {
         // Initializing variables
-        WebPage ret = new WebPage();
-        sCurIdx = 0;
         sContent = new StringBuilder();
-        sWordPosMap = new HashMap<>();
-        sWordScoreMap = new HashMap<>();
+        mPage = new WebPage();
+        mPage.wordPosMap = new HashMap<>();
+        mPage.wordScoreMap = new HashMap<>();
+        mPage.stemWordsCount = new HashMap<>();
 
         // Assign page URL & title
-        ret.url = URLNormalizer.normalize(url);
-        ret.title = extractPageTitle(doc);
+        mPage.url = URLNormalizer.normalize(url);
+        mPage.title = extractPageTitle(doc);
 
-        // Parsing
+        // Parse to fill web page content and index
         dfs(doc.body(), "");
 
         // Assign words index variable
-        ret.content = sContent.toString().trim();
-        ret.wordsCount = sCurIdx;
-        ret.wordPosMap = sWordPosMap;
-        ret.wordScoreMap = sWordScoreMap;
+        mPage.content = sContent.toString().trim();
 
-        return ret;
+        return mPage;
     }
 
     /**
@@ -127,15 +129,34 @@ public class WebPageParser {
      */
     private void addToWordIndex(String str, String tag) {
         str = Utilities.processString(str);
-        List<String> words = Utilities.removeStopWords(str.split(" "));
+        String words[] = str.split(" ");
 
         int score = Constants.TAG_TO_SCORE_MAP.getOrDefault(tag, 1);
 
         for (String word : words) {
-            sWordPosMap.putIfAbsent(word, new ArrayList<>());
-            sWordScoreMap.putIfAbsent(word, new ArrayList<>());
-            sWordPosMap.get(word).add(sCurIdx++);
-            sWordScoreMap.get(word).add(score);
+            if (word.isEmpty()) {
+                continue;
+            }
+
+            //
+            // Add position and score
+            //
+            mPage.wordPosMap.putIfAbsent(word, new ArrayList<>());
+            mPage.wordPosMap.get(word).add(mPage.wordsCount++);
+
+            mPage.wordScoreMap.putIfAbsent(word, new ArrayList<>());
+            mPage.wordScoreMap.get(word).add(score);
+
+            //
+            // Count stem
+            //
+            sWordStemmer.setCurrent(word);
+            sWordStemmer.stem();
+
+            String stem = sWordStemmer.getCurrent();
+            int cnt = mPage.stemWordsCount.getOrDefault(stem, 0);
+
+            mPage.stemWordsCount.put(stem, cnt + 1);
         }
     }
 
