@@ -8,6 +8,7 @@ import search.engine.utils.Constants;
 import search.engine.utils.WebUtilities;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -150,6 +151,9 @@ public class CrawlerThread extends Thread {
      * @param outLinks the web page out links to enqueue
      */
     private void enqueueOutLinks(List<String> outLinks) {
+        // Randomly shuffle the out links
+        Collections.shuffle(outLinks);
+
         for (String url : outLinks) {
             String baseURL = WebUtilities.getHostName(url);
 
