@@ -109,7 +109,7 @@ public class Server {
 
             Document paginationDocument = new Document()
                     .append("pages_count", pagesCount)
-                    .append("current_page", pageNumber);
+                    .append("current_page", Integer.parseInt(pageNumber));
 
             Document webpagesResponse = new Document()
                     .append("pages", pagesDocuments)
