@@ -96,7 +96,7 @@ public class Server {
                         Document doc = new Document()
                                 .append("title", webPage.title)
                                 .append("url", webPage.url)
-                                .append("snippet", webPage.content.substring(0, 100));
+                                .append("content", webPage.content);
 
                         pagesDocuments.add(doc);
                         break;
