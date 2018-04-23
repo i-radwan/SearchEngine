@@ -21,7 +21,7 @@ public class WebPageParser {
     //
     // Static variables
     //
-    SnowballStemmer sWordStemmer = new englishStemmer();
+    private static SnowballStemmer sWordStemmer = new englishStemmer();
 
     //
     // Member variables
@@ -62,21 +62,25 @@ public class WebPageParser {
     /**
      * Extracts the web page title from the head tag.
      *
-     * @param doc the web page raw content
+     * @param doc          the web page raw content
      * @param defaultTitle the web page default title if no title found in the web page document
      * @return the web page title
      */
     private String extractPageTitle(Document doc, String defaultTitle) {
-        String title = doc.head().select("title").first().ownText().trim();
+        String ret = defaultTitle;
+        String title = "";
+        Elements titles = doc.head().select("title");
 
-        if (title.isEmpty()) {
-            title = defaultTitle;
-        }
-        else {
-            addToWordIndex(title, "title");
+        if (titles.size() > 0) {
+            title = titles.first().ownText().trim();
         }
 
-        return title;
+        if (title.length() > 0) {
+            ret = title;
+            addToWordIndex(ret, "title");
+        }
+
+        return ret;
     }
 
     /**
