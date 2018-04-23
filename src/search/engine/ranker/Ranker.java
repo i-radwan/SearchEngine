@@ -125,13 +125,14 @@ public class Ranker {
             String word = mQueryWords.get(i);
             String stem = mQueryStems.get(i);
 
-            int wordCnt = 0, stemCnt = 0;
+            List<Integer> positions = webPage.wordPosMap.get(word);
+
+            int wordCnt = (positions == null ? 0 : positions.size());
+            int stemCnt = webPage.stemWordsCount.getOrDefault(stem, 0) - wordCnt;
             double TF, IDF;
 
             // Exact word
-            if (webPage.wordPosMap.containsKey(word)) {
-                wordCnt = webPage.wordPosMap.get(word).size();
-
+            if (wordCnt > 0) {
                 TF = wordCnt / (double) webPage.wordsCount;
                 IDF = Math.log((double) mTotalDocsCount / mWordsDocsCount[i]);
 
@@ -139,9 +140,7 @@ public class Ranker {
             }
 
             // Synonymous words
-            if (webPage.stemWordsCount.containsKey(stem)) {
-                stemCnt = webPage.stemWordsCount.get(stem) - wordCnt;
-
+            if (stemCnt > 0) {
                 TF = stemCnt / (double) webPage.wordsCount;
                 IDF = Math.log((double) mTotalDocsCount / mStemsDocsCount[i]);
 
