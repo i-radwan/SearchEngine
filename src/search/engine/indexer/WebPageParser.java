@@ -155,6 +155,10 @@ public class WebPageParser {
             //
             // Count stem and sum score
             //
+            if (Utilities.stopWord(word)) {
+                continue;
+            }
+
             mWordStemmer.setCurrent(word);
             mWordStemmer.stem();
 
