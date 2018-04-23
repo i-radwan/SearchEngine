@@ -4,11 +4,9 @@ import org.bson.types.ObjectId;
 import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
-import search.engine.utils.Utilities;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -24,6 +22,12 @@ public class Ranker {
     List<String> mQueryStems;
 
     long mTotalDocsCount;
+    long mWordsDocsCount[];
+    long mStemsDocsCount[];
+
+    //
+    // Member methods
+    //
 
     /**
      * Constructs a ranker object for the given web pages and search query.
@@ -35,11 +39,12 @@ public class Ranker {
      */
     public Ranker(Indexer indexer, List<WebPage> webPages, List<String> queryWords, List<String> queryStems) {
         mIndexer = indexer;
-        mTotalDocsCount = mIndexer.getDocumentsCount();
 
         mWebPages = webPages;
         mQueryWords = queryWords;
         mQueryStems = queryStems;
+
+        retrieveDocumentsCount();
     }
 
     /**
@@ -76,6 +81,34 @@ public class Ranker {
     }
 
     /**
+     * Retrieves the web pages documents count for each of the
+     * search query words and stems, along with the total number of documents in the database.
+     * <p>
+     * Fill:
+     * <ul>
+     * <li>{@code mWordsDocsCount}</li>
+     * <li>{@code mStemsDocsCount}</li>
+     * <li>{@code mTotalDocsCount}</li>
+     * </ul>
+     */
+    private void retrieveDocumentsCount() {
+        // Get the total number of documents in the database
+        mTotalDocsCount = mIndexer.getDocumentsCount();
+
+        // Get the total number of documents containing each of the search query words
+        mWordsDocsCount = new long[mQueryWords.size()];
+        mStemsDocsCount = new long[mQueryWords.size()];
+
+        for (int i = 0; i < mQueryWords.size(); ++i) {
+            String word = mQueryWords.get(i);
+            String stem = mQueryStems.get(i);
+
+            mWordsDocsCount[i] = mIndexer.getWordDocumentsCount(word);
+            mStemsDocsCount[i] = mIndexer.getStemDocumentsCount(stem) - mWordsDocsCount[i];
+        }
+    }
+
+    /**
      * Calculates the given web page score rank based on the users's search query
      * and the content of the page.
      * The score is calculated as the sum of product of the web page TF and IDF
@@ -85,36 +118,37 @@ public class Ranker {
      * @return the calculated web page score
      */
     private double calculatePageScore(WebPage webPage) {
-        double pageTFIDFScore = 0.0;
+        double pageScore = 0.0; // TF-IDF score
 
         // For each word in the query filter words
         for (int i = 0; i < mQueryWords.size(); ++i) {
             String word = mQueryWords.get(i);
             String stem = mQueryStems.get(i);
 
+            int wordCnt = 0, stemCnt = 0;
+            double TF, IDF;
+
             // Exact word
-            int wordCnt = 0;
-            long wordDocCnt = 0;
             if (webPage.wordPosMap.containsKey(word)) {
                 wordCnt = webPage.wordPosMap.get(word).size();
-                wordDocCnt = mIndexer.getWordDocumentsCount(word);
-                double wordTF = wordCnt / (double) webPage.wordsCount;
-                double wordIDF = Math.log(mTotalDocsCount / (double) wordDocCnt);
 
-                pageTFIDFScore += wordTF * wordIDF;
+                TF = wordCnt / (double) webPage.wordsCount;
+                IDF = Math.log((double) mTotalDocsCount / mWordsDocsCount[i]);
+
+                pageScore += TF * IDF;
             }
 
             // Synonymous words
             if (webPage.stemWordsCount.containsKey(stem)) {
-                int stemCnt = webPage.stemWordsCount.get(stem) - wordCnt;
-                long stemDocCnt = mIndexer.getStemDocumentsCount(stem) - wordDocCnt;
-                double stemTF = stemCnt / (double) webPage.wordsCount;
-                double stemIDF = Math.log(mTotalDocsCount / (double) stemDocCnt);
+                stemCnt = webPage.stemWordsCount.get(stem) - wordCnt;
 
-                pageTFIDFScore += (stemTF * stemIDF) * (0.5);
+                TF = stemCnt / (double) webPage.wordsCount;
+                IDF = Math.log((double) mTotalDocsCount / mStemsDocsCount[i]);
+
+                pageScore += (TF * IDF) * 0.5;
             }
         }
 
-        return (0.75 * pageTFIDFScore) * (0.25 * webPage.rank);
+        return (0.75 * pageScore) * (0.25 * webPage.rank);
     }
 }

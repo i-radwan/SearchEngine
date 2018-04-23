@@ -43,6 +43,8 @@ public class Server {
 
         // Search end point
         get("/search", (Request req, Response res) -> {
+            long now, startTime = System.nanoTime();
+
             String queryString = req.queryParams("q");
             String pageNumber = req.queryParams("page");
 
@@ -69,6 +71,10 @@ public class Server {
             List<String> queryWords = Arrays.asList(queryString.split(" "));
             List<String> queryStems = Utilities.stemWords(queryWords);
 
+            now = System.nanoTime();
+            System.out.printf("Process query time:\t\t %.04f sec\n", (now - startTime) / 1e9);
+            startTime = now;
+
             // Get results from the indexer
             List<WebPage> allMatchedResults;
 
@@ -86,10 +92,18 @@ public class Server {
             // Add suggestion
             sIndexer.insertSuggestion(queryString);
 
+            now = System.nanoTime();
+            System.out.printf("Indexer search time:\t %.04f sec\n", (now - startTime) / 1e9);
+            startTime = now;
+
             // Call the ranker
             Ranker ranker = new Ranker(sIndexer, allMatchedResults, queryWords, queryStems);
             List<ObjectId> rankedWebPagesIds = ranker.rank(pageNumberInt);
             List<WebPage> results = sIndexer.searchById(rankedWebPagesIds, Constants.FIELDS_FOR_SEARCH_RESULTS);
+
+            now = System.nanoTime();
+            System.out.printf("Ranker time:\t\t\t %.04f sec\n", (now - startTime) / 1e9);
+            startTime = now;
 
             List<Document> pagesDocuments = new ArrayList<>();
 
@@ -114,11 +128,15 @@ public class Server {
                     .append("pages_count", pagesCount)
                     .append("current_page", pageNumberInt);
 
-            Document webpagesResponse = new Document()
+            Document webPagesResponse = new Document()
                     .append("pages", pagesDocuments)
                     .append("pagination", paginationDocument);
 
-            return "app.webpagesCallBack(" + webpagesResponse.toJson() + ")";
+            now = System.nanoTime();
+            System.out.printf("Post processing time:\t %.04f sec\n", (now - startTime) / 1e9);
+            System.out.println("------------------------------------");
+
+            return "app.webpagesCallBack(" + webPagesResponse.toJson() + ")";
         });
 
         // Suggestions endpoint

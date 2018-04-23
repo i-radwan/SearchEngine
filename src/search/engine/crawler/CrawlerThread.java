@@ -95,7 +95,7 @@ public class CrawlerThread extends Thread {
         if (lastPage.fetchSkipCount + 1 < lastPage.fetchSkipLimit) {
             mIndexer.incrementFetchSkipCount(lastPage.id);
             enqueueOutLinks(lastPage.outLinks);
-            //removeURLFromCnt(baseUrlStr);
+            removeURLFromCnt(baseUrlStr);
             Output.log("Not fetched due to skip limits : " + urlStr);
             System.out.println("Not fetched due to skip limits : " + urlStr);
             return;

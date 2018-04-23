@@ -19,15 +19,11 @@ import java.util.*;
 public class WebPageParser {
 
     //
-    // Static variables
-    //
-    private static SnowballStemmer sWordStemmer = new englishStemmer();
-
-    //
     // Member variables
     //
     private StringBuilder sContent;
     private WebPage mPage;
+    private SnowballStemmer mWordStemmer = new englishStemmer();
 
 
     /**
@@ -162,10 +158,10 @@ public class WebPageParser {
             //
             // Count stem
             //
-            sWordStemmer.setCurrent(word);
-            sWordStemmer.stem();
+            mWordStemmer.setCurrent(word);
+            mWordStemmer.stem();
 
-            String stem = sWordStemmer.getCurrent();
+            String stem = mWordStemmer.getCurrent();
             int cnt = mPage.stemWordsCount.getOrDefault(stem, 0);
 
             mPage.stemWordsCount.put(stem, cnt + 1);
