@@ -66,9 +66,10 @@ public class Constants {
     public static final String FIELD_PAGE_CONTENT = "content";
     public static final String FIELD_RANK = "rank";
     public static final String FIELD_CONNECTED_TO = "connected_to";
-    public static final String FIELD_WORDS_COUNT = "words_count";
+    public static final String FIELD_TOTAL_WORDS_COUNT = "words_count";
     public static final String FIELD_WORDS_INDEX = "words_index";
     public static final String FIELD_WORD = "word";
+    public static final String FIELD_WORD_COUNT = "count";
     public static final String FIELD_POSITIONS = "positions";
     public static final String FIELD_STEMS_INDEX = "stems_index";
     public static final String FIELD_STEM_WORD = "stem";
@@ -85,7 +86,7 @@ public class Constants {
     public static final List<String> FIELDS_FOR_RANKING = Arrays.asList(
             FIELD_ID,
             FIELD_RANK,
-            FIELD_WORDS_COUNT,
+            FIELD_TOTAL_WORDS_COUNT,
             FIELD_WORDS_INDEX,
             FIELD_STEMS_INDEX
     );

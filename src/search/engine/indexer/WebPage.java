@@ -105,7 +105,7 @@ public class WebPage {
         content = (String) doc.getOrDefault(Constants.FIELD_PAGE_CONTENT, null);
 
         rank = (double) doc.getOrDefault(Constants.FIELD_RANK, 1.0);
-        wordsCount = (int) doc.getOrDefault(Constants.FIELD_WORDS_COUNT, 0);
+        wordsCount = (int) doc.getOrDefault(Constants.FIELD_TOTAL_WORDS_COUNT, 0);
         fetchSkipLimit = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_LIMIT, 1);
         fetchSkipCount = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_COUNT, 0);
 
@@ -132,7 +132,7 @@ public class WebPage {
 
         doc.append(Constants.FIELD_RANK, rank);
         doc.append(Constants.FIELD_CONNECTED_TO, outLinks);
-        doc.append(Constants.FIELD_WORDS_COUNT, wordsCount);
+        doc.append(Constants.FIELD_TOTAL_WORDS_COUNT, wordsCount);
         doc.append(Constants.FIELD_WORDS_INDEX, getWordsIndex());
         doc.append(Constants.FIELD_STEMS_INDEX, getStemsIndex());
 
@@ -155,10 +155,11 @@ public class WebPage {
         // List of word documents
         List<Document> dictionary = new ArrayList<>();
 
-        for (String word : wordPosMap.keySet()) {
+        for (Map.Entry<String, List<Integer>> entry : wordPosMap.entrySet()) {
             Document doc = new Document()
-                    .append(Constants.FIELD_WORD, word)
-                    .append(Constants.FIELD_POSITIONS, wordPosMap.get(word));
+                    .append(Constants.FIELD_WORD, entry.getKey())
+                    //.append(Constants.FIELD_WORD_COUNT, entry.getValue().size())
+                    .append(Constants.FIELD_POSITIONS, entry.getValue());
 
             dictionary.add(doc);
         }
