@@ -6,6 +6,7 @@ const SERVER_SUGGESTIONS_LINK = "http://localhost:8080/suggestions?q={query}";
 const MIN_SUGGESTION_CHARS_COUNT = 3;
 const SUGGESTIONS_TIMEOUT_DELAY = 300;
 const MAX_SNIPPETS_COUNT = 10; // Max snippets per search result
+const QUERY_MAX_LENGTH = 5 * 10;
 
 //
 // Main App Code
@@ -308,6 +309,9 @@ let app = {
                 app.suggestionsTimeouts.push(setTimeout(app.getSuggestionsRequest, SUGGESTIONS_TIMEOUT_DELAY));
             }
         });
+
+        // Set max length
+        app.searchBox.attr('maxlength', QUERY_MAX_LENGTH);
     },
 
     clearAllTimeOuts() {

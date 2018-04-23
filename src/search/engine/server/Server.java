@@ -46,6 +46,8 @@ public class Server {
             String queryString = req.queryParams("q");
             String pageNumber = req.queryParams("page");
 
+            queryString = queryString.substring(0, Math.min(queryString.length(), Constants.QUERY_MAX_LENGTH));
+
             // Check for empty queries
             if (queryString == null || queryString.trim().isEmpty()) {
                 return "app.webpagesCallBack({error_msg:\"Please fill valid query!\"})";
@@ -121,6 +123,7 @@ public class Server {
         // Suggestions endpoint
         get("/suggestions", (Request req, Response res) -> {
             String queryString = Utilities.processString(req.queryParams("q"));
+            queryString = queryString.substring(0, Math.min(queryString.length(), Constants.QUERY_MAX_LENGTH));
 
             // Get suggestions from the indexer
             List<String> suggestions = sIndexer.getSuggestions(queryString);

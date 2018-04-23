@@ -161,6 +161,7 @@ public class Constants {
     //
 
     public static int SEARCH_ENGINE_PORT_NUMBER = 8080;
+    public static int QUERY_MAX_LENGTH = 5 * 10;
 
     // ================================================================================================
     //
