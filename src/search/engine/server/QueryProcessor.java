@@ -105,6 +105,12 @@ public class QueryProcessor {
         mQuery = mQuery.substring(0, Math.min(mQuery.length(), Constants.QUERY_MAX_LENGTH));
         mQuery = Utilities.processString(mQuery);
         mQueryWords = Arrays.asList(mQuery.split(" "));
+
+        // Remove stop words from search query in normal search mode
+        if (!mIsPhraseSearch) {
+            mQueryWords = Utilities.removeStopWords(mQueryWords);
+        }
+
         mQueryStems = Utilities.stemWords(mQueryWords);
 
         // Check if no words are left after processing
@@ -138,7 +144,6 @@ public class QueryProcessor {
         if (mIsPhraseSearch) {
             matchingResults = mIndexer.searchByPhrase(mQueryWords);
         } else {
-            mQueryWords = Utilities.removeStopWords(mQueryWords);
             matchingResults = mIndexer.searchByWord(mQueryStems);
         }
 
