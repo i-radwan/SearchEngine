@@ -4,6 +4,7 @@ import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.PrintWriter;
@@ -318,7 +319,7 @@ public class PageRanker {
      * Start page ranking algorithm
      */
     public void start() {
-        // Get the graph and svae it
+        // Get the graph and save it
         getGraph();
         saveGraph();
 
@@ -328,5 +329,30 @@ public class PageRanker {
 
         printPR(true);
         savePR();
+    }
+
+    /**
+     * Start CUDA page ranking algorithm
+     */
+    public void startCUDAPageRank() {
+        try {
+            // Get the graph and save it
+            getGraph();
+            saveGraph();
+
+            // Compile CUDA.
+            Runtime.getRuntime().exec("mkdir " + Constants.CUDA_SRC_DIRECTORY + "build");
+            Runtime.getRuntime().exec("cd " + Constants.CUDA_SRC_DIRECTORY + "build");
+            Runtime.getRuntime().exec("cmake ..");
+
+            // Run PageRank.
+            Runtime.getRuntime().exec("./" + Constants.CUDA_SRC_DIRECTORY + "build/PageRank " + Constants.GRAPH_FILE_NAME);
+
+            // Update Ranks
+            this.updatePagesRanks(true);
+
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
     }
 }
