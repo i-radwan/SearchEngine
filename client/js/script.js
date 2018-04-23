@@ -234,7 +234,7 @@ let app = {
                 return (a.R - a.L) < (b.R - b.L);
             });
 
-            let selectedSnippets = nominatedSnippets.splice(0, Math.min(10, nominatedSnippets.length));
+            let selectedSnippets = nominatedSnippets.splice(0, Math.min(MAX_SNIPPETS_COUNT, nominatedSnippets.length));
 
             // Sort again by L to print them in order
             selectedSnippets.sort(function (a, b) {
