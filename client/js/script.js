@@ -313,7 +313,6 @@ let app = {
         // Set max length
         app.searchBox.attr('maxlength', QUERY_MAX_LENGTH);
     },
-
     clearAllTimeOuts() {
         for (let i = 0; i < app.suggestionsTimeouts.length; i++) {
             clearTimeout(app.suggestionsTimeouts[i]);
