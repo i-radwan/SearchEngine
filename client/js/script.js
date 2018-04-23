@@ -116,8 +116,6 @@ let app = {
      * @param pagination
      */
     displayPagination: function (pagination) {
-        pagination.current_page = 1;
-        pagination.pages_count = 4;
         // Check if current page in the first/last segment
         let isFirstSegment = (pagination.current_page <= 6);
         let isLastSegment = (pagination.current_page >= pagination.pages_count - 5);
