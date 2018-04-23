@@ -5,7 +5,7 @@ import search.engine.indexer.Indexer;
 import search.engine.ranker.PageRanker;
 import search.engine.server.Server;
 
-import java.util.*;
+import java.util.Scanner;
 
 
 public class Main {

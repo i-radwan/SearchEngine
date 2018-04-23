@@ -100,11 +100,8 @@ public class Ranker {
         mStemsDocsCount = new long[mQueryWords.size()];
 
         for (int i = 0; i < mQueryWords.size(); ++i) {
-            String word = mQueryWords.get(i);
-            String stem = mQueryStems.get(i);
-
-            mWordsDocsCount[i] = mIndexer.getWordDocumentsCount(word);
-            mStemsDocsCount[i] = mIndexer.getStemDocumentsCount(stem) - mWordsDocsCount[i];
+            mWordsDocsCount[i] = mIndexer.getWordDocumentsCount(mQueryWords.get(i));
+            mStemsDocsCount[i] = mIndexer.getStemDocumentsCount(mQueryStems.get(i));
         }
     }
 
@@ -128,8 +125,8 @@ public class Ranker {
             List<Integer> positions = webPage.wordPosMap.get(word);
 
             int wordCnt = (positions == null ? 0 : positions.size());
-            int stemCnt = webPage.stemWordsCount.getOrDefault(stem, 0) - wordCnt;
-            double TF, IDF, score = 0;
+            int stemCnt = webPage.stemWordsCount.getOrDefault(stem, 0);
+            double TF, IDF, score = 0, wordScore = 0;
 
             // Exact word
             if (wordCnt > 0) {
@@ -145,12 +142,13 @@ public class Ranker {
                 IDF = Math.log((double) mTotalDocsCount / mStemsDocsCount[i]);
 
                 score += (TF * IDF) * 0.5;
+
+                wordScore = (double) webPage.wordScoreMap.get(stem) / stemCnt;
             }
 
-            // Add normalized score of the word related to its occurance in the HTML tags
-            score = (score * webPage.wordScoreMap.get(stem) / stemCnt);
-
-            pageScore += score;
+            // Add the effect of the normalized score of the word
+            // The word score is related to its occurances in the HTML
+            pageScore += score * wordScore;
         }
 
         return (0.75 * pageScore) * (0.25 * webPage.rank);

@@ -41,7 +41,7 @@ public class WebPage {
      * Web page rank.
      * <p>
      * To be calculated as follows:
-     *
+     * <p>
      * <i>PR(u) = Σ PR(v) / OutDegree(v)</i>
      * <p>
      * where:

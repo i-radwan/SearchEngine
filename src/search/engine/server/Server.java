@@ -63,6 +63,7 @@ public class Server {
             if (pageNumber == null || pageNumber.trim().isEmpty() || !pageNumber.matches("\\d+")) {
                 pageNumber = "1";
             }
+
             int pageNumberInt = Integer.parseInt(pageNumber);
 
             // Process the query
