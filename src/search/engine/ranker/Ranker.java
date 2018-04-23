@@ -28,7 +28,7 @@ public class Ranker {
     /**
      * Constructs a ranker object for the given web pages and search query.
      *
-     * @param indexer    a database indexer object to get web page statistics
+     * @param indexer    a database mIndexer object to get web page statistics
      * @param webPages   the web pages to rank and sort
      * @param queryWords the user's search query after polishing
      * @param queryStems the user's search query after stemming the words

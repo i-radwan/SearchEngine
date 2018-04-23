@@ -35,7 +35,7 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 10000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 10000;
+    public static final int MAX_WEB_PAGES_COUNT = 100;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
 
     // ================================================================================================
@@ -145,9 +145,10 @@ public class Constants {
      */
     public static final String RANKER_DATA_PATH = DATA_PATH + "/ranker";
     public static final String GRAPH_FILE_NAME = RANKER_DATA_PATH + "/graph.txt";
-    public static final String NODES_FILE_NAME = RANKER_DATA_PATH + "/nodes.txt";
     public static final String PAGE_RANKS_FILE_NAME = RANKER_DATA_PATH + "/ranks.txt";
-    public static final String CUDA_PAGE_RANKS_FILE_NAME = RANKER_DATA_PATH + "/cuda_ranks.txt";
+
+    public static final String CUDA_SRC_DIRECTORY = "Modules/CUDAPageRank/";
+    public static final String CUDA_PAGE_RANKS_FILE_NAME = CUDA_SRC_DIRECTORY + "/cuda_page_ranks.txt";
 
     /**
      * Pagination constants

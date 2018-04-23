@@ -4,6 +4,7 @@ import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.PrintWriter;
@@ -22,7 +23,7 @@ public class PageRanker {
     /**
      * Indexer object
      */
-    Indexer indexer = new Indexer();
+    Indexer mIndexer = new Indexer();
 
     /**
      * All web pages in the database
@@ -75,6 +76,15 @@ public class PageRanker {
     //
 
     /**
+     * Constructor.
+     *
+     * @param indexer indexer object needed to get the web pages graph and save new ranks.
+     */
+    public PageRanker(Indexer indexer) {
+        mIndexer = indexer;
+    }
+
+    /**
      * Add an arc to the graph
      *
      * @param from a node
@@ -112,7 +122,7 @@ public class PageRanker {
      */
     public void getGraph() {
         // Get the web pages in the graph (all nodes)
-        graphNodes = indexer.getWebGraph();
+        graphNodes = mIndexer.getWebGraph();
 
         this.pagesCount = graphNodes.keySet().size();
 
@@ -246,7 +256,7 @@ public class PageRanker {
                 graphNodes.get(pagesURL.get(id)).rank = pagesRank.get(id);
             }
 
-            indexer.updatePageRanks(graphNodes.values());
+            mIndexer.updatePageRanks(graphNodes.values());
         }
     }
 
@@ -309,7 +319,7 @@ public class PageRanker {
      * Start page ranking algorithm
      */
     public void start() {
-        // Get the graph and svae it
+        // Get the graph and save it
         getGraph();
         saveGraph();
 
@@ -319,5 +329,30 @@ public class PageRanker {
 
         printPR(true);
         savePR();
+    }
+
+    /**
+     * Start CUDA page ranking algorithm
+     */
+    public void startCUDAPageRank() {
+        try {
+            // Get the graph and save it
+            getGraph();
+            saveGraph();
+
+            // Compile CUDA.
+            Runtime.getRuntime().exec("mkdir " + Constants.CUDA_SRC_DIRECTORY + "build");
+            Runtime.getRuntime().exec("cd " + Constants.CUDA_SRC_DIRECTORY + "build");
+            Runtime.getRuntime().exec("cmake ..");
+
+            // Run PageRank.
+            Runtime.getRuntime().exec("./" + Constants.CUDA_SRC_DIRECTORY + "build/PageRank " + Constants.GRAPH_FILE_NAME);
+
+            // Update Ranks
+            this.updatePagesRanks(true);
+
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
     }
 }

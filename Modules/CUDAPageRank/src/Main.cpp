@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
 
 	// Save Result in output.txt file
 	ofstream file;
-	file.open("output.txt");
+	file.open("cuda_page_ranks.txt");
 
 	double *res = page_rank.get_result(), check_sum = 0.0;
 	for (int i = 0; i < nodes_count; i++) {

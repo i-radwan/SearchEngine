@@ -48,7 +48,7 @@ public class WebPageParser {
 
         // Assign page URL & title
         mPage.url = URLNormalizer.normalize(url);
-        mPage.title = extractPageTitle(doc);
+        mPage.title = extractPageTitle(doc, url.getHost());
 
         // Parse to fill web page content and index
         dfs(doc.body(), "");
@@ -63,11 +63,19 @@ public class WebPageParser {
      * Extracts the web page title from the head tag.
      *
      * @param doc the web page raw content
+     * @param defaultTitle the web page default title if no title found in the web page document
      * @return the web page title
      */
-    private String extractPageTitle(Document doc) {
-        String title = doc.head().select("title").first().ownText();
-        addToWordIndex(title, "title");
+    private String extractPageTitle(Document doc, String defaultTitle) {
+        String title = doc.head().select("title").first().ownText().trim();
+
+        if (title.isEmpty()) {
+            title = defaultTitle;
+        }
+        else {
+            addToWordIndex(title, "title");
+        }
+
         return title;
     }
 
