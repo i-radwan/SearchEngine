@@ -66,7 +66,7 @@ public class Ranker {
         List<ObjectId> ret = new ArrayList<>();
 
         int idx = Constants.SINGLE_PAGE_RESULTS_COUNT * (pageNumber - 1);
-        int cnt = Math.min(mWebPages.size(), Constants.SINGLE_PAGE_RESULTS_COUNT);
+        int cnt = Math.min(mWebPages.size() - idx, Constants.SINGLE_PAGE_RESULTS_COUNT);
 
         while (cnt-- > 0) {
             ret.add(mWebPages.get(idx++).id);
