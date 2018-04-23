@@ -61,6 +61,7 @@ public class Server {
             if (pageNumber == null || pageNumber.trim().isEmpty() || !pageNumber.matches("\\d+")) {
                 pageNumber = "1";
             }
+            int pageNumberInt = Integer.parseInt(pageNumber);
 
             // Process the query
             boolean isPhraseSearch = (queryString.startsWith("\"") && queryString.endsWith("\""));
@@ -87,7 +88,7 @@ public class Server {
 
             // Call the ranker
             Ranker ranker = new Ranker(sIndexer, allMatchedResults, queryWords, queryStems);
-            List<ObjectId> rankedWebPagesIds = ranker.rank(Integer.valueOf(pageNumber));
+            List<ObjectId> rankedWebPagesIds = ranker.rank(pageNumberInt);
             List<WebPage> results = sIndexer.searchById(rankedWebPagesIds, Constants.FIELDS_FOR_SEARCH_RESULTS);
 
             List<Document> pagesDocuments = new ArrayList<>();
@@ -111,7 +112,7 @@ public class Server {
 
             Document paginationDocument = new Document()
                     .append("pages_count", pagesCount)
-                    .append("current_page", Integer.parseInt(pageNumber));
+                    .append("current_page", pageNumberInt);
 
             Document webpagesResponse = new Document()
                     .append("pages", pagesDocuments)
