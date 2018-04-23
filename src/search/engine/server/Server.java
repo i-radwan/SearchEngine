@@ -89,6 +89,8 @@ public class Server {
                 return "app.webpagesCallBack({error_msg:\"No matching, please use different query!\"})";
             }
 
+            System.out.println("Total matching results: " + allMatchedResults.size());
+
             // Add suggestion
             sIndexer.insertSuggestion(queryString);
 

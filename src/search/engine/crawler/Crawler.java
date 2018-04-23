@@ -35,18 +35,17 @@ public class Crawler {
      * @param threadsCnt the number of crawler threads to start
      */
     public void start(int threadsCnt) {
-        Output.openFiles();
+        System.out.println("Start crawling...");
 
+        Output.openFiles();
         Input.readSeed();
         calcVisitedUrlCount();
-
-        System.out.println("Start crawling...");
         startThreads(threadsCnt);
         waitThreadsFinish();
-        System.out.println("Finish crawling");
-
         Output.closeFiles();
         clearData();
+
+        System.out.println("Finish crawling");
     }
 
     /**

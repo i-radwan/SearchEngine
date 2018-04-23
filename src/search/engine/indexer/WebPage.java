@@ -41,7 +41,7 @@ public class WebPage {
      * Web page rank.
      * <p>
      * To be calculated as follows:
-     * <p>
+     *
      * <i>PR(u) = Σ PR(v) / OutDegree(v)</i>
      * <p>
      * where:
@@ -68,7 +68,7 @@ public class WebPage {
      * for every distinct word in the web page.
      */
     public Map<String, List<Integer>> wordPosMap = null;
-    public Map<String, List<Integer>> wordScoreMap = null;
+    public Map<String, Integer> wordScoreMap = null;
     public Map<String, Integer> stemWordsCount = null;
 
     /**
@@ -158,8 +158,7 @@ public class WebPage {
         for (String word : wordPosMap.keySet()) {
             Document doc = new Document()
                     .append(Constants.FIELD_WORD, word)
-                    .append(Constants.FIELD_POSITIONS, wordPosMap.get(word))
-                    .append(Constants.FIELD_SCORES, wordScoreMap.get(word));
+                    .append(Constants.FIELD_POSITIONS, wordPosMap.get(word));
 
             dictionary.add(doc);
         }
@@ -184,7 +183,6 @@ public class WebPage {
         for (Document doc : wordsIndex) {
             String word = doc.getString(Constants.FIELD_WORD);
             wordPosMap.put(word, (List<Integer>) doc.get(Constants.FIELD_POSITIONS));
-            wordScoreMap.put(word, (List<Integer>) doc.get(Constants.FIELD_SCORES));
         }
     }
 
@@ -197,10 +195,12 @@ public class WebPage {
     private List<Document> getStemsIndex() {
         List<Document> ret = new ArrayList<>();
 
+        // TODO: convert the two maps into one map of pair of integers
         for (Map.Entry<String, Integer> entry : stemWordsCount.entrySet()) {
             Document doc = new Document()
                     .append(Constants.FIELD_STEM_WORD, entry.getKey())
-                    .append(Constants.FIELD_STEM_COUNT, entry.getValue());
+                    .append(Constants.FIELD_STEM_COUNT, entry.getValue())
+                    .append(Constants.FIELD_STEM_SCORE, wordScoreMap.get(entry.getKey()));
 
             ret.add(doc);
         }
@@ -221,9 +221,16 @@ public class WebPage {
         stemWordsCount = new HashMap<>();
 
         for (Document doc : stemsIndex) {
+            String stem = doc.getString(Constants.FIELD_STEM_WORD);
+
             stemWordsCount.put(
-                    doc.getString(Constants.FIELD_STEM_WORD),
+                    stem,
                     doc.getInteger(Constants.FIELD_STEM_COUNT)
+            );
+
+            wordScoreMap.put(
+                    stem,
+                    doc.getInteger(Constants.FIELD_STEM_SCORE)
             );
         }
     }

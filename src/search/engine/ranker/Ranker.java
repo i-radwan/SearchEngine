@@ -129,14 +129,14 @@ public class Ranker {
 
             int wordCnt = (positions == null ? 0 : positions.size());
             int stemCnt = webPage.stemWordsCount.getOrDefault(stem, 0) - wordCnt;
-            double TF, IDF;
+            double TF, IDF, score = 0;
 
             // Exact word
             if (wordCnt > 0) {
                 TF = wordCnt / (double) webPage.wordsCount;
                 IDF = Math.log((double) mTotalDocsCount / mWordsDocsCount[i]);
 
-                pageScore += TF * IDF;
+                score += TF * IDF;
             }
 
             // Synonymous words
@@ -144,8 +144,13 @@ public class Ranker {
                 TF = stemCnt / (double) webPage.wordsCount;
                 IDF = Math.log((double) mTotalDocsCount / mStemsDocsCount[i]);
 
-                pageScore += (TF * IDF) * 0.5;
+                score += (TF * IDF) * 0.5;
             }
+
+            // Add normalized score of the word related to its occurance in the HTML tags
+            score = (score * webPage.wordScoreMap.get(stem) / stemCnt);
+
+            pageScore += score;
         }
 
         return (0.75 * pageScore) * (0.25 * webPage.rank);

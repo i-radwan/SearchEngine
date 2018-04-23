@@ -23,7 +23,7 @@ public class PageRanker {
     /**
      * Indexer object
      */
-    Indexer mIndexer = new Indexer();
+    Indexer mIndexer;
 
     /**
      * All web pages in the database
@@ -268,9 +268,9 @@ public class PageRanker {
         for (Integer page = 0; page < pagesCount; page++) {
             checkSum += pagesRank.get(page);
             if (!checkSumOnly)
-                System.out.println(page.toString() + " = " + pagesRank.get(page));
+                System.out.println("Page Ranker: " + page.toString() + " = " + pagesRank.get(page));
         }
-        System.out.println("PageRank: check sum = " + checkSum.toString());
+        System.out.println("Page Ranker: check sum = " + checkSum.toString());
     }
 
     /**
@@ -319,6 +319,8 @@ public class PageRanker {
      * Start page ranking algorithm
      */
     public void start() {
+        System.out.println("Start page ranking...");
+
         // Get the graph and save it
         getGraph();
         saveGraph();
@@ -329,6 +331,8 @@ public class PageRanker {
 
         printPR(true);
         savePR();
+
+        System.out.println("Finish page ranking");
     }
 
     /**
