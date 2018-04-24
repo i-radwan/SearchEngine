@@ -1,13 +1,20 @@
 /* Styles for wrapping the search box */
 
 .main {
-    width: 50%;
+    width: 50vw;
     margin: 45vh auto;
 }
 
 p {
     margin: 0;
     padding: 0;
+}
+
+.webpage_url, .webpage_title {
+    width: 50vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /****************************/

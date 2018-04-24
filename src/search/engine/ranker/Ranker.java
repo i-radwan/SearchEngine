@@ -4,11 +4,9 @@ import org.bson.types.ObjectId;
 import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
-import search.engine.utils.Utilities;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -24,6 +22,12 @@ public class Ranker {
     List<String> mQueryStems;
 
     long mTotalDocsCount;
+    long mWordsDocsCount[];
+    long mStemsDocsCount[];
+
+    //
+    // Member methods
+    //
 
     /**
      * Constructs a ranker object for the given web pages and search query.
@@ -35,11 +39,12 @@ public class Ranker {
      */
     public Ranker(Indexer indexer, List<WebPage> webPages, List<String> queryWords, List<String> queryStems) {
         mIndexer = indexer;
-        mTotalDocsCount = mIndexer.getDocumentsCount();
 
         mWebPages = webPages;
         mQueryWords = queryWords;
         mQueryStems = queryStems;
+
+        retrieveDocumentsCount();
     }
 
     /**
@@ -66,13 +71,38 @@ public class Ranker {
         List<ObjectId> ret = new ArrayList<>();
 
         int idx = Constants.SINGLE_PAGE_RESULTS_COUNT * (pageNumber - 1);
-        int cnt = Math.min(mWebPages.size(), Constants.SINGLE_PAGE_RESULTS_COUNT);
+        int cnt = Math.min(mWebPages.size() - idx, Constants.SINGLE_PAGE_RESULTS_COUNT);
 
         while (cnt-- > 0) {
             ret.add(mWebPages.get(idx++).id);
         }
 
         return ret;
+    }
+
+    /**
+     * Retrieves the web pages documents count for each of the
+     * search query words and stems, along with the total number of documents in the database.
+     * <p>
+     * Fill:
+     * <ul>
+     * <li>{@code mWordsDocsCount}</li>
+     * <li>{@code mStemsDocsCount}</li>
+     * <li>{@code mTotalDocsCount}</li>
+     * </ul>
+     */
+    private void retrieveDocumentsCount() {
+        // Get the total number of documents in the database
+        mTotalDocsCount = mIndexer.getDocumentsCount();
+
+        // Get the total number of documents containing each of the search query words
+        mWordsDocsCount = new long[mQueryWords.size()];
+        mStemsDocsCount = new long[mQueryWords.size()];
+
+        for (int i = 0; i < mQueryWords.size(); ++i) {
+            mWordsDocsCount[i] = mIndexer.getWordDocumentsCount(mQueryWords.get(i));
+            mStemsDocsCount[i] = mIndexer.getStemDocumentsCount(mQueryStems.get(i));
+        }
     }
 
     /**
@@ -85,36 +115,42 @@ public class Ranker {
      * @return the calculated web page score
      */
     private double calculatePageScore(WebPage webPage) {
-        double pageTFIDFScore = 0.0;
+        double pageScore = 0.0; // TF-IDF score
 
         // For each word in the query filter words
         for (int i = 0; i < mQueryWords.size(); ++i) {
             String word = mQueryWords.get(i);
             String stem = mQueryStems.get(i);
 
-            // Exact word
-            int wordCnt = 0;
-            long wordDocCnt = 0;
-            if (webPage.wordPosMap.containsKey(word)) {
-                wordCnt = webPage.wordPosMap.get(word).size();
-                wordDocCnt = mIndexer.getWordDocumentsCount(word);
-                double wordTF = wordCnt / (double) webPage.wordsCount;
-                double wordIDF = Math.log(mTotalDocsCount / (double) wordDocCnt);
+            List<Integer> positions = webPage.wordPosMap.get(word);
 
-                pageTFIDFScore += wordTF * wordIDF;
+            int wordCnt = (positions == null ? 0 : positions.size());
+            int stemCnt = webPage.stemWordsCount.getOrDefault(stem, 0);
+            double TF, IDF, score = 0, wordScore = 0;
+
+            // Exact word
+            if (wordCnt > 0) {
+                TF = wordCnt / (double) webPage.wordsCount;
+                IDF = Math.log((double) mTotalDocsCount / mWordsDocsCount[i]);
+
+                score += TF * IDF;
             }
 
             // Synonymous words
-            if (webPage.stemWordsCount.containsKey(stem)) {
-                int stemCnt = webPage.stemWordsCount.get(stem) - wordCnt;
-                long stemDocCnt = mIndexer.getStemDocumentsCount(stem) - wordDocCnt;
-                double stemTF = stemCnt / (double) webPage.wordsCount;
-                double stemIDF = Math.log(mTotalDocsCount / (double) stemDocCnt);
+            if (stemCnt > 0) {
+                TF = stemCnt / (double) webPage.wordsCount;
+                IDF = Math.log((double) mTotalDocsCount / mStemsDocsCount[i]);
 
-                pageTFIDFScore += (stemTF * stemIDF) * (0.5);
+                score += (TF * IDF) * 0.5;
+
+                wordScore = (double) webPage.stemScoreMap.get(stem) / stemCnt;
             }
+
+            // Add the effect of the normalized score of the word
+            // The word score is related to its occurances in the HTML
+            pageScore += score * wordScore;
         }
 
-        return (0.75 * pageTFIDFScore) * (0.25 * webPage.rank);
+        return (0.75 * pageScore) * (0.25 * webPage.rank);
     }
 }

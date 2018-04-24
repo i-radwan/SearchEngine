@@ -5,6 +5,8 @@ const SERVER_SEARCH_LINK = "http://localhost:8080/search?q={query}&page={page}";
 const SERVER_SUGGESTIONS_LINK = "http://localhost:8080/suggestions?q={query}";
 const MIN_SUGGESTION_CHARS_COUNT = 3;
 const SUGGESTIONS_TIMEOUT_DELAY = 300;
+const MAX_SNIPPETS_COUNT = 10; // Max snippets per search result
+const QUERY_MAX_LENGTH = 5 * 10;
 
 //
 // Main App Code
@@ -15,6 +17,7 @@ let app = {
         app.suggestions = [];
         app.suggestionsTimeouts = [];
         app.didTheUserSearch = false;
+        app.enterHitTime = 0;
 
         app.config();
 
@@ -37,7 +40,7 @@ let app = {
     },
 
     /**
-     * Server request
+     * Retrieve webpages from the server
      *
      * @param query
      * @param page
@@ -56,7 +59,7 @@ let app = {
     },
 
     /**
-     * Server request
+     * Retrieve suggestions from the server
      */
     getSuggestionsRequest: function () {
         let query = app.searchBox.val();
@@ -97,19 +100,19 @@ let app = {
     },
 
     /**
-     * Render webpages into results container
+     * Renders webpages into results container
      *
      * @param webpages
      */
     displayResults: function (webpages) {
-        app.styleSnippet(webpages, app.searchBox.val().split(" "));
+        app.extractSnippets(webpages, app.searchBox.val().split(" "));
         app.resultsContainer.html(app.resultsTemplateScript({webpages: webpages}));
 
         $("#results_container").fadeTo("fast", 1);
     },
 
     /**
-     * Dispaly pagination
+     * Displays pagination
      *
      * @param pagination
      */
@@ -156,7 +159,10 @@ let app = {
             });
 
         // Fill the container
-        app.paginationContainer.html(app.paginationTemplateScript({page_numbers: pagesNumbers}));
+        app.paginationContainer.html(app.paginationTemplateScript({
+            page_numbers: pagesNumbers,
+            elapsed: Date.now() - app.enterHitTime
+        }));
 
         // Reset link handlers
         app.setPaginationLinksHandler();
@@ -166,33 +172,132 @@ let app = {
     },
 
     /**
-     * Make keywords bold in the snipper
-     *
-     * ToDo: check if will get it ready from the server
+     * Extracts
      *
      * @param webpages
-     * @param keywords
+     * @param queryWords
      */
-    styleSnippet: function (webpages, keywords) {
+    extractSnippets: function (webpages, queryWords) {
         for (let i in webpages) {
             let page = webpages[i];
+            let pageContent = page.content;
+            let pageContentArray = pageContent.split(" ");
+            let pageContentArrayLength = pageContentArray.length;
 
-            for (let j in keywords) {
-                let keyword = keywords[j];
-                if (keyword.length === 0) continue;
+            let nominatedSnippets = [];
+            let lastKeywordIdx = -3;
 
-                page.snippet = page.snippet.replace(new RegExp("\\b" + keyword + "\\b", 'g'), "<b>" + keyword + "</b>");
+            for (let key = 0; key < pageContentArrayLength; ++key) {
+                let word = pageContentArray[key];
+                if (queryWords.findIndex(item => app.removeSpecialCharsAroundWord(word.toLowerCase()) === app.removeSpecialCharsAroundWord(item.toLowerCase())) === -1) continue;
+
+                let lastSnippet = nominatedSnippets[nominatedSnippets.length - 1];
+                let snippet = {str: ""};
+                let snippetStringStartIdx;
+
+                // New snippet
+                if (key - lastKeywordIdx > 2) {
+                    snippet.L = Math.max(key - 2, (lastSnippet ? lastSnippet.R + 1 : 0));
+                    snippet.R = Math.min(pageContentArrayLength, key + 2);
+
+                    snippetStringStartIdx = snippet.L;
+
+                    nominatedSnippets.push(snippet);
+                }
+                // Merge snippets
+                else {
+                    let oldLastSnippetR = lastSnippet.R;
+                    lastSnippet.R = Math.min(pageContentArrayLength, key + 2);
+
+                    snippet = lastSnippet;
+                    snippetStringStartIdx = oldLastSnippetR + 1;
+                }
+
+                // Separate newly added words from the previous snippet.str words
+                if (snippet === lastSnippet)
+                    snippet.str += " ";
+
+                // Add/Update snippet words
+                for (let i = snippetStringStartIdx; i <= snippet.R; ++i) {
+                    let isKeyword = (queryWords.findIndex(item => app.removeSpecialCharsAroundWord(pageContentArray[i].toLowerCase()) === app.removeSpecialCharsAroundWord(item.toLowerCase())) > -1);
+
+                    snippet.str += (isKeyword) ? "<b>" : "";
+                    snippet.str += pageContentArray[i];
+                    snippet.str += (isKeyword) ? "</b>" : "";
+                    snippet.str += (i < snippet.R) ? " " : "";
+                }
+
+                lastKeywordIdx = key;
+            }
+
+            // Sort by snippet length desc. (this will be better, and manages phrases too)
+            nominatedSnippets.sort(function (a, b) {
+                return (a.R - a.L) < (b.R - b.L);
+            });
+
+            let selectedSnippets = nominatedSnippets.splice(0, Math.min(MAX_SNIPPETS_COUNT, nominatedSnippets.length));
+
+            // Sort again by L to print them in order
+            selectedSnippets.sort(function (a, b) {
+                return (a.L) > (b.L);
+            });
+
+            // Concatenate to get page snippet
+            page.snippet = "...";
+            for (let i = 0; i < selectedSnippets.length; ++i) {
+                page.snippet += selectedSnippets[i].str;
+                page.snippet += (i < selectedSnippets.length - 1) ? "..." : "";
+            }
+
+            // Escaping route
+            if (selectedSnippets.length === 0) {
+                page.snippet = page.content.substr(0, 220) + "...";
+            } else if (page.snippet.length < 220) {
+                // Fill more to show full-like snippet
+                page.snippet += page.content.substr(
+                    selectedSnippets[selectedSnippets.length - 1].R + 1,
+                    Math.min(page.content.length, 220 - page.snippet.length + 1)
+                );
             }
         }
     },
 
     /**
-     * Catch pressing enter to search
+     * Removes the special chars around word (google. => google)
+     * This function will allow us to highlight more relevant things
+     * @param word
+     * @returns string processed word
+     */
+    removeSpecialCharsAroundWord: function (word) {
+        let firstLetterIdx, lastLetterIdx;
+
+        // Prefix chars
+        for (let i = 0; i < word.length; ++i) {
+            if (word[i].match("^[a-zA-Z0-9]*$") != null) {
+                firstLetterIdx = i;
+                break;
+            }
+        }
+
+        // Postfix chars
+        for (let i = word.length - 1; i >= 0; --i) {
+            if (word[i].match("^[a-zA-Z0-9]*$") != null) {
+                lastLetterIdx = i;
+                break;
+            }
+        }
+
+        return word.substr(firstLetterIdx, lastLetterIdx - firstLetterIdx + 1);
+    },
+
+    /**
+     * Catches pressing enter to search
      */
     configureSearchBox: function () {
         // Send search request when enter key gets pressed
         app.searchBox.bind('keypress', function (e) {
             if (e.keyCode === 13 && app.searchBox.val().trim().length > 0) {
+                app.enterHitTime = Date.now();
                 app.getWebpagesRequest(app.searchBox.val());
             }
         });
@@ -204,8 +309,10 @@ let app = {
                 app.suggestionsTimeouts.push(setTimeout(app.getSuggestionsRequest, SUGGESTIONS_TIMEOUT_DELAY));
             }
         });
-    },
 
+        // Set max length
+        app.searchBox.attr('maxlength', QUERY_MAX_LENGTH);
+    },
     clearAllTimeOuts() {
         for (let i = 0; i < app.suggestionsTimeouts.length; i++) {
             clearTimeout(app.suggestionsTimeouts[i]);
@@ -220,7 +327,7 @@ let app = {
     },
 
     /**
-     * Prevent default links action, re-fetch new page from server
+     * Prevents default links action, re-fetch new page from server
      */
     setPaginationLinksHandler: function () {
         $(".pagination .valid").click(function (event) {
@@ -230,7 +337,7 @@ let app = {
     },
 
     /**
-     * Update the autocomplete list after fetching from server
+     * Updates the autocomplete list after fetching from server
      */
     updateSearchBoxAutoCompleteList: function () {
         // Set autocomplete list

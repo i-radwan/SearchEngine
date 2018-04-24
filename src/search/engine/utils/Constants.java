@@ -35,7 +35,7 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 10000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 100;
+    public static final int MAX_WEB_PAGES_COUNT = 5000;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
 
     // ================================================================================================
@@ -66,14 +66,15 @@ public class Constants {
     public static final String FIELD_PAGE_CONTENT = "content";
     public static final String FIELD_RANK = "rank";
     public static final String FIELD_CONNECTED_TO = "connected_to";
-    public static final String FIELD_WORDS_COUNT = "words_count";
+    public static final String FIELD_TOTAL_WORDS_COUNT = "words_count";
     public static final String FIELD_WORDS_INDEX = "words_index";
     public static final String FIELD_WORD = "word";
+    public static final String FIELD_WORD_COUNT = "count";
     public static final String FIELD_POSITIONS = "positions";
-    public static final String FIELD_SCORES = "scores";
     public static final String FIELD_STEMS_INDEX = "stems_index";
     public static final String FIELD_STEM_WORD = "stem";
     public static final String FIELD_STEM_COUNT = "count";
+    public static final String FIELD_STEM_SCORE = "score";
     public static final String FILED_SYNONYMS = "synonyms";
     public static final String FILED_FETCH_SKIP_LIMIT = "fetch_skip_limit";
     public static final String FILED_FETCH_SKIP_COUNT = "fetch_skip_count";
@@ -84,9 +85,8 @@ public class Constants {
      */
     public static final List<String> FIELDS_FOR_RANKING = Arrays.asList(
             FIELD_ID,
-            FIELD_URL,
             FIELD_RANK,
-            FIELD_WORDS_COUNT,
+            FIELD_TOTAL_WORDS_COUNT,
             FIELD_WORDS_INDEX,
             FIELD_STEMS_INDEX
     );
@@ -119,19 +119,17 @@ public class Constants {
      */
     public static final Map<String, Integer> TAG_TO_SCORE_MAP = new HashMap<String, Integer>() {
         {
-            put("title", 30);
-            put("h1", 15);
-            put("h2", 10);
-            put("i", 10);
-
-            put("h3", 8);
-            put("em", 5);
-            put("b", 5);
-            put("strong", 5);
-
-            put("h4", 4);
-            put("h5", 3);
-            put("h6", 3);
+            put("title", 10);
+            put("h1", 6);
+            put("h2", 5);
+            put("h3", 4);
+            put("strong", 4);
+            put("em", 4);
+            put("b", 4);
+            put("i", 3);
+            put("h4", 3);
+            put("h5", 2);
+            put("h6", 2);
         }
     };
 
@@ -162,6 +160,7 @@ public class Constants {
     //
 
     public static int SEARCH_ENGINE_PORT_NUMBER = 8080;
+    public static int QUERY_MAX_LENGTH = 5 * 10;
 
     // ================================================================================================
     //

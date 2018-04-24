@@ -19,15 +19,11 @@ import java.util.*;
 public class WebPageParser {
 
     //
-    // Static variables
-    //
-    SnowballStemmer sWordStemmer = new englishStemmer();
-
-    //
     // Member variables
     //
     private StringBuilder sContent;
     private WebPage mPage;
+    private SnowballStemmer mWordStemmer = new englishStemmer();
 
 
     /**
@@ -43,7 +39,7 @@ public class WebPageParser {
         sContent = new StringBuilder();
         mPage = new WebPage();
         mPage.wordPosMap = new HashMap<>();
-        mPage.wordScoreMap = new HashMap<>();
+        mPage.stemScoreMap = new HashMap<>();
         mPage.stemWordsCount = new HashMap<>();
 
         // Assign page URL & title
@@ -62,21 +58,25 @@ public class WebPageParser {
     /**
      * Extracts the web page title from the head tag.
      *
-     * @param doc the web page raw content
+     * @param doc          the web page raw content
      * @param defaultTitle the web page default title if no title found in the web page document
      * @return the web page title
      */
     private String extractPageTitle(Document doc, String defaultTitle) {
-        String title = doc.head().select("title").first().ownText().trim();
+        String ret = defaultTitle;
+        String title = "";
+        Elements titles = doc.head().select("title");
 
-        if (title.isEmpty()) {
-            title = defaultTitle;
-        }
-        else {
-            addToWordIndex(title, "title");
+        if (titles.size() > 0) {
+            title = titles.first().ownText().trim();
         }
 
-        return title;
+        if (title.length() > 0) {
+            ret = title;
+            addToWordIndex(ret, "title");
+        }
+
+        return ret;
     }
 
     /**
@@ -139,7 +139,7 @@ public class WebPageParser {
         str = Utilities.processString(str);
         String words[] = str.split(" ");
 
-        int score = Constants.TAG_TO_SCORE_MAP.getOrDefault(tag, 1);
+        int tagScore = Constants.TAG_TO_SCORE_MAP.getOrDefault(tag, 1);
 
         for (String word : words) {
             if (word.isEmpty()) {
@@ -147,24 +147,28 @@ public class WebPageParser {
             }
 
             //
-            // Add position and score
+            // Add position
             //
             mPage.wordPosMap.putIfAbsent(word, new ArrayList<>());
             mPage.wordPosMap.get(word).add(mPage.wordsCount++);
 
-            mPage.wordScoreMap.putIfAbsent(word, new ArrayList<>());
-            mPage.wordScoreMap.get(word).add(score);
-
             //
-            // Count stem
+            // Count stem and sum score
             //
-            sWordStemmer.setCurrent(word);
-            sWordStemmer.stem();
+            if (Utilities.stopWord(word)) {
+                continue;
+            }
 
-            String stem = sWordStemmer.getCurrent();
+            mWordStemmer.setCurrent(word);
+            mWordStemmer.stem();
+
+            String stem = mWordStemmer.getCurrent();
+
             int cnt = mPage.stemWordsCount.getOrDefault(stem, 0);
+            int cur = mPage.stemScoreMap.getOrDefault(stem, 0);
 
             mPage.stemWordsCount.put(stem, cnt + 1);
+            mPage.stemScoreMap.put(stem, cur + tagScore);
         }
     }
 
