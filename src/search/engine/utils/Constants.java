@@ -148,7 +148,8 @@ public class Constants {
     public static final String PAGE_RANKS_FILE_NAME = RANKER_DATA_PATH + "/ranks.txt";
 
     public static final String CUDA_SRC_DIRECTORY = "Modules/CUDAPageRank/";
-    public static final String CUDA_PAGE_RANKS_FILE_NAME = CUDA_SRC_DIRECTORY + "/cuda_page_ranks.txt";
+    public static final String CUDA_SCRIPT_PATH = CUDA_SRC_DIRECTORY + "run_cuda.sh";
+    public static final String CUDA_PAGE_RANKS_FILE_NAME = CUDA_SRC_DIRECTORY + "build/cuda_page_ranks.txt";
 
     /**
      * Pagination constants
