@@ -95,7 +95,7 @@ public class QueryProcessor {
 
         // Check if too short query
         if (mQuery.length() <= 3) {
-            throw new Exception("{error_msg:\"Please fill a valid search query!\"}");
+            throw new Exception("Please fill a valid search query!");
         }
 
         //
@@ -115,8 +115,15 @@ public class QueryProcessor {
 
         // Check if no words are left after processing
         if (mQueryWords.isEmpty()) {
-            throw new Exception("{error_msg:\"Please fill a valid search query!\"}");
+            throw new Exception("Please fill a valid search query!");
         }
+
+        //
+        System.out.print("Search query:\t ");
+        for (String word : mQueryWords) {
+            System.out.print(word + " ");
+        }
+        System.out.println();
 
         //
         // Parse page number
@@ -147,16 +154,16 @@ public class QueryProcessor {
             matchingResults = mIndexer.searchByWord(mQueryStems);
         }
 
-        mTotalResultsCount = matchingResults.size();
-
-        if (matchingResults.isEmpty()) {
-            throw new Exception("{error_msg:\"No matching results, please try a different search query!\"}");
-        }
-
         //
         now = System.nanoTime();
         System.out.printf("Search time:\t %.04f sec\n", (now - startTime) / 1e9);
         startTime = now;
+
+        mTotalResultsCount = matchingResults.size();
+
+        if (matchingResults.isEmpty()) {
+            throw new Exception("No matching results, please try a different search query!");
+        }
 
         //
         // Save search query for later suggestions
@@ -173,9 +180,8 @@ public class QueryProcessor {
         //
         now = System.nanoTime();
         System.out.printf("Ranking time:\t %.04f sec\n", (now - startTime) / 1e9);
-        startTime = now;
 
+        //
         System.out.printf("Total results:\t %d\n", mTotalResultsCount);
-        System.out.println("-------------------------------------------");
     }
 }

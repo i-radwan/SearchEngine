@@ -48,8 +48,11 @@ public class Server {
 
                 ret = processor.getJsonResult();
             } catch (Exception e) {
-                ret = e.getMessage();
+                ret = "{error_msg:\"" + e.getMessage() + "\"}";
             }
+
+            //
+            System.out.println("-------------------------------------------");
 
             return "app.webpagesCallBack(" + ret + ")";
         });

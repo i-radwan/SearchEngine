@@ -39,7 +39,7 @@ public class WebPageParser {
         sContent = new StringBuilder();
         mPage = new WebPage();
         mPage.wordPosMap = new HashMap<>();
-        mPage.wordScoreMap = new HashMap<>();
+        mPage.stemScoreMap = new HashMap<>();
         mPage.stemWordsCount = new HashMap<>();
 
         // Assign page URL & title
@@ -165,10 +165,10 @@ public class WebPageParser {
             String stem = mWordStemmer.getCurrent();
 
             int cnt = mPage.stemWordsCount.getOrDefault(stem, 0);
-            int cur = mPage.wordScoreMap.getOrDefault(stem, 0);
+            int cur = mPage.stemScoreMap.getOrDefault(stem, 0);
 
             mPage.stemWordsCount.put(stem, cnt + 1);
-            mPage.wordScoreMap.put(stem, cur + tagScore);
+            mPage.stemScoreMap.put(stem, cur + tagScore);
         }
     }
 

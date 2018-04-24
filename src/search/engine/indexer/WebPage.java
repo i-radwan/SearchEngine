@@ -68,7 +68,7 @@ public class WebPage {
      * for every distinct word in the web page.
      */
     public Map<String, List<Integer>> wordPosMap = null;
-    public Map<String, Integer> wordScoreMap = null;
+    public Map<String, Integer> stemScoreMap = null;
     public Map<String, Integer> stemWordsCount = null;
 
     /**
@@ -168,8 +168,7 @@ public class WebPage {
     }
 
     /**
-     * Parse the given words index document
-     * and fill {@code wordPosMap} and {@code wordScoreMap}.
+     * Parse the given words index document and fill {@code wordPosMap}.
      *
      * @param wordsIndex list of documents representing the dictionary of this web page
      */
@@ -179,7 +178,6 @@ public class WebPage {
         }
 
         wordPosMap = new HashMap<>();
-        wordScoreMap = new HashMap<>();
 
         for (Document doc : wordsIndex) {
             String word = doc.getString(Constants.FIELD_WORD);
@@ -201,7 +199,7 @@ public class WebPage {
             Document doc = new Document()
                     .append(Constants.FIELD_STEM_WORD, entry.getKey())
                     .append(Constants.FIELD_STEM_COUNT, entry.getValue())
-                    .append(Constants.FIELD_STEM_SCORE, wordScoreMap.get(entry.getKey()));
+                    .append(Constants.FIELD_STEM_SCORE, stemScoreMap.get(entry.getKey()));
 
             ret.add(doc);
         }
@@ -210,7 +208,8 @@ public class WebPage {
     }
 
     /**
-     * Parse the given stem words count document and fill {@code stemWordsCount}.
+     * Parse the given stem words count document
+     * and fill {@code stemWordsCount} and {@code stemScoreMap}.
      *
      * @param stemsIndex list of documents representing the stems index of this web page
      */
@@ -220,6 +219,7 @@ public class WebPage {
         }
 
         stemWordsCount = new HashMap<>();
+        stemScoreMap = new HashMap<>();
 
         for (Document doc : stemsIndex) {
             String stem = doc.getString(Constants.FIELD_STEM_WORD);
@@ -229,7 +229,7 @@ public class WebPage {
                     doc.getInteger(Constants.FIELD_STEM_COUNT)
             );
 
-            wordScoreMap.put(
+            stemScoreMap.put(
                     stem,
                     doc.getInteger(Constants.FIELD_STEM_SCORE)
             );

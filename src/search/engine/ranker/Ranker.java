@@ -143,7 +143,7 @@ public class Ranker {
 
                 score += (TF * IDF) * 0.5;
 
-                wordScore = (double) webPage.wordScoreMap.get(stem) / stemCnt;
+                wordScore = (double) webPage.stemScoreMap.get(stem) / stemCnt;
             }
 
             // Add the effect of the normalized score of the word

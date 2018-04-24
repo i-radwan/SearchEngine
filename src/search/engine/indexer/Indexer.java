@@ -9,7 +9,6 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import search.engine.crawler.Output;
 import search.engine.utils.Constants;
-import search.engine.utils.Utilities;
 
 import java.net.URL;
 import java.util.*;
@@ -145,7 +144,7 @@ public class Indexer {
         // Compare the newly fetched page with its previous version from the database.
         if (curPage.wordsCount == prvPage.wordsCount
                 && curPage.wordPosMap.equals(prvPage.wordPosMap)
-                && curPage.wordScoreMap.equals(prvPage.wordScoreMap)) {
+                && curPage.stemScoreMap.equals(prvPage.stemScoreMap)) {
 
             // If no changes happens to the content of the web page then
             // increase the skip fetch limit and return
