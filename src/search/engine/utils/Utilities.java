@@ -80,9 +80,20 @@ public class Utilities {
      * @return a new string of stemmed word.
      */
     public static String stemWord(String word) {
-        stemmer.setCurrent(word);
-        stemmer.stem();
-        return stemmer.getCurrent();
+        String lastWord = word;
+
+        while (true) {
+            stemmer.setCurrent(word);
+            stemmer.stem();
+            word = stemmer.getCurrent();
+
+            if (word.equals(lastWord))
+                break;
+
+            lastWord = word;
+        }
+
+        return word;
     }
 
     /**

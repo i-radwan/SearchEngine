@@ -82,9 +82,7 @@ public class SnippetExtractor {
             }
             // Merge snippets
             else {
-                int oldLastSnippetR = lastSnippet.R;
-
-                lastSnippet.R = Math.min(pageContentArrayLength - 1, key + 2);
+                int oldLastSnippetR = lastSnippet.R = Math.min(pageContentArrayLength - 1, key + 2);
 
                 snippet = lastSnippet;
 
