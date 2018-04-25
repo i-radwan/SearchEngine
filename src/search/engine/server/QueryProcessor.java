@@ -10,7 +10,6 @@ import search.engine.utils.Utilities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 public class QueryProcessor {
@@ -68,15 +67,18 @@ public class QueryProcessor {
 
         for (ObjectId id : mRankedIds) {
             for (WebPage webPage : mResults) {
-                if (webPage.id.equals(id)) {
-                    Document doc = new Document()
-                            .append("title", webPage.title)
-                            .append("url", webPage.url)
-                            .append("snippet", extractWebpageSnippet(webPage.content));
+                if (!webPage.id.equals(id)) continue;
 
-                    pagesDocuments.add(doc);
-                    break;
-                }
+                String snippet = SnippetExtractor.extractWebpageSnippet(webPage.content, mOriginalQueryStems);
+                
+                Document doc = new Document()
+                        .append("title", webPage.title)
+                        .append("url", webPage.url)
+                        .append("snippet", snippet);
+
+                pagesDocuments.add(doc);
+
+                break;
             }
         }
 
@@ -217,138 +219,5 @@ public class QueryProcessor {
 
         //
         System.out.printf("Total results:\t %d\n", mTotalResultsCount);
-    }
-
-    /**
-     * Extracts the important snippets from the given webpage content
-     *
-     * @param content the webpage content string
-     * @return concatenated webpage snippets
-     */
-    private String extractWebpageSnippet(String content) {
-        ArrayList<Snippet> nominatedSnippets = getNominatedSnippets(content);
-
-        // Sort by snippet length desc. (this will be better, and manages phrases too)
-        nominatedSnippets.sort(Comparator.comparingInt(s -> (s.L - s.R)));
-
-        // Select top snippets w.r.t. size
-        List<Snippet> selectedSnippets = getSelectedSnippets(nominatedSnippets);
-
-        // Sort again by L to print them in order
-        selectedSnippets.sort(Comparator.comparingInt(s -> s.L));
-
-        // Concatenate small snippets
-        String pageSnippet = concatenateSnippets(selectedSnippets);
-
-        return completeSnippetFilling(content, pageSnippet, selectedSnippets);
-    }
-
-    private String completeSnippetFilling(String content, String snippet, List<Snippet> selectedSnippets) {
-        // Escaping route
-        if (selectedSnippets.size() == 0) {
-            snippet = content.substring(0, Constants.MAX_SNIPPETS_CHARS_COUNT) + "...";
-        } else if (snippet.length() < Constants.MAX_SNIPPETS_CHARS_COUNT) {
-            // Fill more to show full-like snippet
-            int beginIndex = selectedSnippets.get(selectedSnippets.size() - 1).R + 1;
-
-            snippet += "..." + content.substring(
-                    beginIndex,
-                    Math.min(
-                            content.length(),
-                            beginIndex + Constants.MAX_SNIPPETS_CHARS_COUNT - snippet.length() + 1
-                    )
-            );
-        }
-
-        return snippet;
-    }
-
-    private List<Snippet> getSelectedSnippets(ArrayList<Snippet> nominatedSnippets) {
-        return nominatedSnippets.subList(0,
-                Math.min(Constants.MAX_SNIPPETS_COUNT, nominatedSnippets.size())
-        );
-    }
-
-    private String concatenateSnippets(List<Snippet> selectedSnippets) {
-        String snippet = "...";
-
-        // Concatenate to get page snippet
-        for (int i = 0; i < selectedSnippets.size(); ++i) {
-            snippet += selectedSnippets.get(i).str;
-            snippet += (i < selectedSnippets.size() - 1) ? "..." : "";
-        }
-
-        return snippet;
-    }
-
-    private ArrayList<Snippet> getNominatedSnippets(String content) {
-        ArrayList<Snippet> nominatedSnippets = new ArrayList<>();
-
-        String[] pageContentArray = content.split(" ");
-        int pageContentArrayLength = pageContentArray.length;
-
-        int lastKeywordIdx = -3;
-
-        for (int key = 0; key < pageContentArrayLength; ++key) {
-            String word = prepareWordForSnippet(pageContentArray[key]);
-
-            if (mOriginalQueryStems.indexOf(word) == -1) continue;
-
-            Snippet snippet = new Snippet();
-            Snippet lastSnippet = null;
-            int snippetStringStartIdx;
-
-            if (!nominatedSnippets.isEmpty()) lastSnippet = nominatedSnippets.get(nominatedSnippets.size() - 1);
-
-            // New snippet
-            //ToDo 2 to constant
-            if (key - lastKeywordIdx > 2) {
-                snippet.L = Math.max(key - 2, (lastSnippet != null ? lastSnippet.R + 1 : 0));
-                snippet.R = Math.min(pageContentArrayLength - 1, key + 2);
-
-                snippetStringStartIdx = snippet.L;
-
-                nominatedSnippets.add(snippet);
-            }
-            // Merge snippets
-            else {
-                int oldLastSnippetR = lastSnippet.R;
-                lastSnippet.R = Math.min(pageContentArrayLength - 1, key + 2);
-
-                snippet = lastSnippet;
-                snippetStringStartIdx = oldLastSnippetR + 1;
-            }
-
-            // Separate newly added words from the previous snippet.str words
-            if (snippet == lastSnippet)
-                snippet.str += " ";
-
-            // Add/Update snippet words
-            for (int i = snippetStringStartIdx; i <= snippet.R; ++i) {
-                String tmpWord = Utilities.stemWord(
-                        Utilities.removeSpecialCharsAroundWord(pageContentArray[i])
-                ).toLowerCase();
-
-                boolean isKeyword = (mOriginalQueryStems.indexOf(tmpWord) > -1);
-
-                snippet.str += (isKeyword) ? "<b>" : "";
-                snippet.str += pageContentArray[i];
-                snippet.str += (isKeyword) ? "</b>" : "";
-                snippet.str += (i < snippet.R) ? " " : "";
-            }
-
-            lastKeywordIdx = key;
-        }
-
-        return nominatedSnippets;
-    }
-
-    private String prepareWordForSnippet(String word) {
-        return Utilities.stemWord(Utilities.removeSpecialCharsAroundWord(word)).toLowerCase();
-    }
-
-    private class Snippet {
-        String str = "";
-        int L, R;
     }
 }
