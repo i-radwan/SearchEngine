@@ -99,19 +99,19 @@ public class WebPage {
         }
 
         id = (ObjectId) doc.getOrDefault(Constants.FIELD_ID, null);
-
         url = (String) doc.getOrDefault(Constants.FIELD_URL, null);
         title = (String) doc.getOrDefault(Constants.FIELD_TITLE, null);
         content = (String) doc.getOrDefault(Constants.FIELD_PAGE_CONTENT, null);
+        wordsCount = (int) doc.getOrDefault(Constants.FIELD_TOTAL_WORDS_COUNT, 0);
 
         rank = (double) doc.getOrDefault(Constants.FIELD_RANK, 1.0);
-        wordsCount = (int) doc.getOrDefault(Constants.FIELD_TOTAL_WORDS_COUNT, 0);
-        fetchSkipLimit = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_LIMIT, 1);
-        fetchSkipCount = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_COUNT, 0);
-
         outLinks = (List<String>) doc.getOrDefault(Constants.FIELD_CONNECTED_TO, null);
+
         parseWordsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_WORDS_INDEX, null));
         parseStemsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_STEMS_INDEX, null));
+
+        fetchSkipLimit = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_LIMIT, 1);
+        fetchSkipCount = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_COUNT, 0);
     }
 
     /**
@@ -129,10 +129,11 @@ public class WebPage {
         doc.append(Constants.FIELD_URL, url);
         doc.append(Constants.FIELD_TITLE, title);
         doc.append(Constants.FIELD_PAGE_CONTENT, content);
+        doc.append(Constants.FIELD_TOTAL_WORDS_COUNT, wordsCount);
 
         doc.append(Constants.FIELD_RANK, rank);
         doc.append(Constants.FIELD_CONNECTED_TO, outLinks);
-        doc.append(Constants.FIELD_TOTAL_WORDS_COUNT, wordsCount);
+
         doc.append(Constants.FIELD_WORDS_INDEX, getWordsIndex());
         doc.append(Constants.FIELD_STEMS_INDEX, getStemsIndex());
 

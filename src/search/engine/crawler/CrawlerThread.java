@@ -88,7 +88,7 @@ public class CrawlerThread extends Thread {
         // Check for the frequency of visiting the current web page
         //
 
-        WebPage lastPage = mIndexer.getWebPageByURL(urlStr);
+        WebPage lastPage = mIndexer.getWebPageByURL(urlStr, Constants.FIELDS_FOR_CRAWLING);
 
         // If fetch skip count does not reach the limit then skip fetching this page
         // and increment fetch skip count by one

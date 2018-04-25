@@ -64,9 +64,9 @@ public class Constants {
     public static final String FIELD_URL = "url";
     public static final String FIELD_TITLE = "title";
     public static final String FIELD_PAGE_CONTENT = "content";
+    public static final String FIELD_TOTAL_WORDS_COUNT = "words_count";
     public static final String FIELD_RANK = "rank";
     public static final String FIELD_CONNECTED_TO = "connected_to";
-    public static final String FIELD_TOTAL_WORDS_COUNT = "words_count";
     public static final String FIELD_WORDS_INDEX = "words_index";
     public static final String FIELD_WORD = "word";
     public static final String FIELD_WORD_COUNT = "count";
@@ -83,6 +83,17 @@ public class Constants {
     /**
      * Common fields lists
      */
+    public static final List<String> FIELDS_FOR_CRAWLING = Arrays.asList(
+            FIELD_ID,
+            FIELD_TITLE,
+            FIELD_TOTAL_WORDS_COUNT,
+            FIELD_CONNECTED_TO,
+            FIELD_WORDS_INDEX,
+            FIELD_STEMS_INDEX,
+            FILED_FETCH_SKIP_LIMIT,
+            FILED_FETCH_SKIP_COUNT
+    );
+
     public static final List<String> FIELDS_FOR_RANKING = Arrays.asList(
             FIELD_ID,
             FIELD_RANK,

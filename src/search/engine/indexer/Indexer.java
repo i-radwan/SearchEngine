@@ -144,6 +144,7 @@ public class Indexer {
 
         // Compare the newly fetched page with its previous version from the database.
         if (curPage.wordsCount == prvPage.wordsCount
+                && curPage.title.equals(prvPage.title)
                 && curPage.wordPosMap.equals(prvPage.wordPosMap)
                 && curPage.stemScoreMap.equals(prvPage.stemScoreMap)) {
 
@@ -309,7 +310,7 @@ public class Indexer {
      * @param projections the desired fields to be returned. To return all fields just pass null
      * @return the matching web page, or null if not exist
      */
-    public WebPage getWebPageByURL(String url, String... projections) {
+    public WebPage getWebPageByURL(String url, List<String> projections) {
         Document res = mWebPagesCollection
                 .find(eq(Constants.FIELD_URL, url))
                 .projection(include(projections))
@@ -341,54 +342,18 @@ public class Indexer {
      * @return list of matching web pages
      */
     public List<WebPage> searchByWord(List<String> filterWords, List<String> filterStems) {
-        //
-        // Filter words index array
-        //
-        Document wordsFilterCond = new Document()
-                .append("$in", Arrays.asList("$$this." + Constants.FIELD_WORD, filterWords));
-
-        Document wordsFilterFields = new Document()
-                .append("input", "$" + Constants.FIELD_WORDS_INDEX)
-                .append("cond", wordsFilterCond);
-
-        Document wordsProjection = new Document()
-                .append(Constants.FIELD_WORDS_INDEX, new Document("$filter", wordsFilterFields));
-
-        //
-        // Filter stems index array
-        //
-        Document stemsFilterCond = new Document()
-                .append("$in", Arrays.asList("$$this." + Constants.FIELD_STEM_WORD, filterStems));
-
-        Document stemsFilterFields = new Document()
-                .append("input", "$" + Constants.FIELD_STEMS_INDEX)
-                .append("cond", stemsFilterCond);
-
-        Document stemsProjection = new Document()
-                .append(Constants.FIELD_STEMS_INDEX, new Document("$filter", stemsFilterFields));
-
-        //
-        // Projections
-        //
-        Bson projections = fields(
-                include(Constants.FIELD_ID, Constants.FIELD_RANK, Constants.FIELD_TOTAL_WORDS_COUNT),
-                wordsProjection,
-                stemsProjection
-        );
-
-        //
         // Query filter
-        //
-        Bson queryFilter = in(
+        Bson filter = in(
                 Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD,
                 filterWords
         );
 
-        //
+        // Projections
+        Bson projections = IndexerUtilities.getSearchProjections(filterWords, filterStems);
+
         // Retrieve results
-        //
         AggregateIterable<Document> res = mWebPagesCollection.aggregate(Arrays.asList(
-                Aggregates.match(queryFilter),
+                Aggregates.match(filter),
                 Aggregates.project(projections)
         ));
 
@@ -403,59 +368,22 @@ public class Indexer {
      * @return list of matching web pages
      */
     public List<WebPage> searchByPhrase(List<String> filterWords, List<String> filterStems) {
-        //
-        // Filter words index array
-        //
-        Document wordsFilterCond = new Document()
-                .append("$in", Arrays.asList("$$this." + Constants.FIELD_WORD, filterWords));
-
-        Document wordsFilterFields = new Document()
-                .append("input", "$" + Constants.FIELD_WORDS_INDEX)
-                .append("cond", wordsFilterCond);
-
-        Document wordsProjection = new Document()
-                .append(Constants.FIELD_WORDS_INDEX, new Document("$filter", wordsFilterFields));
-
-        //
-        // Filter stems index array
-        //
-        Document stemsFilterCond = new Document()
-                .append("$in", Arrays.asList("$$this." + Constants.FIELD_STEM_WORD, filterStems));
-
-        Document stemsFilterFields = new Document()
-                .append("input", "$" + Constants.FIELD_STEMS_INDEX)
-                .append("cond", stemsFilterCond);
-
-        Document stemsProjection = new Document()
-                .append(Constants.FIELD_STEMS_INDEX, new Document("$filter", stemsFilterFields));
-
-        //
-        // Projections
-        //
-        Bson projections = fields(
-                include(Constants.FIELD_ID, Constants.FIELD_RANK, Constants.FIELD_TOTAL_WORDS_COUNT),
-                wordsProjection, stemsProjection
-        );
-
-        //
         // Query filter
-        //
-        Bson queryFilter = all(
+        Bson filter = all(
                 Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
                 filterWords
         );
 
-        //
+        // Projections
+        Bson projections = IndexerUtilities.getSearchProjections(filterWords, filterStems);
+
         // Retrieve results
-        //
         AggregateIterable<Document> res = mWebPagesCollection.aggregate(Arrays.asList(
-                Aggregates.match(queryFilter),
+                Aggregates.match(filter),
                 Aggregates.project(projections)
         ));
 
-        //
-        // Check if the whole phrase occurred in the same given order
-        //
+        // Return only web pages having the whole phrase occurred in the same given order
         List<WebPage> ret = new ArrayList<>();
 
         for (Document doc : res) {

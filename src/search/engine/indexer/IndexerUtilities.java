@@ -2,14 +2,61 @@ package search.engine.indexer;
 
 import com.mongodb.client.MongoIterable;
 import org.bson.Document;
+import org.bson.conversions.Bson;
+import search.engine.utils.Constants;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static com.mongodb.client.model.Projections.fields;
+import static com.mongodb.client.model.Projections.include;
 
 
 public class IndexerUtilities {
+
+    /**
+     * Returns search projection clause document.
+     *
+     * @param filterWords list of search query words
+     * @param filterStems list of search query stems
+     * @return
+     */
+    public static Bson getSearchProjections(List<String> filterWords, List<String> filterStems) {
+        //
+        // Filter words index array
+        //
+        Document wordsFilterCond = new Document()
+                .append("$in", Arrays.asList("$$this." + Constants.FIELD_WORD, filterWords));
+
+        Document wordsFilterFields = new Document()
+                .append("input", "$" + Constants.FIELD_WORDS_INDEX)
+                .append("cond", wordsFilterCond);
+
+        Document wordsProjection = new Document()
+                .append(Constants.FIELD_WORDS_INDEX, new Document("$filter", wordsFilterFields));
+
+        //
+        // Filter stems index array
+        //
+        Document stemsFilterCond = new Document()
+                .append("$in", Arrays.asList("$$this." + Constants.FIELD_STEM_WORD, filterStems));
+
+        Document stemsFilterFields = new Document()
+                .append("input", "$" + Constants.FIELD_STEMS_INDEX)
+                .append("cond", stemsFilterCond);
+
+        Document stemsProjection = new Document()
+                .append(Constants.FIELD_STEMS_INDEX, new Document("$filter", stemsFilterFields));
+
+        //
+        // Projections
+        //
+        return fields(
+                include(Constants.FIELD_ID, Constants.FIELD_RANK, Constants.FIELD_TOTAL_WORDS_COUNT),
+                wordsProjection,
+                stemsProjection
+        );
+    }
+
 
     /**
      * Converts the results of find query into a list of web pages.
