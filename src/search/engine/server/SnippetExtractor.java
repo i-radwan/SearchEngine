@@ -9,6 +9,20 @@ import java.util.List;
 
 public class SnippetExtractor {
 
+    //
+    // Member fields
+    //
+    private ArrayList<Snippet> nominatedSnippets = new ArrayList<>();
+    private List<Snippet> selectedSnippets;
+    private List<String> mOriginalQueryStems;
+    private String[] pageContentArray;
+    private String content;
+
+
+    //
+    // Member methods
+    //
+
     /**
      * Extracts the important snippets from the given webpage content
      * <p>
@@ -30,31 +44,31 @@ public class SnippetExtractor {
      * @param mOriginalQueryStems the user's query words stemmed version
      * @return concatenated webpage snippets
      */
-    public static String extractWebpageSnippet(String content, List<String> mOriginalQueryStems) {
+    public String extractWebpageSnippet(String content, List<String> mOriginalQueryStems) {
+        this.mOriginalQueryStems = mOriginalQueryStems;
+        this.content = content;
+
         // Extract all possible snippets from the document
-        ArrayList<Snippet> nominatedSnippets = getNominatedSnippets(content, mOriginalQueryStems);
+        getNominatedSnippets();
 
         // Select top snippets w.r.t. size
-        List<Snippet> selectedSnippets = getSelectedSnippets(nominatedSnippets);
+        getSelectedSnippets();
 
         // Concatenate small snippets
-        String pageSnippet = concatenateSnippets(selectedSnippets);
+        String pageSnippet = concatenateSnippets();
 
         // Fill the snippet in case it was so short
-        return completeSnippetFilling(content, pageSnippet, selectedSnippets);
+        return completeSnippetFilling(pageSnippet);
     }
 
     /**
      * Returns list of nominated snippets, which contains matches between query words and webpage words
      *
-     * @param content             The webpage content
-     * @param mOriginalQueryStems The user's query stemmed version
      * @return list of nominated snippets
      */
-    private static ArrayList<Snippet> getNominatedSnippets(String content, List<String> mOriginalQueryStems) {
-        ArrayList<Snippet> nominatedSnippets = new ArrayList<>();
+    private ArrayList<Snippet> getNominatedSnippets() {
+        this.pageContentArray = content.split(" ");
 
-        String[] pageContentArray = content.split(" ");
         int pageContentArrayLength = pageContentArray.length;
 
         int lastKeywordIdx = -3;
@@ -93,7 +107,7 @@ public class SnippetExtractor {
             }
 
             // Add/Update snippet words
-            fillSnippetStr(snippet, snippetStringStartIdx, mOriginalQueryStems, pageContentArray);
+            fillSnippetStr(snippet, snippetStringStartIdx);
 
             lastKeywordIdx = key;
         }
@@ -109,10 +123,8 @@ public class SnippetExtractor {
      *
      * @param snippet               The snippet to fill its str attribute
      * @param snippetStringStartIdx The starting index relative to the whole page content
-     * @param mOriginalQueryStems   The query stemmed version
-     * @param pageContentArray      The page content array
      */
-    private static void fillSnippetStr(Snippet snippet, int snippetStringStartIdx, List<String> mOriginalQueryStems, String[] pageContentArray) {
+    private void fillSnippetStr(Snippet snippet, int snippetStringStartIdx) {
         for (int i = snippetStringStartIdx; i <= snippet.R; ++i) {
             String tmpWord = prepareWordForSnippet(pageContentArray[i]);
 
@@ -128,11 +140,10 @@ public class SnippetExtractor {
     /**
      * Selects top nominated snippets and sorts them according to their start index
      *
-     * @param nominatedSnippets The content nominated snippets
      * @return List of sorted snippets ready to be concatenated
      */
-    private static List<Snippet> getSelectedSnippets(ArrayList<Snippet> nominatedSnippets) {
-        List<Snippet> selectedSnippets = nominatedSnippets.subList(0,
+    private List<Snippet> getSelectedSnippets() {
+        selectedSnippets = nominatedSnippets.subList(0,
                 Math.min(Constants.MAX_SNIPPETS_COUNT, nominatedSnippets.size())
         );
 
@@ -145,10 +156,9 @@ public class SnippetExtractor {
     /**
      * Concatenates snippets
      *
-     * @param selectedSnippets list of snippets
      * @return string that contains the semi-finished page snipped
      */
-    private static String concatenateSnippets(List<Snippet> selectedSnippets) {
+    private String concatenateSnippets() {
         String snippet = "...";
 
         // Concatenate to get page snippet
@@ -164,23 +174,20 @@ public class SnippetExtractor {
     /**
      * Fills the snippet to make all snippets with almost equal size, for better looking
      *
-     * @param content          page original content
-     * @param snippet          semi-finished page snippet
-     * @param selectedSnippets List of selected snippets
+     * @param snippet semi-finished page snippet
      * @return string contains the finished webpage snippet
      */
-    private static String completeSnippetFilling(String content, String snippet, List<Snippet> selectedSnippets) {
+    private String completeSnippetFilling(String snippet) {
         // If no selected snippet
         if (selectedSnippets.size() == 0) {
-            snippet = content.substring(0, Constants.MAX_SNIPPETS_CHARS_COUNT) + "...";
+            return content.substring(0, Constants.MAX_SNIPPETS_CHARS_COUNT) + "...";
         }
-        // Fill more to show full-like snippet
-        else if (snippet.length() < Constants.MAX_SNIPPETS_CHARS_COUNT) {
-            int beginIndex = selectedSnippets.get(selectedSnippets.size() - 1).R + 1;
-            int endIndex = beginIndex + Constants.MAX_SNIPPETS_CHARS_COUNT - snippet.length() + 1;
 
-            snippet += "..." +
-                    content.substring(beginIndex, Math.min(content.length(), endIndex));
+        // Fill more to show full-like snippet
+        int index = selectedSnippets.get(selectedSnippets.size() - 1).R + 1;
+
+        while (snippet.length() < Constants.MAX_SNIPPETS_CHARS_COUNT && index < pageContentArray.length) {
+            snippet += " " + pageContentArray[index++];
         }
 
         return snippet;
@@ -198,11 +205,11 @@ public class SnippetExtractor {
      * @param word the word to be processed
      * @return string contains the processes word
      */
-    private static String prepareWordForSnippet(String word) {
+    private String prepareWordForSnippet(String word) {
         return Utilities.stemWord(Utilities.removeSpecialCharsAroundWord(word)).toLowerCase();
     }
 
-    private static class Snippet {
+    private class Snippet {
         String str = "";
         int L, R;
     }

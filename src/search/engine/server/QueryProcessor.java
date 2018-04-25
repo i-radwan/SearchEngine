@@ -65,12 +65,14 @@ public class QueryProcessor {
     public String getJsonResult() {
         List<Document> pagesDocuments = new ArrayList<>();
 
+        SnippetExtractor snippetExtractor = new SnippetExtractor();
+
         for (ObjectId id : mRankedIds) {
             for (WebPage webPage : mResults) {
                 if (!webPage.id.equals(id)) continue;
 
-                String snippet = SnippetExtractor.extractWebpageSnippet(webPage.content, mOriginalQueryStems);
-                
+                String snippet = snippetExtractor.extractWebpageSnippet(webPage.content, mOriginalQueryStems);
+
                 Document doc = new Document()
                         .append("title", webPage.title)
                         .append("url", webPage.url)
