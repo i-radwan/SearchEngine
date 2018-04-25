@@ -35,7 +35,7 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 10000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 100;
+    public static final int MAX_WEB_PAGES_COUNT = 5000;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
 
     // ================================================================================================
@@ -92,7 +92,7 @@ public class Constants {
             FILED_FETCH_SKIP_COUNT
     );
 
-    public static final List<String> FIELDS_FOR_RANKING = Arrays.asList(
+    public static final List<String> FIELDS_FOR_SEARCH_RANKING = Arrays.asList(
             FIELD_ID,
             FIELD_RANK,
             FIELD_TOTAL_WORDS_COUNT,

@@ -124,10 +124,10 @@ public class Ranker {
             String stem = mQueryStems.get(i);
 
             List<Integer> positions = webPage.wordPosMap.get(word);
-            StemInfo stemPair = webPage.stemMap.getOrDefault(stem, new StemInfo(0, 0));
+            StemInfo stemInfo = webPage.stemMap.getOrDefault(stem, new StemInfo(0, 0));
 
             int wordCnt = (positions == null ? 0 : positions.size());
-            int stemCnt = stemPair.count;
+            int stemCnt = stemInfo.count;
             double TF, IDF, score = 0, wordScore = 0;
 
             // Exact word
@@ -145,7 +145,7 @@ public class Ranker {
 
                 score += (TF * IDF) * 0.5;
 
-                wordScore = (double) stemPair.count / stemCnt;
+                wordScore = (double) stemInfo.count / stemCnt;
             }
 
             // Add the effect of the normalized score of the word
