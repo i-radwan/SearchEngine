@@ -16,7 +16,6 @@ import static spark.SparkBase.port;
 public class Server {
 
     private static Indexer sIndexer = new Indexer();
-    private static QueryProcessor sQueryProcessor = new QueryProcessor(sIndexer);
 
     /**
      * Starts serving the clients.
@@ -41,14 +40,14 @@ public class Server {
             String ret = "";
 
             try {
-                sQueryProcessor.process(
+                QueryProcessor processor = new QueryProcessor(
+                        sIndexer,
                         req.queryParams("q"),
                         req.queryParams("page")
                 );
 
-                ret = sQueryProcessor.getJsonResult();
+                ret = processor.getJsonResult();
             } catch (Exception e) {
-                e.printStackTrace();
                 ret = "{error_msg:\"" + e.getMessage() + "\"}";
             }
 

@@ -8,8 +8,6 @@ import java.util.*;
 
 public class Utilities {
 
-    private static SnowballStemmer stemmer = new englishStemmer();
-
     /**
      * Processes the given string as follows:
      * <ul>
@@ -82,6 +80,8 @@ public class Utilities {
      * @return a new string of stemmed word.
      */
     public static String stemWord(String word) {
+        SnowballStemmer stemmer = new englishStemmer();
+
         String lastWord = word;
 
         while (true) {
@@ -108,6 +108,8 @@ public class Utilities {
      * @return the words dictionary
      */
     public static Map<String, List<String>> getWordsDictionary(Set<String> words) {
+        SnowballStemmer stemmer = new englishStemmer();
+
         Map<String, List<String>> ret = new TreeMap<>();
 
         for (String word : words) {

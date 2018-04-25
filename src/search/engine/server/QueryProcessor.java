@@ -39,20 +39,13 @@ public class QueryProcessor {
     /**
      * Constructs a query processor
      *
-     * @param indexer the indexer to search with
-     */
-    public QueryProcessor(Indexer indexer) {
-        mIndexer = indexer;
-    }
-
-    /**
-     * Prepares the results for the given search query.
-     *
+     * @param indexer    the indexer to search with
      * @param query      the user's raw search query to search for
      * @param pageNumber the required results page number for pagination
      * @throws Exception
      */
-    public void process(String query, String pageNumber) throws Exception {
+    public QueryProcessor(Indexer indexer, String query, String pageNumber) throws Exception {
+        mIndexer = indexer;
         parseSearchQuery(query, pageNumber);
         searchAndRankResults();
     }

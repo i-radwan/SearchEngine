@@ -35,7 +35,7 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 10000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 10000;
+    public static final int MAX_WEB_PAGES_COUNT = 1000;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
     public static final int MAX_SNIPPETS_COUNT = 10;
     public static final int MAX_SNIPPETS_CHARS_COUNT = 220;

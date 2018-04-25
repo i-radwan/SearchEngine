@@ -64,6 +64,9 @@ let app = {
     getSuggestionsRequest: function () {
         let query = app.searchBox.val();
 
+        if (query[0] == "\"")
+            query = query.substr(1, query.length - 2);
+
         $.ajax({
             url: SERVER_SUGGESTIONS_LINK.replace("{query}", query),
             type: 'GET',
@@ -105,7 +108,6 @@ let app = {
      * @param webpages
      */
     displayResults: function (webpages) {
-        console.log(webpages);
         app.resultsContainer.html(app.resultsTemplateScript({webpages: webpages}));
 
         $("#results_container").fadeTo("fast", 1);
@@ -223,7 +225,21 @@ let app = {
     updateSearchBoxAutoCompleteList: function () {
         // Set autocomplete list
         app.searchBox.autocomplete({
-            source: app.suggestions
+            source: function (request, response) {
+                let tmpSuggestions = Object.assign([], app.suggestions);
+                if (request.term[0] == "\"") {
+                    for (let i = 0; i < tmpSuggestions.length; ++i) {
+                        tmpSuggestions[i] = "\"" + app.suggestions[i] + "\"";
+                    }
+                }
+
+                console.log(tmpSuggestions);
+                let matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+                response($.grep(tmpSuggestions, function (value) {
+                    value = value.label || value.value || value;
+                    return matcher.test(value);
+                }));
+            }
         });
     }
 };

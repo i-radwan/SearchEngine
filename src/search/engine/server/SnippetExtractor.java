@@ -55,7 +55,7 @@ public class SnippetExtractor {
         getSelectedSnippets();
 
         // Concatenate small snippets
-        String pageSnippet = concatenateSnippets();
+        StringBuilder pageSnippet = concatenateSnippets();
 
         // Fill the snippet in case it was so short
         return completeSnippetFilling(pageSnippet);
@@ -103,7 +103,7 @@ public class SnippetExtractor {
                 snippet = lastSnippet;
 
                 // Separate newly added words from the previous snippet.str words
-                snippet.str += " ";
+                snippet.str.append(" ");
 
                 snippetStringStartIdx = oldLastSnippetR + 1;
             }
@@ -132,10 +132,10 @@ public class SnippetExtractor {
 
             boolean isKeyword = (mOriginalQueryStems.indexOf(tmpWord) > -1);
 
-            snippet.str += (isKeyword) ? "<b>" : "";
-            snippet.str += pageContentArray[i];
-            snippet.str += (isKeyword) ? "</b>" : "";
-            snippet.str += (i < snippet.R) ? " " : "";
+            snippet.str.append((isKeyword) ? "<b>" : "");
+            snippet.str.append(pageContentArray[i]);
+            snippet.str.append((isKeyword) ? "</b>" : "");
+            snippet.str.append((i < snippet.R) ? " " : "");
         }
     }
 
@@ -160,13 +160,13 @@ public class SnippetExtractor {
      *
      * @return string that contains the semi-finished page snipped
      */
-    private String concatenateSnippets() {
-        String snippet = "...";
+    private StringBuilder concatenateSnippets() {
+        StringBuilder snippet = new StringBuilder("...");
 
         // Concatenate to get page snippet
         for (int i = 0; i < selectedSnippets.size(); ++i) {
-            snippet += selectedSnippets.get(i).str;
-            snippet += (i < selectedSnippets.size() - 1) ? "..." : "";
+            snippet.append(selectedSnippets.get(i).str);
+            snippet.append((i < selectedSnippets.size() - 1) ? "..." : "");
         }
 
         return snippet;
@@ -179,7 +179,7 @@ public class SnippetExtractor {
      * @param snippet semi-finished page snippet
      * @return string contains the finished webpage snippet
      */
-    private String completeSnippetFilling(String snippet) {
+    private String completeSnippetFilling(StringBuilder snippet) {
         // If no selected snippet
         if (selectedSnippets.size() == 0) {
             return content.substring(0, Constants.MAX_SNIPPETS_CHARS_COUNT) + "...";
@@ -189,10 +189,10 @@ public class SnippetExtractor {
         int index = selectedSnippets.get(selectedSnippets.size() - 1).R + 1;
 
         while (snippet.length() < Constants.MAX_SNIPPETS_CHARS_COUNT && index < pageContentArray.length) {
-            snippet += " " + pageContentArray[index++];
+            snippet.append(" " + pageContentArray[index++]);
         }
 
-        return snippet;
+        return snippet.toString();
     }
 
     /**
@@ -212,7 +212,7 @@ public class SnippetExtractor {
     }
 
     private class Snippet {
-        String str = "";
+        StringBuilder str = new StringBuilder("");
         int L, R;
     }
 }
