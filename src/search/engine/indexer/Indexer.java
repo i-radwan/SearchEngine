@@ -11,12 +11,14 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import search.engine.crawler.Output;
 import search.engine.utils.Constants;
+import search.engine.utils.Utilities;
 
 import java.net.URL;
 import java.util.*;
 
 import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Projections.*;
+import static com.mongodb.client.model.Projections.excludeId;
+import static com.mongodb.client.model.Projections.include;
 import static com.mongodb.client.model.Sorts.ascending;
 import static com.mongodb.client.model.Updates.*;
 
@@ -160,7 +162,7 @@ public class Indexer {
 
         // Insert new content in the database
         updateWebPage(curPage);
-        //updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
+        updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
 
         //
         Output.log("Indexed : " + curPage.url);

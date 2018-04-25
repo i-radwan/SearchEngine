@@ -14,49 +14,61 @@ import static com.mongodb.client.model.Projections.include;
 public class IndexerUtilities {
 
     /**
-     * Returns search projection clause document.
+     * Constructs a projection document to project only the needed fields during.
      *
      * @param filterWords list of search query words
      * @param filterStems list of search query stems
-     * @return
+     * @return the constructed projection document
      */
     public static Bson getSearchProjections(List<String> filterWords, List<String> filterStems) {
-        //
         // Filter words index array
-        //
-        Document wordsFilterCond = new Document()
-                .append("$in", Arrays.asList("$$this." + Constants.FIELD_WORD, filterWords));
+        Document projectWords = getProjectAggregationFilterDocument(
+                Constants.FIELD_WORDS_INDEX,
+                Constants.FIELD_WORD,
+                filterWords
+        );
 
-        Document wordsFilterFields = new Document()
-                .append("input", "$" + Constants.FIELD_WORDS_INDEX)
-                .append("cond", wordsFilterCond);
-
-        Document wordsProjection = new Document()
-                .append(Constants.FIELD_WORDS_INDEX, new Document("$filter", wordsFilterFields));
-
-        //
         // Filter stems index array
-        //
-        Document stemsFilterCond = new Document()
-                .append("$in", Arrays.asList("$$this." + Constants.FIELD_STEM_WORD, filterStems));
+        Document projectStems = getProjectAggregationFilterDocument(
+                Constants.FIELD_STEMS_INDEX,
+                Constants.FIELD_STEM_WORD,
+                filterStems
+        );
 
-        Document stemsFilterFields = new Document()
-                .append("input", "$" + Constants.FIELD_STEMS_INDEX)
-                .append("cond", stemsFilterCond);
+        // System.out.println(projectWords.toJson());
+        // System.out.println(projectStems.toJson());
 
-        Document stemsProjection = new Document()
-                .append(Constants.FIELD_STEMS_INDEX, new Document("$filter", stemsFilterFields));
-
-        //
         // Projections
-        //
         return fields(
                 include(Constants.FIELD_ID, Constants.FIELD_RANK, Constants.FIELD_TOTAL_WORDS_COUNT),
-                wordsProjection,
-                stemsProjection
+                projectWords,
+                projectStems
         );
     }
 
+    /**
+     * Constructs an array filter document to be used in MongoDB aggregation pipeline during
+     * projection stage.
+     * The constructed document will filter the given array to pass only the array elements
+     * having {@code arrayItem} equals any of the given filter words.
+     *
+     * @param arrayName   the name of the array to filter during projection
+     * @param arrayItem   the name of the array item to compare with the given filter
+     * @param filterWords the filter words
+     * @return the constructed array filter document
+     */
+    public static Document getProjectAggregationFilterDocument(String arrayName, String arrayItem, List<String> filterWords) {
+        // Filter condition
+        Document filterCond = new Document()
+                .append("$in", Arrays.asList("$$this." + arrayItem, filterWords));
+
+        // Project aggregation needed filter fields
+        Document filterFields = new Document()
+                .append("input", "$" + arrayName)
+                .append("cond", filterCond);
+
+        return new Document(arrayName, new Document("$filter", filterFields));
+    }
 
     /**
      * Converts the results of find query into a list of web pages.
