@@ -46,6 +46,8 @@ let app = {
      * @param page
      */
     getWebpagesRequest: function (query, page = 1) {
+        app.requestSent = true;
+
         if (app.didTheUserSearch) // Check to prevent the effect the first time only
             $("#results_container").fadeTo("fast", 0.3); // Fade out to give refresh animation
 
@@ -85,7 +87,12 @@ let app = {
         }
 
         // Slide search bar to top
-        $(".main").animate({'marginTop': '10vh'}, 700);
+        $(".main").animate({'marginTop': '10vh'}, {
+            duration: 700,
+            complete: function () {
+                app.requestSent = false;
+            }
+        });
 
         // Fill containers
         app.displayResults(response.pages);
@@ -226,6 +233,8 @@ let app = {
         // Set autocomplete list
         app.searchBox.autocomplete({
             source: function (request, response) {
+                if (app.requestSent) return;
+
                 let tmpSuggestions = Object.assign([], app.suggestions);
                 if (request.term[0] == "\"") {
                     for (let i = 0; i < tmpSuggestions.length; ++i) {

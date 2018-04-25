@@ -189,7 +189,7 @@ public class SnippetExtractor {
         int index = selectedSnippets.get(selectedSnippets.size() - 1).R + 1;
 
         while (snippet.length() < Constants.MAX_SNIPPETS_CHARS_COUNT && index < pageContentArray.length) {
-            snippet.append(" " + pageContentArray[index++]);
+            snippet.append(" ").append(pageContentArray[index++]);
         }
 
         return snippet.toString();
