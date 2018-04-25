@@ -105,7 +105,8 @@ let app = {
      * @param webpages
      */
     displayResults: function (webpages) {
-        app.extractSnippets(webpages, app.searchBox.val().split(" "));
+        console.log(webpages);
+        // app.extractSnippets(webpages, app.searchBox.val().split(" "));
         app.resultsContainer.html(app.resultsTemplateScript({webpages: webpages}));
 
         $("#results_container").fadeTo("fast", 1);

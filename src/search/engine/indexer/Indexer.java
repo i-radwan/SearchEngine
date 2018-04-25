@@ -65,7 +65,6 @@ public class Indexer {
         IndexOptions indexOptions = new IndexOptions().unique(true);
 
         // Create web page collection and its indexes
-        database.createCollection(Constants.COLLECTION_WEB_PAGES);
         collection = database.getCollection(Constants.COLLECTION_WEB_PAGES);
         collection.createIndex(Indexes.ascending(Constants.FIELD_URL), indexOptions);
         collection.createIndex(Indexes.ascending(Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD));

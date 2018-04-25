@@ -57,7 +57,6 @@ public class IndexerUtilities {
         );
     }
 
-
     /**
      * Converts the results of find query into a list of web pages.
      *

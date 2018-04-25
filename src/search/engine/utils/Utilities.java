@@ -8,6 +8,8 @@ import java.util.*;
 
 public class Utilities {
 
+    private static SnowballStemmer stemmer = new englishStemmer();
+
     /**
      * Processes the given string as follows:
      * <ul>
@@ -63,15 +65,24 @@ public class Utilities {
      */
     public static List<String> stemWords(List<String> words) {
         List<String> ret = new ArrayList<>();
-        SnowballStemmer stemmer = new englishStemmer();
 
         for (String word : words) {
-            stemmer.setCurrent(word);
-            stemmer.stem();
-            ret.add(stemmer.getCurrent());
+            ret.add(stemWord(word));
         }
 
         return ret;
+    }
+
+    /**
+     * Converts the given word into its stemmed version.
+     *
+     * @param word string to be stemmed
+     * @return a new string of stemmed word.
+     */
+    public static String stemWord(String word) {
+        stemmer.setCurrent(word);
+        stemmer.stem();
+        return stemmer.getCurrent();
     }
 
     /**
@@ -85,8 +96,6 @@ public class Utilities {
      */
     public static Map<String, List<String>> getWordsDictionary(Set<String> words) {
         Map<String, List<String>> ret = new TreeMap<>();
-
-        SnowballStemmer stemmer = new englishStemmer();
 
         for (String word : words) {
             // Stem word
@@ -129,5 +138,33 @@ public class Utilities {
         }
 
         return res;
+    }
+
+    /**
+     * Returns the given word after removing surrounding special chars
+     *
+     * @param word the word to be cleaned
+     * @return the clean word
+     */
+    public static String removeSpecialCharsAroundWord(String word) {
+        int firstLetterIdx = 0, lastLetterIdx = word.length() - 1;
+
+        // Prefix chars
+        for (int i = 0; i < word.length(); ++i) {
+            if (Character.isLetterOrDigit(word.charAt(i))) {
+                firstLetterIdx = i;
+                break;
+            }
+        }
+
+        // Postfix chars
+        for (int i = word.length() - 1; i >= 0; --i) {
+            if (Character.isLetterOrDigit(word.charAt(i))) {
+                lastLetterIdx = i;
+                break;
+            }
+        }
+
+        return word.substring(firstLetterIdx, lastLetterIdx + 1);
     }
 }
