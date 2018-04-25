@@ -23,8 +23,10 @@ public class WebPageParser {
     //
     private StringBuilder sContent;
     private WebPage mPage;
-    private SnowballStemmer mWordStemmer = new englishStemmer();
 
+    //
+    // Member methods
+    //
 
     /**
      * Parses the given web page document and returns a {@code WebPage} object
@@ -164,9 +166,7 @@ public class WebPageParser {
             }
 
             // Get word's stem
-            mWordStemmer.setCurrent(word);
-            mWordStemmer.stem();
-            String stem = mWordStemmer.getCurrent();
+            String stem = Utilities.stemWord(word);
 
             // Update web page stem map
             StemInfo info = mPage.stemMap.putIfAbsent(stem, new StemInfo(1, tagScore));

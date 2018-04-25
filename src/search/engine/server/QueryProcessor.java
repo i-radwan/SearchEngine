@@ -20,11 +20,9 @@ public class QueryProcessor {
     private Indexer mIndexer;
 
     private int mPageNumber;
-    private String mQuery;
-    private String mOriginalQuery;
     private boolean mIsPhraseSearch;
-    private List<String> mOriginalQueryWords;
-    private List<String> mOriginalQueryStems;
+    private String mOriginalQuery;
+    private String mQuery;
     private List<String> mQueryWords;
     private List<String> mQueryStems;
 
@@ -64,7 +62,7 @@ public class QueryProcessor {
             for (WebPage webPage : mResults) {
                 if (!webPage.id.equals(id)) continue;
 
-                String snippet = snippetExtractor.extractWebpageSnippet(webPage.content, mOriginalQueryStems);
+                String snippet = snippetExtractor.extractWebPageSnippet(webPage.content, mOriginalQuery);
 
                 Document doc = new Document()
                         .append("title", webPage.title)
@@ -99,7 +97,7 @@ public class QueryProcessor {
      * @throws Exception when empty or short search query is used
      */
     private void parseSearchQuery(String rawQuery, String number) throws Exception {
-        mQuery = (rawQuery == null ? "" : rawQuery).trim();
+        mOriginalQuery = mQuery = (rawQuery == null ? "" : rawQuery.trim());
 
         // Check if too short query
         if (mQuery.length() <= 3) {
@@ -107,23 +105,7 @@ public class QueryProcessor {
         }
 
         //
-        // Process the mOriginalQuery string, for snippet extraction purposes
-        //
-        mOriginalQuery = Utilities.removeSpecialCharsAroundWord(mQuery);
-
-        mOriginalQuery = mOriginalQuery
-                .substring(0, Math.min(mOriginalQuery.length(), Constants.QUERY_MAX_LENGTH))
-                .toLowerCase();
-
-        mOriginalQueryWords = Arrays.asList(mOriginalQuery.split(" "));
-        for (int i = 0; i < mOriginalQueryWords.size(); i++) {
-            mOriginalQueryWords.set(i, Utilities.removeSpecialCharsAroundWord(mOriginalQueryWords.get(i)));
-        }
-
-        mOriginalQueryStems = Utilities.stemWords(mOriginalQueryWords);
-
-        //
-        // Process the mQuery string
+        // Process the query string
         //
         mIsPhraseSearch = (mQuery.startsWith("\"") && mQuery.endsWith("\""));
         mQuery = mQuery.substring(0, Math.min(mQuery.length(), Constants.QUERY_MAX_LENGTH));

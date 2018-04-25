@@ -41,14 +41,9 @@ public class IndexerUtilities {
     public static List<WebPage> toWebPages(MongoIterable<Document> documents) {
         List<WebPage> ret = new ArrayList<>();
 
-        int cnt = 0;
-
         for (Document doc : documents) {
-            cnt++;
             ret.add(new WebPage(doc));
         }
-
-        System.out.println("Results Count: " + cnt);
 
         return ret;
     }

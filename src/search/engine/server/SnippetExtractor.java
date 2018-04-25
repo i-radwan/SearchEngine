@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+
 public class SnippetExtractor {
 
     //
@@ -14,17 +15,17 @@ public class SnippetExtractor {
     //
     private ArrayList<Snippet> nominatedSnippets;
     private List<Snippet> selectedSnippets;
-    private List<String> mOriginalQueryStems;
+    private List<String> originalQueryStems;
     private String[] pageContentArray;
     private String content;
-
+    private String originalQuery;
 
     //
     // Member methods
     //
 
     /**
-     * Extracts the important snippets from the given webpage content
+     * Extracts the important snippets from the given web page content.
      * <p>
      * The general steps to extract page snippet:
      * <ul>
@@ -40,13 +41,16 @@ public class SnippetExtractor {
      * fill more chars after the end of the last selected snippet</li>
      * </ul>
      *
-     * @param content             the webpage content string
-     * @param mOriginalQueryStems the user's query words stemmed version
-     * @return concatenated webpage snippets
+     * @param content       the web page content string
+     * @param originalQuery the user's original raw search query
+     * @return concatenated web page snippets
      */
-    public String extractWebpageSnippet(String content, List<String> mOriginalQueryStems) {
-        this.mOriginalQueryStems = mOriginalQueryStems;
+    public String extractWebPageSnippet(String content, String originalQuery) {
         this.content = content;
+        this.originalQuery = originalQuery;
+
+        // Process the original query string, for snippet extraction purposes
+        init();
 
         // Extract all possible snippets from the document
         getNominatedSnippets();
@@ -62,7 +66,27 @@ public class SnippetExtractor {
     }
 
     /**
-     * Returns list of nominated snippets, which contains matches between query words and webpage words
+     * Pre-processes the user's original raw search query
+     * and constructs a stemmed version of it.
+     */
+    private void init() {
+        originalQuery = Utilities.removeSpecialCharsAroundWord(originalQuery);
+
+        originalQuery = originalQuery
+                .substring(0, Math.min(originalQuery.length(), Constants.QUERY_MAX_LENGTH))
+                .toLowerCase();
+
+        originalQueryStems = new ArrayList<>();
+
+        String queryWords[] = originalQuery.split(" ");
+
+        for (String word : queryWords) {
+            originalQueryStems.add(Utilities.stemWord(Utilities.removeSpecialCharsAroundWord(word)));
+        }
+    }
+
+    /**
+     * Returns list of nominated snippets, which contains matches between query words and web page content.
      *
      * @return list of nominated snippets
      */
@@ -78,7 +102,7 @@ public class SnippetExtractor {
         for (int key = 0; key < pageContentArrayLength; ++key) {
             String word = prepareWordForSnippet(pageContentArray[key]);
 
-            if (mOriginalQueryStems.indexOf(word) == -1) continue;
+            if (originalQueryStems.indexOf(word) == -1) continue;
 
             Snippet snippet = new Snippet();
             Snippet lastSnippet = null;
@@ -121,16 +145,17 @@ public class SnippetExtractor {
     }
 
     /**
-     * Fills small snippet string contents from/to the given limits, if any word is keyword, we highlight it
+     * Fills small snippet string contents from/to the given limits,
+     * if any word is keyword, we highlight it.
      *
-     * @param snippet               The snippet to fill its str attribute
-     * @param snippetStringStartIdx The starting index relative to the whole page content
+     * @param snippet               the snippet to fill its str attribute
+     * @param snippetStringStartIdx the starting index relative to the whole page content
      */
     private void fillSnippetStr(Snippet snippet, int snippetStringStartIdx) {
         for (int i = snippetStringStartIdx; i <= snippet.R; ++i) {
             String tmpWord = prepareWordForSnippet(pageContentArray[i]);
 
-            boolean isKeyword = (mOriginalQueryStems.indexOf(tmpWord) > -1);
+            boolean isKeyword = (originalQueryStems.indexOf(tmpWord) > -1);
 
             snippet.str.append((isKeyword) ? "<b>" : "");
             snippet.str.append(pageContentArray[i]);
@@ -140,9 +165,9 @@ public class SnippetExtractor {
     }
 
     /**
-     * Selects top nominated snippets and sorts them according to their start index
+     * Selects top nominated snippets and sorts them according to their start index.
      *
-     * @return List of sorted snippets ready to be concatenated
+     * @return list of sorted snippets ready to be concatenated
      */
     private List<Snippet> getSelectedSnippets() {
         selectedSnippets = nominatedSnippets.subList(0,
@@ -156,7 +181,7 @@ public class SnippetExtractor {
     }
 
     /**
-     * Concatenates snippets
+     * Concatenates snippets.
      *
      * @return string that contains the semi-finished page snipped
      */
@@ -174,10 +199,10 @@ public class SnippetExtractor {
 
 
     /**
-     * Fills the snippet to make all snippets with almost equal size, for better looking
+     * Fills the snippet to make all snippets with almost equal size, for better looking.
      *
      * @param snippet semi-finished page snippet
-     * @return string contains the finished webpage snippet
+     * @return string contains the finished web page snippet
      */
     private String completeSnippetFilling(StringBuilder snippet) {
         // If no selected snippet
@@ -189,14 +214,14 @@ public class SnippetExtractor {
         int index = selectedSnippets.get(selectedSnippets.size() - 1).R + 1;
 
         while (snippet.length() < Constants.MAX_SNIPPETS_CHARS_COUNT && index < pageContentArray.length) {
-            snippet.append(" " + pageContentArray[index++]);
+            snippet.append(" ").append(pageContentArray[index++]);
         }
 
         return snippet.toString();
     }
 
     /**
-     * Prepares a word for comparison to be selected as snippet word or not
+     * Prepares a word for comparison to be selected as snippet word or not.
      * Here:
      * <ul>
      * <li>The surrounding special chars get removed.</li>
@@ -212,7 +237,7 @@ public class SnippetExtractor {
     }
 
     private class Snippet {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         int L, R;
     }
 }
