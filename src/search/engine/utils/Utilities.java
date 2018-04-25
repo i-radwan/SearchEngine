@@ -73,8 +73,8 @@ public class Utilities {
 
     /**
      * Converts the given word into its stemmed version.
-     * We may need more than one iteration to get to the base stem
-     * computerized -> computer -> comput
+     * We may need more than one iteration to get to the base stem.
+     * (i.e. computerized -> computer -> comput)
      *
      * @param word string to be stemmed
      * @return a new string of stemmed word.
@@ -108,15 +108,11 @@ public class Utilities {
      * @return the words dictionary
      */
     public static Map<String, List<String>> getWordsDictionary(Set<String> words) {
-        SnowballStemmer stemmer = new englishStemmer();
-
         Map<String, List<String>> ret = new TreeMap<>();
 
         for (String word : words) {
             // Stem word
-            stemmer.setCurrent(word);
-            stemmer.stem();
-            String stem = stemmer.getCurrent();
+            String stem = stemWord(word);
 
             // Map[stem].insert(word)
             ret.putIfAbsent(stem, new ArrayList<>());
@@ -156,7 +152,7 @@ public class Utilities {
     }
 
     /**
-     * Returns the given word after removing surrounding special chars
+     * Returns the given word after removing surrounding special chars.
      *
      * @param word the word to be cleaned
      * @return the clean word
