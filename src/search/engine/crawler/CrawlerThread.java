@@ -140,7 +140,7 @@ public class CrawlerThread extends Thread {
         //
 
         List<String> outLinks = WebPageParser.extractOutLinks(doc);
-        mIndexer.indexWebPageAsync(url, doc, outLinks, lastPage);
+        mIndexer.indexWebPage(url, doc, outLinks, lastPage);
         enqueueOutLinks(outLinks);
         Output.logVisitedURL(urlStr);
     }

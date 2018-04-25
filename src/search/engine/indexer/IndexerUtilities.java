@@ -24,14 +24,14 @@ public class IndexerUtilities {
         // Filter words index array
         Document projectWords = getProjectAggregationFilterDocument(
                 Constants.FIELD_WORDS_INDEX,
-                Constants.FIELD_WORD,
+                Constants.FIELD_TERM,
                 filterWords
         );
 
         // Filter stems index array
         Document projectStems = getProjectAggregationFilterDocument(
                 Constants.FIELD_STEMS_INDEX,
-                Constants.FIELD_STEM_WORD,
+                Constants.FIELD_TERM,
                 filterStems
         );
 

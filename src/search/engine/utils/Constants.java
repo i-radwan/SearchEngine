@@ -35,7 +35,7 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 10000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 5000;
+    public static final int MAX_WEB_PAGES_COUNT = 100;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
 
     // ================================================================================================
@@ -68,13 +68,11 @@ public class Constants {
     public static final String FIELD_RANK = "rank";
     public static final String FIELD_CONNECTED_TO = "connected_to";
     public static final String FIELD_WORDS_INDEX = "words_index";
-    public static final String FIELD_WORD = "word";
-    public static final String FIELD_WORD_COUNT = "count";
-    public static final String FIELD_POSITIONS = "positions";
     public static final String FIELD_STEMS_INDEX = "stems_index";
-    public static final String FIELD_STEM_WORD = "stem";
-    public static final String FIELD_STEM_COUNT = "count";
-    public static final String FIELD_STEM_SCORE = "score";
+    public static final String FIELD_TERM = "term";
+    public static final String FIELD_TERM_COUNT = "count";
+    public static final String FIELD_TERM_SCORE = "score";
+    public static final String FIELD_TERM_POSITIONS = "positions";
     public static final String FILED_SYNONYMS = "synonyms";
     public static final String FILED_FETCH_SKIP_LIMIT = "fetch_skip_limit";
     public static final String FILED_FETCH_SKIP_COUNT = "fetch_skip_count";
@@ -130,17 +128,17 @@ public class Constants {
      */
     public static final Map<String, Integer> TAG_TO_SCORE_MAP = new HashMap<String, Integer>() {
         {
-            put("title", 10);
-            put("h1", 6);
-            put("h2", 5);
-            put("h3", 4);
-            put("strong", 4);
-            put("em", 4);
-            put("b", 4);
-            put("i", 3);
-            put("h4", 3);
-            put("h5", 2);
-            put("h6", 2);
+            put("title", 100);
+            put("h1", 50);
+            put("h2", 45);
+            put("h3", 40);
+            put("strong", 20);
+            put("em", 20);
+            put("b", 20);
+            put("i", 20);
+            put("h4", 10);
+            put("h5", 5);
+            put("h6", 5);
         }
     };
 

@@ -41,7 +41,7 @@ public class WebPage {
      * Web page rank.
      * <p>
      * To be calculated as follows:
-     * <p>
+     *
      * <i>PR(u) = Σ PR(v) / OutDegree(v)</i>
      * <p>
      * where:
@@ -68,8 +68,7 @@ public class WebPage {
      * for every distinct word in the web page.
      */
     public Map<String, List<Integer>> wordPosMap = null;
-    public Map<String, Integer> stemScoreMap = null;
-    public Map<String, Integer> stemWordsCount = null;
+    public Map<String, StemInfo> stemMap = null;
 
     /**
      * Variables used to adjust the frequency of fetching the web page content.
@@ -158,9 +157,9 @@ public class WebPage {
 
         for (Map.Entry<String, List<Integer>> entry : wordPosMap.entrySet()) {
             Document doc = new Document()
-                    .append(Constants.FIELD_WORD, entry.getKey())
-                    //.append(Constants.FIELD_WORD_COUNT, entry.getValue().size())
-                    .append(Constants.FIELD_POSITIONS, entry.getValue());
+                    .append(Constants.FIELD_TERM, entry.getKey())
+                    //.append(Constants.FIELD_TERM_COUNT, entry.getValue().size())
+                    .append(Constants.FIELD_TERM_POSITIONS, entry.getValue());
 
             dictionary.add(doc);
         }
@@ -181,8 +180,8 @@ public class WebPage {
         wordPosMap = new HashMap<>();
 
         for (Document doc : wordsIndex) {
-            String word = doc.getString(Constants.FIELD_WORD);
-            wordPosMap.put(word, (List<Integer>) doc.get(Constants.FIELD_POSITIONS));
+            String word = doc.getString(Constants.FIELD_TERM);
+            wordPosMap.put(word, (List<Integer>) doc.get(Constants.FIELD_TERM_POSITIONS));
         }
     }
 
@@ -195,12 +194,11 @@ public class WebPage {
     private List<Document> getStemsIndex() {
         List<Document> ret = new ArrayList<>();
 
-        // TODO: convert the two maps into one map of pair of integers
-        for (Map.Entry<String, Integer> entry : stemWordsCount.entrySet()) {
+        for (Map.Entry<String, StemInfo> entry : stemMap.entrySet()) {
             Document doc = new Document()
-                    .append(Constants.FIELD_STEM_WORD, entry.getKey())
-                    .append(Constants.FIELD_STEM_COUNT, entry.getValue())
-                    .append(Constants.FIELD_STEM_SCORE, stemScoreMap.get(entry.getKey()));
+                    .append(Constants.FIELD_TERM, entry.getKey())
+                    .append(Constants.FIELD_TERM_COUNT, entry.getValue().count)
+                    .append(Constants.FIELD_TERM_SCORE, entry.getValue().score);
 
             ret.add(doc);
         }
@@ -219,20 +217,15 @@ public class WebPage {
             return;
         }
 
-        stemWordsCount = new HashMap<>();
-        stemScoreMap = new HashMap<>();
+        stemMap = new HashMap<>();
 
         for (Document doc : stemsIndex) {
-            String stem = doc.getString(Constants.FIELD_STEM_WORD);
-
-            stemWordsCount.put(
-                    stem,
-                    doc.getInteger(Constants.FIELD_STEM_COUNT)
-            );
-
-            stemScoreMap.put(
-                    stem,
-                    doc.getInteger(Constants.FIELD_STEM_SCORE)
+            stemMap.put(
+                    doc.getString(Constants.FIELD_TERM),
+                    new StemInfo(
+                            doc.getInteger(Constants.FIELD_TERM_COUNT),
+                            doc.getInteger(Constants.FIELD_TERM_SCORE)
+                    )
             );
         }
     }

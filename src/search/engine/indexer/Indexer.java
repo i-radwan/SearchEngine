@@ -70,13 +70,13 @@ public class Indexer {
         database.createCollection(Constants.COLLECTION_WEB_PAGES);
         collection = database.getCollection(Constants.COLLECTION_WEB_PAGES);
         collection.createIndex(Indexes.ascending(Constants.FIELD_URL), indexOptions);
-        collection.createIndex(Indexes.ascending(Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD));
-        collection.createIndex(Indexes.ascending(Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD));
+        collection.createIndex(Indexes.ascending(Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM));
+        collection.createIndex(Indexes.ascending(Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM));
 
         // Create dictionary collection and its indexes
         database.createCollection(Constants.COLLECTION_DICTIONARY);
         collection = database.getCollection(Constants.COLLECTION_DICTIONARY);
-        collection.createIndex(Indexes.ascending(Constants.FIELD_WORD), indexOptions);
+        collection.createIndex(Indexes.ascending(Constants.FIELD_TERM), indexOptions);
 
         // Create suggestions collection and its indexes
         database.createCollection(Constants.COLLECTION_SUGGESTIONS);
@@ -148,7 +148,7 @@ public class Indexer {
         if (curPage.wordsCount == prvPage.wordsCount
                 && curPage.title.equals(prvPage.title)
                 && curPage.wordPosMap.equals(prvPage.wordPosMap)
-                && curPage.stemScoreMap.equals(prvPage.stemScoreMap)) {
+                && curPage.stemMap.equals(prvPage.stemMap)) {
 
             // If no changes happens to the content of the web page then
             // increase the skip fetch limit and return
@@ -162,7 +162,7 @@ public class Indexer {
 
         // Insert new content in the database
         updateWebPage(curPage);
-        updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
+        // updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
 
         //
         Output.log("Indexed : " + curPage.url);
@@ -286,7 +286,7 @@ public class Indexer {
      */
     public long getWordDocumentsCount(String word) {
         return mWebPagesCollection.count(eq(
-                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
+                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM,
                 word
         ));
     }
@@ -300,7 +300,7 @@ public class Indexer {
      */
     public long getStemDocumentsCount(String stem) {
         return mWebPagesCollection.count(eq(
-                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD,
+                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM,
                 stem
         ));
     }
@@ -346,7 +346,7 @@ public class Indexer {
     public List<WebPage> searchByWord(List<String> filterWords, List<String> filterStems) {
         // Query filter
         Bson filter = in(
-                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD,
+                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM,
                 filterWords
         );
 
@@ -372,7 +372,7 @@ public class Indexer {
     public List<WebPage> searchByPhrase(List<String> filterWords, List<String> filterStems) {
         // Query filter
         Bson filter = all(
-                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
+                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM,
                 filterWords
         );
 
@@ -420,7 +420,7 @@ public class Indexer {
 
         for (Map.Entry<String, List<String>> it : dictionary.entrySet()) {
             operations.add(new UpdateOneModel<>(
-                    eq(Constants.FIELD_WORD, it.getKey()),
+                    eq(Constants.FIELD_TERM, it.getKey()),
                     addEachToSet(Constants.FILED_SYNONYMS, it.getValue()),
                     options
             ));
@@ -446,11 +446,11 @@ public class Indexer {
     public Map<String, List<String>> getWordsDictionary(List<String> words) {
         Map<String, List<String>> dictionary = new HashMap<>();
 
-        FindIterable<Document> res = mDictionaryCollection.find(in(Constants.FIELD_WORD, words));
+        FindIterable<Document> res = mDictionaryCollection.find(in(Constants.FIELD_TERM, words));
 
         for (Document doc : res) {
             dictionary.put(
-                    doc.getString(Constants.FIELD_WORD),
+                    doc.getString(Constants.FIELD_TERM),
                     (List<String>) doc.get(Constants.FILED_SYNONYMS)
             );
         }
