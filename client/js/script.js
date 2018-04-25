@@ -233,7 +233,6 @@ let app = {
                     }
                 }
 
-                console.log(tmpSuggestions);
                 let matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
                 response($.grep(tmpSuggestions, function (value) {
                     value = value.label || value.value || value;
