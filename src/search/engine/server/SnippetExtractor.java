@@ -12,7 +12,7 @@ public class SnippetExtractor {
     //
     // Member fields
     //
-    private ArrayList<Snippet> nominatedSnippets = new ArrayList<>();
+    private ArrayList<Snippet> nominatedSnippets;
     private List<Snippet> selectedSnippets;
     private List<String> mOriginalQueryStems;
     private String[] pageContentArray;
@@ -67,6 +67,8 @@ public class SnippetExtractor {
      * @return list of nominated snippets
      */
     private ArrayList<Snippet> getNominatedSnippets() {
+        nominatedSnippets = new ArrayList<>();
+
         this.pageContentArray = content.split(" ");
 
         int pageContentArrayLength = pageContentArray.length;
@@ -80,7 +82,7 @@ public class SnippetExtractor {
 
             Snippet snippet = new Snippet();
             Snippet lastSnippet = null;
-            int snippetStringStartIdx;
+            Integer snippetStringStartIdx;
 
             if (!nominatedSnippets.isEmpty())
                 lastSnippet = nominatedSnippets.get(nominatedSnippets.size() - 1);
