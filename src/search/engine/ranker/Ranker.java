@@ -2,6 +2,7 @@ package search.engine.ranker;
 
 import org.bson.types.ObjectId;
 import search.engine.indexer.Indexer;
+import search.engine.indexer.StemInfo;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
 
@@ -123,9 +124,10 @@ public class Ranker {
             String stem = mQueryStems.get(i);
 
             List<Integer> positions = webPage.wordPosMap.get(word);
+            StemInfo stemInfo = webPage.stemMap.getOrDefault(stem, new StemInfo(0, 0));
 
             int wordCnt = (positions == null ? 0 : positions.size());
-            int stemCnt = webPage.stemWordsCount.getOrDefault(stem, 0);
+            int stemCnt = stemInfo.count;
             double TF, IDF, score = 0, wordScore = 0;
 
             // Exact word
@@ -143,7 +145,7 @@ public class Ranker {
 
                 score += (TF * IDF) * 0.5;
 
-                wordScore = (double) webPage.stemScoreMap.get(stem) / stemCnt;
+                wordScore = (double) stemInfo.count / stemCnt;
             }
 
             // Add the effect of the normalized score of the word
@@ -151,6 +153,6 @@ public class Ranker {
             pageScore += score * wordScore;
         }
 
-        return (0.75 * pageScore) * (0.25 * webPage.rank);
+        return pageScore * (0.5 * webPage.rank);
     }
 }

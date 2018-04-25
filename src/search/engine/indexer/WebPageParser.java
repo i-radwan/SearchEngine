@@ -39,8 +39,7 @@ public class WebPageParser {
         sContent = new StringBuilder();
         mPage = new WebPage();
         mPage.wordPosMap = new HashMap<>();
-        mPage.stemScoreMap = new HashMap<>();
-        mPage.stemWordsCount = new HashMap<>();
+        mPage.stemMap = new HashMap<>();
 
         // Assign page URL & title
         mPage.url = URLNormalizer.normalize(url);
@@ -147,10 +146,15 @@ public class WebPageParser {
             }
 
             //
-            // Add position
+            // Add new word position
             //
-            mPage.wordPosMap.putIfAbsent(word, new ArrayList<>());
-            mPage.wordPosMap.get(word).add(mPage.wordsCount++);
+            int pos = mPage.wordsCount++;
+            List<Integer> positions = new ArrayList<>();
+            positions.add(pos);
+            positions = mPage.wordPosMap.putIfAbsent(word, positions);
+            if (positions != null) {
+                positions.add(pos);
+            }
 
             //
             // Count stem and sum score
@@ -159,16 +163,17 @@ public class WebPageParser {
                 continue;
             }
 
+            // Get word's stem
             mWordStemmer.setCurrent(word);
             mWordStemmer.stem();
-
             String stem = mWordStemmer.getCurrent();
 
-            int cnt = mPage.stemWordsCount.getOrDefault(stem, 0);
-            int cur = mPage.stemScoreMap.getOrDefault(stem, 0);
-
-            mPage.stemWordsCount.put(stem, cnt + 1);
-            mPage.stemScoreMap.put(stem, cur + tagScore);
+            // Update web page stem map
+            StemInfo info = mPage.stemMap.putIfAbsent(stem, new StemInfo(1, tagScore));
+            if (info != null) {
+                info.count++;
+                info.score += tagScore;
+            }
         }
     }
 

@@ -15,11 +15,6 @@ import search.engine.utils.Constants;
 import java.net.URL;
 import java.util.*;
 
-import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Projections.*;
-import static com.mongodb.client.model.Sorts.ascending;
-import static com.mongodb.client.model.Updates.*;
-
 
 public class Indexer {
 
@@ -67,13 +62,13 @@ public class Indexer {
         // Create web page collection and its indexes
         collection = database.getCollection(Constants.COLLECTION_WEB_PAGES);
         collection.createIndex(Indexes.ascending(Constants.FIELD_URL), indexOptions);
-        collection.createIndex(Indexes.ascending(Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD));
-        collection.createIndex(Indexes.ascending(Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD));
+        collection.createIndex(Indexes.ascending(Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM));
+        collection.createIndex(Indexes.ascending(Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM));
 
         // Create dictionary collection and its indexes
         database.createCollection(Constants.COLLECTION_DICTIONARY);
         collection = database.getCollection(Constants.COLLECTION_DICTIONARY);
-        collection.createIndex(Indexes.ascending(Constants.FIELD_WORD), indexOptions);
+        collection.createIndex(Indexes.ascending(Constants.FIELD_TERM), indexOptions);
 
         // Create suggestions collection and its indexes
         database.createCollection(Constants.COLLECTION_SUGGESTIONS);
@@ -145,7 +140,7 @@ public class Indexer {
         if (curPage.wordsCount == prvPage.wordsCount
                 && curPage.title.equals(prvPage.title)
                 && curPage.wordPosMap.equals(prvPage.wordPosMap)
-                && curPage.stemScoreMap.equals(prvPage.stemScoreMap)) {
+                && curPage.stemMap.equals(prvPage.stemMap)) {
 
             // If no changes happens to the content of the web page then
             // increase the skip fetch limit and return
@@ -159,7 +154,7 @@ public class Indexer {
 
         // Insert new content in the database
         updateWebPage(curPage);
-        //updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
+        // updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
 
         //
         Output.log("Indexed : " + curPage.url);
@@ -174,7 +169,7 @@ public class Indexer {
     public void updateWebPage(WebPage page) {
         // Replace or create new document in the web pages collection
         mWebPagesCollection.replaceOne(
-                eq(Constants.FIELD_URL, page.url),  // Filter document by web page url
+                Filters.eq(Constants.FIELD_URL, page.url),  // Filter document by web page url
                 page.toDocument(),                  // Create the web page document to be indexed
                 new UpdateOptions().upsert(true)    // Add upsert option
         );
@@ -188,8 +183,8 @@ public class Indexer {
      */
     public void incrementFetchSkipCount(ObjectId id) {
         mWebPagesCollection.updateOne(
-                eq(Constants.FIELD_ID, id),
-                inc(Constants.FILED_FETCH_SKIP_COUNT, 1)
+                Filters.eq(Constants.FIELD_ID, id),
+                Updates.inc(Constants.FILED_FETCH_SKIP_COUNT, 1)
         );
     }
 
@@ -202,10 +197,10 @@ public class Indexer {
      */
     public void updateFetchSkipLimit(ObjectId id, int limit) {
         mWebPagesCollection.updateOne(
-                eq(Constants.FIELD_ID, id),
-                combine(
-                        set(Constants.FILED_FETCH_SKIP_LIMIT, limit),
-                        set(Constants.FILED_FETCH_SKIP_COUNT, 0)
+                Filters.eq(Constants.FIELD_ID, id),
+                Updates.combine(
+                        Updates.set(Constants.FILED_FETCH_SKIP_LIMIT, limit),
+                        Updates.set(Constants.FILED_FETCH_SKIP_COUNT, 0)
                 )
         );
     }
@@ -216,7 +211,7 @@ public class Indexer {
      * @param id the web page id to remove
      */
     public void removeWebPage(ObjectId id) {
-        mWebPagesCollection.deleteOne(eq(Constants.FIELD_ID, id));
+        mWebPagesCollection.deleteOne(Filters.eq(Constants.FIELD_ID, id));
     }
 
     /**
@@ -229,8 +224,8 @@ public class Indexer {
 
         for (WebPage page : pages) {
             operations.add(new UpdateOneModel<>(
-                    eq(Constants.FIELD_ID, page.id),
-                    set(Constants.FIELD_RANK, page.rank)
+                    Filters.eq(Constants.FIELD_ID, page.id),
+                    Updates.set(Constants.FIELD_RANK, page.rank)
             ));
         }
 
@@ -250,7 +245,7 @@ public class Indexer {
     public Map<String, WebPage> getWebGraph() {
         FindIterable<Document> res = mWebPagesCollection
                 .find()
-                .projection(include(
+                .projection(Projections.include(
                         Constants.FIELD_URL,
                         Constants.FIELD_CONNECTED_TO
                 ));
@@ -282,8 +277,8 @@ public class Indexer {
      * @return documents count
      */
     public long getWordDocumentsCount(String word) {
-        return mWebPagesCollection.count(eq(
-                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
+        return mWebPagesCollection.count(Filters.eq(
+                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM,
                 word
         ));
     }
@@ -296,8 +291,8 @@ public class Indexer {
      * @return documents count
      */
     public long getStemDocumentsCount(String stem) {
-        return mWebPagesCollection.count(eq(
-                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD,
+        return mWebPagesCollection.count(Filters.eq(
+                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM,
                 stem
         ));
     }
@@ -311,8 +306,8 @@ public class Indexer {
      */
     public WebPage getWebPageByURL(String url, List<String> projections) {
         Document res = mWebPagesCollection
-                .find(eq(Constants.FIELD_URL, url))
-                .projection(include(projections))
+                .find(Filters.eq(Constants.FIELD_URL, url))
+                .projection(Projections.include(projections))
                 .first();
 
         return new WebPage(res);
@@ -327,8 +322,8 @@ public class Indexer {
      */
     public List<WebPage> searchById(List<ObjectId> ids, List<String> projections) {
         FindIterable<Document> res = mWebPagesCollection
-                .find(in(Constants.FIELD_ID, ids))
-                .projection(include(projections));
+                .find(Filters.in(Constants.FIELD_ID, ids))
+                .projection(Projections.include(projections));
 
         return IndexerUtilities.toWebPages(res);
     }
@@ -342,13 +337,24 @@ public class Indexer {
      */
     public List<WebPage> searchByWord(List<String> filterWords, List<String> filterStems) {
         // Query filter
-        Bson filter = in(
-                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD,
+        Bson filter = Filters.in(
+                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM,
                 filterWords
         );
 
-        // Projections
-        Bson projections = IndexerUtilities.getSearchProjections(filterWords, filterStems);
+        // Filter words index array
+        Document projectWords = IndexerUtilities.AggregationFilter(
+                Constants.FIELD_WORDS_INDEX, Constants.FIELD_TERM, filterWords);
+
+        // Filter stems index array
+        Document projectStems = IndexerUtilities.AggregationFilter(
+                Constants.FIELD_STEMS_INDEX, Constants.FIELD_TERM, filterStems);
+
+        // Initial fields projections
+        Bson projections = Projections.fields(
+                Projections.include(Constants.FIELDS_FOR_SEARCH_RANKING),
+                projectWords, projectStems
+        );
 
         // Retrieve results
         AggregateIterable<Document> res = mWebPagesCollection.aggregate(Arrays.asList(
@@ -368,13 +374,24 @@ public class Indexer {
      */
     public List<WebPage> searchByPhrase(List<String> filterWords, List<String> filterStems) {
         // Query filter
-        Bson filter = all(
-                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
+        Bson filter = Filters.all(
+                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM,
                 filterWords
         );
 
-        // Projections
-        Bson projections = IndexerUtilities.getSearchProjections(filterWords, filterStems);
+        // Filter words index array
+        Document projectWords = IndexerUtilities.AggregationFilter(
+                Constants.FIELD_WORDS_INDEX, Constants.FIELD_TERM, filterWords);
+
+        // Filter stems index array
+        Document projectStems = IndexerUtilities.AggregationFilter(
+                Constants.FIELD_STEMS_INDEX, Constants.FIELD_TERM, filterStems);
+
+        // Initial fields projections
+        Bson projections = Projections.fields(
+                Projections.include(Constants.FIELDS_FOR_SEARCH_RANKING),
+                projectWords, projectStems
+        );
 
         // Retrieve results
         AggregateIterable<Document> res = mWebPagesCollection.aggregate(Arrays.asList(
@@ -417,8 +434,8 @@ public class Indexer {
 
         for (Map.Entry<String, List<String>> it : dictionary.entrySet()) {
             operations.add(new UpdateOneModel<>(
-                    eq(Constants.FIELD_WORD, it.getKey()),
-                    addEachToSet(Constants.FILED_SYNONYMS, it.getValue()),
+                    Filters.eq(Constants.FIELD_TERM, it.getKey()),
+                    Updates.addEachToSet(Constants.FILED_SYNONYMS, it.getValue()),
                     options
             ));
         }
@@ -443,11 +460,11 @@ public class Indexer {
     public Map<String, List<String>> getWordsDictionary(List<String> words) {
         Map<String, List<String>> dictionary = new HashMap<>();
 
-        FindIterable<Document> res = mDictionaryCollection.find(in(Constants.FIELD_WORD, words));
+        FindIterable<Document> res = mDictionaryCollection.find(Filters.in(Constants.FIELD_TERM, words));
 
         for (Document doc : res) {
             dictionary.put(
-                    doc.getString(Constants.FIELD_WORD),
+                    doc.getString(Constants.FIELD_TERM),
                     (List<String>) doc.get(Constants.FILED_SYNONYMS)
             );
         }
@@ -462,8 +479,8 @@ public class Indexer {
 
     public void insertSuggestion(String suggestion) {
         mSuggestionsCollection.updateOne(
-                eq(Constants.FIELD_SUGGESTION, suggestion),
-                set(Constants.FIELD_SUGGESTION, suggestion),
+                Filters.eq(Constants.FIELD_SUGGESTION, suggestion),
+                Updates.set(Constants.FIELD_SUGGESTION, suggestion),
                 new UpdateOptions().upsert(true)
         );
     }
@@ -479,9 +496,9 @@ public class Indexer {
         List<String> ret = new ArrayList<>();
 
         FindIterable<Document> res = mSuggestionsCollection
-                .find(regex(Constants.FIELD_SUGGESTION, query + ".*"))
-                .projection(excludeId())
-                .sort(ascending(Constants.FIELD_SUGGESTION));
+                .find(Filters.regex(Constants.FIELD_SUGGESTION, query + ".*"))
+                .projection(Projections.excludeId())
+                .sort(Sorts.ascending(Constants.FIELD_SUGGESTION));
 
         for (Document doc : res) {
             ret.add("\"" + doc.getString(Constants.FIELD_SUGGESTION) + "\"");

@@ -2,59 +2,34 @@ package search.engine.indexer;
 
 import com.mongodb.client.MongoIterable;
 import org.bson.Document;
-import org.bson.conversions.Bson;
-import search.engine.utils.Constants;
 
 import java.util.*;
-
-import static com.mongodb.client.model.Projections.fields;
-import static com.mongodb.client.model.Projections.include;
 
 
 public class IndexerUtilities {
 
     /**
-     * Returns search projection clause document.
+     * Constructs an array filter document to be used in MongoDB aggregation pipeline during
+     * projection stage.
+     * The constructed document will filter the given array to pass only the array elements
+     * having {@code arrayItem} equals any of the given filter words.
      *
-     * @param filterWords list of search query words
-     * @param filterStems list of search query stems
-     * @return
+     * @param arrayName   the name of the array to filter during projection
+     * @param arrayItem   the name of the array item to compare with the given filter
+     * @param filterWords the filter words
+     * @return the constructed array filter document
      */
-    public static Bson getSearchProjections(List<String> filterWords, List<String> filterStems) {
-        //
-        // Filter words index array
-        //
-        Document wordsFilterCond = new Document()
-                .append("$in", Arrays.asList("$$this." + Constants.FIELD_WORD, filterWords));
+    public static Document AggregationFilter(String arrayName, String arrayItem, List<String> filterWords) {
+        // Filter condition
+        Document filterCond = new Document()
+                .append("$in", Arrays.asList("$$this." + arrayItem, filterWords));
 
-        Document wordsFilterFields = new Document()
-                .append("input", "$" + Constants.FIELD_WORDS_INDEX)
-                .append("cond", wordsFilterCond);
+        // Project aggregation needed filter fields
+        Document filterFields = new Document()
+                .append("input", "$" + arrayName)
+                .append("cond", filterCond);
 
-        Document wordsProjection = new Document()
-                .append(Constants.FIELD_WORDS_INDEX, new Document("$filter", wordsFilterFields));
-
-        //
-        // Filter stems index array
-        //
-        Document stemsFilterCond = new Document()
-                .append("$in", Arrays.asList("$$this." + Constants.FIELD_STEM_WORD, filterStems));
-
-        Document stemsFilterFields = new Document()
-                .append("input", "$" + Constants.FIELD_STEMS_INDEX)
-                .append("cond", stemsFilterCond);
-
-        Document stemsProjection = new Document()
-                .append(Constants.FIELD_STEMS_INDEX, new Document("$filter", stemsFilterFields));
-
-        //
-        // Projections
-        //
-        return fields(
-                include(Constants.FIELD_ID, Constants.FIELD_RANK, Constants.FIELD_TOTAL_WORDS_COUNT),
-                wordsProjection,
-                stemsProjection
-        );
+        return new Document(arrayName, new Document("$filter", filterFields));
     }
 
     /**
@@ -66,9 +41,14 @@ public class IndexerUtilities {
     public static List<WebPage> toWebPages(MongoIterable<Document> documents) {
         List<WebPage> ret = new ArrayList<>();
 
+        int cnt = 0;
+
         for (Document doc : documents) {
+            cnt++;
             ret.add(new WebPage(doc));
         }
+
+        System.out.println("Results Count: " + cnt);
 
         return ret;
     }

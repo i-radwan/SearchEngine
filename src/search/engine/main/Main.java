@@ -5,6 +5,7 @@ import search.engine.indexer.Indexer;
 import search.engine.ranker.PageRanker;
 import search.engine.server.Server;
 
+import java.util.Arrays;
 import java.util.Scanner;
 
 
@@ -57,9 +58,10 @@ public class Main {
             }
 
             long endTime = System.nanoTime();
-            long secs = (endTime - startTime) / (long) 1e9;
+            long millis = (endTime - startTime) / (long) 1e6;
+            long secs = millis / 1000;
 
-            System.out.printf("Elapsed Time: %02d:%02d\n", secs / 60, secs % 60);
+            System.out.printf("Elapsed Time: %d min : %d sec : %d ms\n", secs / 60, secs % 60, millis % 1000);
         }
 
         scanner.close();
@@ -110,17 +112,17 @@ public class Main {
     private static void test() {
         try {
             testIndexer();
-            testRanker();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static void testRanker() {
-
-    }
-
     private static void testIndexer() {
+        Indexer indexer = new Indexer();
 
+        indexer.searchByWord(
+                Arrays.asList("google", "code", "jam", "hello", "world", "wikipedia"),
+                Arrays.asList("googl", "cod", "jam", "hello", "world", "wikipedia")
+        );
     }
 }
