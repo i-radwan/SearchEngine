@@ -75,6 +75,8 @@ public class Utilities {
 
     /**
      * Converts the given word into its stemmed version.
+     * We may need more than one iteration to get to the base stem
+     * computerized -> computer -> comput
      *
      * @param word string to be stemmed
      * @return a new string of stemmed word.
