@@ -344,13 +344,10 @@ public class PageRanker {
             getGraph();
             saveGraph();
 
-            // Compile CUDA.
-            Runtime.getRuntime().exec("mkdir " + Constants.CUDA_SRC_DIRECTORY + "build");
-            Runtime.getRuntime().exec("cd " + Constants.CUDA_SRC_DIRECTORY + "build");
-            Runtime.getRuntime().exec("cmake ..");
-
-            // Run PageRank.
-            Runtime.getRuntime().exec("./" + Constants.CUDA_SRC_DIRECTORY + "build/PageRank " + Constants.GRAPH_FILE_NAME);
+            // Compile and run cuda.
+            String[] cmd = { Constants.CUDA_SCRIPT_PATH, "../../../" + Constants.GRAPH_FILE_NAME};
+            Process p = Runtime.getRuntime().exec(cmd);
+            p.waitFor();
 
             // Update Ranks
             this.updatePagesRanks(true);
