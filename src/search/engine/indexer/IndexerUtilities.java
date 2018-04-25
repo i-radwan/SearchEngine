@@ -1,6 +1,6 @@
 package search.engine.indexer;
 
-import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoIterable;
 import org.bson.Document;
 
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ public class IndexerUtilities {
      * @param documents list of documents to be converted
      * @return list of web pages
      */
-    public static List<WebPage> toWebPages(FindIterable<Document> documents) {
+    public static List<WebPage> toWebPages(MongoIterable<Document> documents) {
         List<WebPage> ret = new ArrayList<>();
 
         for (Document doc : documents) {

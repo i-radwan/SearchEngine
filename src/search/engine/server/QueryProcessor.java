@@ -118,10 +118,17 @@ public class QueryProcessor {
             throw new Exception("Please fill a valid search query!");
         }
 
-        //
-        System.out.print("Search query:\t ");
+        // Print query words
+        System.out.print("Search query words:\t ");
         for (String word : mQueryWords) {
             System.out.print(word + " ");
+        }
+        System.out.println();
+
+        // Print query words
+        System.out.print("Search query stems:\t ");
+        for (String stem : mQueryStems) {
+            System.out.print(stem + " ");
         }
         System.out.println();
 
@@ -149,9 +156,9 @@ public class QueryProcessor {
         List<WebPage> matchingResults;
 
         if (mIsPhraseSearch) {
-            matchingResults = mIndexer.searchByPhrase(mQueryWords);
+            matchingResults = mIndexer.searchByPhrase(mQueryWords, mQueryStems);
         } else {
-            matchingResults = mIndexer.searchByWord(mQueryStems);
+            matchingResults = mIndexer.searchByWord(mQueryWords, mQueryStems);
         }
 
         //

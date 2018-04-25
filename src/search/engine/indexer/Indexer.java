@@ -1,11 +1,13 @@
 package search.engine.indexer;
 
 import com.mongodb.MongoClient;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import search.engine.crawler.Output;
 import search.engine.utils.Constants;
@@ -14,8 +16,7 @@ import java.net.URL;
 import java.util.*;
 
 import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Projections.excludeId;
-import static com.mongodb.client.model.Projections.include;
+import static com.mongodb.client.model.Projections.*;
 import static com.mongodb.client.model.Sorts.ascending;
 import static com.mongodb.client.model.Updates.*;
 
@@ -334,18 +335,62 @@ public class Indexer {
 
     /**
      * Searches for web pages having any of the given filter words.
-     * TODO: project only needed words
      *
-     * @param filterWords list of words to search for
+     * @param filterWords list of search query words
+     * @param filterStems list of search query stems
      * @return list of matching web pages
      */
-    public List<WebPage> searchByWord(List<String> filterWords) {
-        FindIterable<Document> res = mWebPagesCollection
-                .find(in(
-                        Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD,
-                        filterWords
-                ))
-                .projection(include(Constants.FIELDS_FOR_RANKING));
+    public List<WebPage> searchByWord(List<String> filterWords, List<String> filterStems) {
+        //
+        // Filter words index array
+        //
+        Document wordsFilterCond = new Document()
+                .append("$in", Arrays.asList("$$this." + Constants.FIELD_WORD, filterWords));
+
+        Document wordsFilterFields = new Document()
+                .append("input", "$" + Constants.FIELD_WORDS_INDEX)
+                .append("cond", wordsFilterCond);
+
+        Document wordsProjection = new Document()
+                .append(Constants.FIELD_WORDS_INDEX, new Document("$filter", wordsFilterFields));
+
+        //
+        // Filter stems index array
+        //
+        Document stemsFilterCond = new Document()
+                .append("$in", Arrays.asList("$$this." + Constants.FIELD_STEM_WORD, filterStems));
+
+        Document stemsFilterFields = new Document()
+                .append("input", "$" + Constants.FIELD_STEMS_INDEX)
+                .append("cond", stemsFilterCond);
+
+        Document stemsProjection = new Document()
+                .append(Constants.FIELD_STEMS_INDEX, new Document("$filter", stemsFilterFields));
+
+        //
+        // Projections
+        //
+        Bson projections = fields(
+                include(Constants.FIELD_ID, Constants.FIELD_RANK, Constants.FIELD_TOTAL_WORDS_COUNT),
+                wordsProjection,
+                stemsProjection
+        );
+
+        //
+        // Query filter
+        //
+        Bson queryFilter = in(
+                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_STEM_WORD,
+                filterWords
+        );
+
+        //
+        // Retrieve results
+        //
+        AggregateIterable<Document> res = mWebPagesCollection.aggregate(Arrays.asList(
+                Aggregates.match(queryFilter),
+                Aggregates.project(projections)
+        ));
 
         return IndexerUtilities.toWebPages(res);
     }
@@ -353,17 +398,64 @@ public class Indexer {
     /**
      * Searches for web pages having all of the given filter words in the given order.
      *
-     * @param filterWords list of words to search for
+     * @param filterWords list of search query words
+     * @param filterStems list of search query stems
      * @return list of matching web pages
      */
-    public List<WebPage> searchByPhrase(List<String> filterWords) {
-        FindIterable<Document> res = mWebPagesCollection
-                .find(all(
-                        Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
-                        filterWords
-                ))
-                .projection(include(Constants.FIELDS_FOR_RANKING));
+    public List<WebPage> searchByPhrase(List<String> filterWords, List<String> filterStems) {
+        //
+        // Filter words index array
+        //
+        Document wordsFilterCond = new Document()
+                .append("$in", Arrays.asList("$$this." + Constants.FIELD_WORD, filterWords));
 
+        Document wordsFilterFields = new Document()
+                .append("input", "$" + Constants.FIELD_WORDS_INDEX)
+                .append("cond", wordsFilterCond);
+
+        Document wordsProjection = new Document()
+                .append(Constants.FIELD_WORDS_INDEX, new Document("$filter", wordsFilterFields));
+
+        //
+        // Filter stems index array
+        //
+        Document stemsFilterCond = new Document()
+                .append("$in", Arrays.asList("$$this." + Constants.FIELD_STEM_WORD, filterStems));
+
+        Document stemsFilterFields = new Document()
+                .append("input", "$" + Constants.FIELD_STEMS_INDEX)
+                .append("cond", stemsFilterCond);
+
+        Document stemsProjection = new Document()
+                .append(Constants.FIELD_STEMS_INDEX, new Document("$filter", stemsFilterFields));
+
+        //
+        // Projections
+        //
+        Bson projections = fields(
+                include(Constants.FIELD_ID, Constants.FIELD_RANK, Constants.FIELD_TOTAL_WORDS_COUNT),
+                wordsProjection, stemsProjection
+        );
+
+        //
+        // Query filter
+        //
+        Bson queryFilter = all(
+                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_WORD,
+                filterWords
+        );
+
+        //
+        // Retrieve results
+        //
+        AggregateIterable<Document> res = mWebPagesCollection.aggregate(Arrays.asList(
+                Aggregates.match(queryFilter),
+                Aggregates.project(projections)
+        ));
+
+        //
+        // Check if the whole phrase occurred in the same given order
+        //
         List<WebPage> ret = new ArrayList<>();
 
         for (Document doc : res) {
