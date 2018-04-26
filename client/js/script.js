@@ -5,7 +5,7 @@ const SERVER_SEARCH_LINK = "http://localhost:8080/search?q={query}&page={page}";
 const SERVER_SUGGESTIONS_LINK = "http://localhost:8080/suggestions?q={query}";
 const MIN_SUGGESTION_CHARS_COUNT = 3;
 const SUGGESTIONS_TIMEOUT_DELAY = 300;
-const MAX_SNIPPETS_COUNT = 10; // Max snippets per search result
+const RESULTS_PER_PAGE = 12; // Max snippets per search result
 const QUERY_MAX_LENGTH = 5 * 10;
 
 //
@@ -96,7 +96,7 @@ let app = {
 
         // Fill containers
         app.displayResults(response.pages);
-        app.displayPagination(response.pagination);
+        app.displayPaginationAndInfo(response.pagination);
     },
 
     /**
@@ -125,7 +125,7 @@ let app = {
      *
      * @param pagination
      */
-    displayPagination: function (pagination) {
+    displayPaginationAndInfo: function (pagination) {
         // Check if current page in the first/last segment
         let isFirstSegment = (pagination.current_page <= 6);
         let isLastSegment = (pagination.current_page >= pagination.pages_count - 5);
@@ -170,7 +170,6 @@ let app = {
         // Fill the container
         app.paginationContainer.html(app.paginationTemplateScript({
             page_numbers: pagesNumbers,
-            elapsed: Date.now() - app.enterHitTime
         }));
 
         // Reset link handlers
@@ -178,6 +177,12 @@ let app = {
 
         // Back to top
         $("html, body").animate({scrollTop: 0}, "fast");
+
+        // Fill info
+
+        $("#results-time").html((Date.now() - app.enterHitTime) / 1000.0 + " s");
+        $("#results-count").html(pagination.pages_count * RESULTS_PER_PAGE);
+        $(".info").css('display', 'block');
     },
 
     /**
@@ -187,6 +192,13 @@ let app = {
         // Send search request when enter key gets pressed
         app.searchBox.bind('keypress', function (e) {
             if (e.keyCode === 13 && app.searchBox.val().trim().length > 0) {
+                app.enterHitTime = Date.now();
+                app.getWebpagesRequest(app.searchBox.val());
+            }
+        });
+
+        $(".search-btn").click(function () {
+            if (app.searchBox.val().trim().length > 0) {
                 app.enterHitTime = Date.now();
                 app.getWebpagesRequest(app.searchBox.val());
             }
@@ -241,7 +253,7 @@ let app = {
                         tmpSuggestions[i] = "\"" + app.suggestions[i] + "\"";
                     }
                 }
-
+                console.log($.ui.autocomplete);
                 let matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
                 response($.grep(tmpSuggestions, function (value) {
                     value = value.label || value.value || value;
