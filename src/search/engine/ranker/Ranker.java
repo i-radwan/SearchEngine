@@ -6,9 +6,7 @@ import search.engine.indexer.StemInfo;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 
 public class Ranker {
@@ -154,5 +152,67 @@ public class Ranker {
         }
 
         return pageScore * (0.5 * webPage.rank);
+    }
+
+    /**
+     * Calculates the given web page score rank based on the users's search query
+     * and the content of the page.
+     * The score is calculated as the cosine similarity score between query words vector
+     * and the document words vector.
+     * @param webPage the web page to calculate its score
+     * @return the calculated web page score
+     */
+    private double calculatePageScoreCosineSimilarity(WebPage webPage) {
+        // Calculate TF IDF for the query words.
+        List<Double> queryScoreVector = new ArrayList<>();
+        Integer queryWordsCnt = mQueryWords.size();
+        Double queryVectorMagnitude = 0.0;
+
+        // Calculate normalized TF-IDF score and the query vector magnitude.
+        for (int i = 0; i < queryWordsCnt; i++) {
+            Double component = 1.0 * Math.log((double) mTotalDocsCount / mWordsDocsCount[i]) / queryWordsCnt;
+            queryScoreVector.add(component);
+            queryVectorMagnitude += Math.pow(component, 2);
+        }
+        queryVectorMagnitude = Math.sqrt(queryVectorMagnitude);
+
+        // Calculate cosine similarity score.
+        double pageCosineSimilarityScore = 0.0;
+        double dotProduct = 0.0;
+        double pageVectorMagnitude = 0.0;
+
+        // For each word in the query filter words
+        for (int i = 0; i < queryWordsCnt; ++i) {
+            String word = mQueryWords.get(i);
+            String stem = mQueryStems.get(i);
+
+            List<Integer> positions = webPage.wordPosMap.get(word);
+            StemInfo stemInfo = webPage.stemMap.getOrDefault(stem, new StemInfo(0, 0));
+
+            int wordCnt = (positions == null ? 0 : positions.size());
+            int stemCnt = stemInfo.count;
+            double TF, IDF;
+
+            // Exact word
+            if (wordCnt > 0) {
+                TF = wordCnt / (double) webPage.wordsCount;
+                IDF = Math.log((double) mTotalDocsCount / mWordsDocsCount[i]);
+                pageVectorMagnitude += Math.pow(TF * IDF, 2);
+                dotProduct += TF * IDF * queryScoreVector.get(i);
+            }
+
+            // Synonymous words
+            if (stemCnt > 0) {
+                TF = stemCnt / (double) webPage.wordsCount;
+                IDF = Math.log((double) mTotalDocsCount / mStemsDocsCount[i]);
+
+                pageVectorMagnitude += Math.pow(TF * IDF * 0.5, 2);
+                dotProduct += TF * IDF * 0.5 * queryScoreVector.get(i);
+            }
+        }
+        pageVectorMagnitude = Math.sqrt(pageVectorMagnitude);
+
+        pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
+        return (0.7 * pageCosineSimilarityScore) * (0.3 * webPage.rank);
     }
 }
