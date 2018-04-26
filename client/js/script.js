@@ -197,18 +197,24 @@ let app = {
      * Catches pressing enter to search
      */
     configureSearchBox: function () {
+        let execute = function () {
+            app.enterHitTime = Date.now();
+            app.getWebpagesRequest(app.searchBox.val());
+            $(".ui-menu").css('display', 'none');
+        };
+
         // Send search request when enter key gets pressed
         app.searchBox.bind('keypress', function (e) {
+            $(".ui-menu").css('display', 'block');
+
             if (e.keyCode === 13 && app.searchBox.val().trim().length > 0) {
-                app.enterHitTime = Date.now();
-                app.getWebpagesRequest(app.searchBox.val());
+                execute();
             }
         });
 
         $(".search-btn").click(function () {
             if (app.searchBox.val().trim().length > 0) {
-                app.enterHitTime = Date.now();
-                app.getWebpagesRequest(app.searchBox.val());
+                execute();
             }
         });
 
