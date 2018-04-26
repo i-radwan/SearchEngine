@@ -56,7 +56,7 @@ public class Ranker {
     public List<ObjectId> rank(int pageNumber) {
         // For each page calculate its TF-IDF score
         for (WebPage webPage : mWebPages) {
-            webPage.rank = calculatePageScore(webPage);
+            webPage.rank = calculatePageScoreCosineSimilarity(webPage);
         }
 
         // Sort webPages
