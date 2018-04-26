@@ -48,6 +48,9 @@ let app = {
     getWebpagesRequest: function (query, page = 1) {
         app.requestSent = true;
 
+        $(".loader").css('display', 'block');
+        $(".search-btn").text("");
+
         if (app.didTheUserSearch) // Check to prevent the effect the first time only
             $("#results_container").fadeTo("fast", 0.3); // Fade out to give refresh animation
 
@@ -83,6 +86,9 @@ let app = {
      */
     webpagesCallBack: function (response) {
         if (response.hasOwnProperty("error_msg")) {
+            $(".loader").css('display', 'none');
+            $(".search-btn").text("Search");
+
             return alert(response["error_msg"]);
         }
 
@@ -183,6 +189,8 @@ let app = {
         $("#results-time").html((Date.now() - app.enterHitTime) / 1000.0 + " s");
         $("#results-count").html(pagination.pages_count * RESULTS_PER_PAGE);
         $(".info").css('display', 'block');
+        $(".loader").css('display', 'none');
+        $(".search-btn").text("Search");
     },
 
     /**
