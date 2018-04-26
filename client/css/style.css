@@ -32,8 +32,8 @@ p {
     display: none;
     position: absolute;
     right: calc(50% - 15px);
-    top: calc(50% - 15px);
-    border: 3px solid #f3f3f3; /* Light grey */
+    top: calc(50% - 17px);
+    border: 3px solid transparent; /* Light grey */
     border-top: 3px solid #3498db; /* Blue */
     border-radius: 50%;
     width: 30px;
