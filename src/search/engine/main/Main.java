@@ -79,7 +79,7 @@ public class Main {
         crawler.start(cnt);
 
         PageRanker pageRanker = new PageRanker(indexer);
-        pageRanker.start();
+        pageRanker.start(true);
 
         // crawler.readPreviousData();
         //

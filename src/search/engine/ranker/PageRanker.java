@@ -3,6 +3,7 @@ package search.engine.ranker;
 import search.engine.indexer.Indexer;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
+import search.engine.utils.WebUtilities;
 
 import java.awt.*;
 import java.io.BufferedReader;
@@ -29,6 +30,11 @@ public class PageRanker {
      * All web pages in the database
      */
     Map<String, WebPage> graphNodes;
+
+    /**
+     * Map web pages to their host
+     */
+    Map<String, String> hostWebPagesMap;
 
     /**
      * The number of pages in the graph.
@@ -105,12 +111,15 @@ public class PageRanker {
         outDegrees = new ArrayList<>();
         pagesRank = new ArrayList<>();
         pagesIDS = new HashMap<>();
+        hostWebPagesMap = new HashMap<>();
+    }
 
+
+    private void initializePageRankLists() {
         for (int i = 0; i < pagesCount; i++) {
 
             // Create a new list for each page
-            ArrayList<Integer> newList = new ArrayList<>();
-            inList.put(i, newList);
+            inList.put(i, new ArrayList<>());
 
             outDegrees.add(0);
             pagesRank.add(1.0 / pagesCount); // Initialize at first with 1/n prob
@@ -128,6 +137,7 @@ public class PageRanker {
 
         // Initialize
         initialize();
+        initializePageRankLists();
 
         // add arcs
         for (Map.Entry<String, WebPage> webPageNode : graphNodes.entrySet()) {
@@ -144,6 +154,70 @@ public class PageRanker {
                 }
             }
         }
+    }
+
+
+    /**
+     * Get host to host web pages graph
+     */
+    public void getHostToHostGraph() {
+        // Get the web pages in the graph (all nodes)
+        graphNodes = mIndexer.getWebGraph();
+
+        this.pagesCount = 0;
+
+        // Initialize
+        initialize();
+
+        // calculate pages count and get unique host pages ids.
+        for (Map.Entry<String, WebPage> webPageNode : graphNodes.entrySet()) {
+            // Get the host web page url.
+            String webPageHostURL = WebUtilities.getHostName(webPageNode.getKey());
+            // Map this url to its host url.
+            hostWebPagesMap.put(webPageNode.getKey(), webPageHostURL);
+
+            if (!pagesIDS.containsKey(webPageHostURL)) {
+                this.pagesCount++;
+//                System.out.println("New Host " + webPageHostURL + " ID: " + nextWebPageID);
+                pagesIDS.put(webPageHostURL, nextWebPageID++);
+            }
+
+            for (String to : webPageNode.getValue().outLinks) {
+                String toHostURL = WebUtilities.getHostName(to);
+
+                if (graphNodes.containsKey(to)) { // Check if this out link page is currently indexed in the database.
+                    // Map this url to its host url.
+                    hostWebPagesMap.put(to, toHostURL);
+
+                    if (!pagesIDS.containsKey(toHostURL)) {
+//                        System.out.println("New Host " + toHostURL + " ID: " + nextWebPageID);
+                        this.pagesCount++;
+                        pagesIDS.put(toHostURL, nextWebPageID++);
+                    }
+                }
+            }
+        }
+
+        // Initialize pageRank lists after getting pages count.
+        initializePageRankLists();
+
+        // add arcs.
+        for (Map.Entry<String, WebPage> webPageNode : graphNodes.entrySet()) {
+            // Get the host web page url.
+            String webPageHostURL = WebUtilities.getHostName(webPageNode.getKey());
+
+            // Loop over all links and write arcs
+            for (String to : webPageNode.getValue().outLinks) {
+                String toHostURL = WebUtilities.getHostName(to);
+
+                if (graphNodes.containsKey(to)) { // Check if this out link page is currently indexed in the database.
+                    this.addArc(pagesIDS.get(webPageHostURL), pagesIDS.get(toHostURL));
+                }
+            }
+        }
+
+        // TODO REMOVE THIS DEBUGGING LINE.
+        System.out.println("Number of unique hosts is " + this.pagesCount);
     }
 
     /**
@@ -261,6 +335,25 @@ public class PageRanker {
     }
 
     /**
+     * Updates pages ranks in the database in case of host to host graph.
+     */
+    private void updateHostToHostPagesRanks(boolean cudaInput) {
+        if (cudaInput) readPagesRanks(Constants.CUDA_PAGE_RANKS_FILE_NAME);
+        else {
+            // Loop over the Map and update
+            for (String webPageURL : hostWebPagesMap.keySet()) {
+                // Get its host URl.
+                String webPageHostURL = hostWebPagesMap.get(webPageURL);
+
+                // update web page rank.
+                graphNodes.get(webPageURL).rank = pagesRank.get(pagesIDS.get(webPageHostURL));
+            }
+
+            mIndexer.updatePageRanks(graphNodes.values());
+        }
+    }
+
+    /**
      * Print page ranks on console (Left for Debugging)
      */
     private void printPR(boolean checkSumOnly) {
@@ -318,16 +411,16 @@ public class PageRanker {
     /**
      * Start page ranking algorithm
      */
-    public void start() {
+    public void start(boolean hostPagesOnly) {
         System.out.println("Start page ranking...");
 
         // Get the graph and save it
-        getGraph();
+        if (hostPagesOnly) getHostToHostGraph();
+        else getGraph();
         saveGraph();
 
         rankPages();
-
-        updatePagesRanks(false);
+        updateHostToHostPagesRanks(false);
 
         printPR(true);
         savePR();
@@ -345,7 +438,7 @@ public class PageRanker {
             saveGraph();
 
             // Compile and run cuda.
-            String[] cmd = { Constants.CUDA_SCRIPT_PATH, "../../../" + Constants.GRAPH_FILE_NAME};
+            String[] cmd = {Constants.CUDA_SCRIPT_PATH, "../../../" + Constants.GRAPH_FILE_NAME};
             Process p = Runtime.getRuntime().exec(cmd);
             p.waitFor();
 
