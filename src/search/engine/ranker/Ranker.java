@@ -221,6 +221,6 @@ public class Ranker {
         System.out.println("Number of found words: " + numberOfFoundWords + " " + webPage.id +" " + ((1.0 * numberOfFoundWords) + (0.7 * pageCosineSimilarityScore) + (0.3 * webPage.rank)));
 
         pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
-        return (1.0 * numberOfFoundWords) + (0.7 * pageCosineSimilarityScore) + (0.3 * webPage.rank);
+        return (1.0 * numberOfFoundWords/queryWordsCnt) + (0.7 * pageCosineSimilarityScore) + (0.3 * webPage.rank);
     }
 }
