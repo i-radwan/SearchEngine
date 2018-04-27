@@ -95,6 +95,7 @@ public class Constants {
 
     public static final List<String> FIELDS_FOR_SEARCH_RANKING = Arrays.asList(
             FIELD_ID,
+            FIELD_URL,
             FIELD_RANK,
             FIELD_TOTAL_WORDS_COUNT,
             FIELD_WORDS_INDEX,

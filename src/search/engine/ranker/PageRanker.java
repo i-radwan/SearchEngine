@@ -213,9 +213,6 @@ public class PageRanker {
                 }
             }
         }
-
-        // TODO REMOVE THIS DEBUGGING LINE.
-        System.out.println("Number of unique hosts is " + this.pagesCount);
     }
 
     /**

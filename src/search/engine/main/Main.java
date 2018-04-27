@@ -7,6 +7,7 @@ import search.engine.indexer.WebPage;
 import search.engine.indexer.WebPageParser;
 import search.engine.ranker.PageRanker;
 import search.engine.server.Server;
+import search.engine.utils.Utilities;
 import search.engine.utils.WebUtilities;
 
 import java.net.URL;
@@ -54,9 +55,6 @@ public class Main {
                     test();
                     break;
                 case 5:
-                    Indexer i = new Indexer();
-                    PageRanker r = new PageRanker(i);
-                    r.start(true);
                     System.out.println("Bye!");
                     break;
                 default:

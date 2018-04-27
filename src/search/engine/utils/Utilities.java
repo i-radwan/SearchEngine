@@ -5,6 +5,8 @@ import org.tartarus.snowball.ext.englishStemmer;
 
 import java.util.*;
 
+import static java.lang.Math.min;
+
 
 public class Utilities {
 
@@ -177,5 +179,55 @@ public class Utilities {
         }
 
         return word.substring(firstLetterIdx, lastLetterIdx + 1);
+    }
+
+    /**
+     * Calculate how far the two strings match.
+     * Find minimum number of edits (operations) required to convert ‘str1’ into ‘str2’
+     * @param str1 String first string
+     * @param str2 String
+     * @return
+     */
+    public static int editDist(String str1, String str2) {
+        // Create a table to store results of sub problems
+        int m = str1.length();
+        int n = str2.length();
+        int dp[][] = new int[m + 1][n + 1];
+
+        // Fill d[][] in bottom up manner
+        for (int i = 0; i <= m; i++) {
+            for (int j = 0; j <= n; j++) {
+                // If first string is empty, only option is to
+                // insert all characters of second string
+                if (i == 0)
+                    dp[i][j] = j;  // Min. operations = j
+
+                    // If second string is empty, only option is to
+                    // remove all characters of second string
+                else if (j == 0)
+                    dp[i][j] = i; // Min. operations = i
+
+                    // If last characters are same, ignore last char
+                    // and recur for remaining string
+                else if (str1.charAt(i - 1) == str2.charAt(j - 1))
+                    dp[i][j] = dp[i - 1][j - 1];
+
+                    // If last character are different, consider all
+                    // possibilities and find minimum
+                else {
+                    dp[i][j] = 1 + min(dp[i][j - 1],  // Insert
+                            dp[i - 1][j],  // Remove
+                            dp[i - 1][j - 1]); // Replace
+                }
+            }
+        }
+
+        return dp[m][n];
+    }
+
+    static int min(int x, int y, int z) {
+        if (x <= y && x <= z) return x;
+        if (y <= x && y <= z) return y;
+        else return z;
     }
 }

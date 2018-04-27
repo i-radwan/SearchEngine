@@ -5,6 +5,8 @@ import search.engine.indexer.Indexer;
 import search.engine.indexer.StemInfo;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
+import search.engine.utils.Utilities;
+import search.engine.utils.WebUtilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,7 +112,9 @@ public class Ranker {
      * @return the calculated web page score
      */
     private double calculatePageScore(WebPage webPage) {
-        System.out.println("URL " + webPage.url);
+        String hostURL = WebUtilities.getHostName(webPage.url);
+        double levenshteinScore = 0.0;
+
         double pageScore = 0.0; // TF-IDF score
         int foundWordsCount = 0;
 
@@ -149,9 +153,13 @@ public class Ranker {
             // Add the effect of the normalized score of the word
             // The word score is related to its occurrences in the HTML
             pageScore += score * wordScore;
+
+            // Levenshtein query word, url score
+            levenshteinScore += (hostURL.length() - Utilities.editDist(word, hostURL)) / hostURL.length();
         }
 
-        return (pageScore + webPage.rank) * (foundWordsCount);
+        return (pageScore + webPage.rank) * (foundWordsCount) * (levenshteinScore);
+//        return (25 *pageScore * levenshteinScore + 10 * webPage.rank) * (foundWordsCount);
     }
 
     /**
@@ -164,8 +172,12 @@ public class Ranker {
      * @return the calculated web page score
      */
     private double calculatePageScoreCosineSimilarity(WebPage webPage) {
-        System.out.println("URL " + webPage.url);
-        // Calculate cosine similarity score.
+        // Our score three metrics beside page rank.
+        double pageCosineSimilarityScore;
+        double foundWordsScore;
+        double levenshteinScore = 0.0;
+
+        String hostURL = WebUtilities.getHostName(webPage.url);
         int queryWordsCnt = mQueryWords.size();
         int foundWordsCount = 0;
 
@@ -215,6 +227,9 @@ public class Ranker {
                 pageVectorMagnitude += pageScoreComponent * pageScoreComponent;
                 dotProduct += pageScoreComponent * queryScoreComponent;
             }
+
+            // Levenshtein query word, url score
+            levenshteinScore += (hostURL.length() - Utilities.editDist(word, hostURL)) / hostURL.length();
         }
 
         queryVectorMagnitude = Math.sqrt(queryVectorMagnitude);
@@ -222,8 +237,14 @@ public class Ranker {
 
         //System.out.println("Number of found words: " + numberOfFoundWords + " " + webPage.id +" " + ((1.0 * numberOfFoundWords) + (0.7 * pageCosineSimilarityScore) + (0.5 * webPage.rank)) + " " + webPage.rank);
 
-        double pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
-        double pageScore =  (1.0 * foundWordsCount / queryWordsCnt) + (0.7 * pageCosineSimilarityScore) + (0.5 * webPage.rank);
+        // Calculate cosine similarity TF-IDF Score.
+        pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
+
+        // Calculate found words score.
+        foundWordsScore = (1.0 * foundWordsCount / queryWordsCnt);
+
+        // Final page score
+        double pageScore = foundWordsScore * levenshteinScore * (pageCosineSimilarityScore + webPage.rank);
 
         return pageScore;
     }
