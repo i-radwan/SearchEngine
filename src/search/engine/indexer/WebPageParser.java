@@ -5,8 +5,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import org.tartarus.snowball.SnowballStemmer;
-import org.tartarus.snowball.ext.englishStemmer;
 import search.engine.utils.Constants;
 import search.engine.utils.URLNormalizer;
 import search.engine.utils.Utilities;
@@ -24,19 +22,20 @@ public class WebPageParser {
     private StringBuilder sContent;
     private WebPage mPage;
 
+    private int mParsedContentLen = 0;
+
     //
     // Member methods
     //
 
     /**
-     * Parses the given web page document and returns a {@code WebPage} object
+     * Parses the given web page raw document and prepares a {@code WebPage} object
      * with the parsed data.
      *
      * @param url the web page URL object
      * @param doc the web page document to parse
-     * @return a web page object constructed from the given document
      */
-    public WebPage parse(URL url, Document doc) {
+    public WebPageParser(URL url, Document doc) {
         // Initializing variables
         sContent = new StringBuilder();
         mPage = new WebPage();
@@ -52,8 +51,24 @@ public class WebPageParser {
 
         // Assign words index variable
         mPage.content = sContent.toString().trim();
+    }
 
+    /**
+     * Returns the parsed web page model representing the given raw web page.
+     *
+     * @return the parsed web page object
+     */
+    public WebPage getParsedWebPage() {
         return mPage;
+    }
+
+    /**
+     * Returns the length of the web page content after being processed and parsed.
+     *
+     * @return the length of the parsed web page content
+     */
+    public int getParsedContentLength() {
+        return mParsedContentLen;
     }
 
     /**
@@ -139,6 +154,8 @@ public class WebPageParser {
     private void addToWordIndex(String str, String tag) {
         str = Utilities.processString(str);
         String words[] = str.split(" ");
+
+        mParsedContentLen += str.length();
 
         int tagScore = Constants.TAG_TO_SCORE_MAP.getOrDefault(tag, 1);
 

@@ -1,10 +1,15 @@
 package search.engine.main;
 
+import org.jsoup.nodes.Document;
 import search.engine.crawler.Crawler;
 import search.engine.indexer.Indexer;
+import search.engine.indexer.WebPage;
+import search.engine.indexer.WebPageParser;
 import search.engine.ranker.PageRanker;
 import search.engine.server.Server;
+import search.engine.utils.WebUtilities;
 
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -111,7 +116,8 @@ public class Main {
      */
     private static void test() {
         try {
-            testIndexer();
+            //testIndexer();
+            testWebPageParser();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -124,5 +130,18 @@ public class Main {
                 Arrays.asList("google", "code", "jam", "hello", "world", "wikipedia"),
                 Arrays.asList("googl", "cod", "jam", "hello", "world", "wikipedia")
         );
+    }
+
+    private static void testWebPageParser() throws Exception {
+        URL url = new URL("https://policies.google.com/privacy?hl=ar");
+
+        Document doc = WebUtilities.fetchWebPage(url.toString());
+
+        System.out.println("Fetched");
+
+        WebPageParser parser = new WebPageParser(url, doc);
+        WebPage page = parser.getParsedWebPage();
+
+        System.out.println(doc.text());
     }
 }

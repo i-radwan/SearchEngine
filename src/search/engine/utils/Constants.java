@@ -37,8 +37,7 @@ public class Constants {
     public static final int MAX_BASE_URL_COUNT = 10;
     public static final int MAX_WEB_PAGES_COUNT = 5000;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
-    public static final int MAX_SNIPPETS_COUNT = 10;
-    public static final int MAX_SNIPPETS_CHARS_COUNT = 320;
+    public static final int MIN_PARSED_CONTENT_LENGTH_PERCENTAGE = 30;
 
     // ================================================================================================
     //
@@ -167,16 +166,14 @@ public class Constants {
 
     // ================================================================================================
     //
-    // Server
-    //
-
-    public static int SEARCH_ENGINE_PORT_NUMBER = 8080;
-    public static int QUERY_MAX_LENGTH = 5 * 10;
-
-    // ================================================================================================
-    //
     // Query processing
     //
+
+    public static final int SEARCH_ENGINE_PORT_NUMBER = 8080;
+
+    public static final int QUERY_MAX_LENGTH = 5 * 10;
+    public static final int MAX_SNIPPETS_COUNT = 10;
+    public static final int MAX_SNIPPETS_CHARS_COUNT = 320;
 
     public static final String[] STOP_WORDS = {
             "i", "a", "about", "an", "are", "as", "at", "be", "by", "com", "for",
