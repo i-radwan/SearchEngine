@@ -150,7 +150,7 @@ public class Ranker {
             pageScore += score * wordScore;
         }
 
-        return pageScore * (0.3 * webPage.rank) * (foundWordsCount);
+        return (pageScore + webPage.rank) * (foundWordsCount);
     }
 
     /**

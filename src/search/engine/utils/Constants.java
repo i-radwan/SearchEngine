@@ -130,17 +130,17 @@ public class Constants {
      */
     public static final Map<String, Integer> TAG_TO_SCORE_MAP = new HashMap<String, Integer>() {
         {
-            put("title", 100);
-            put("h1", 50);
-            put("h2", 45);
-            put("h3", 40);
-            put("strong", 20);
-            put("em", 20);
-            put("b", 20);
-            put("i", 10);
-            put("h4", 10);
+            put("title", 50);
+            put("h1", 35);
+            put("h2", 30);
+            put("h3", 25);
+            put("strong", 15);
+            put("em", 15);
+            put("b", 15);
+            put("h4", 7);
             put("h5", 5);
             put("h6", 5);
+            put("i", 5);
         }
     };
 
