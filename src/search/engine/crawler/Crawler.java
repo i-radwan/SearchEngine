@@ -46,6 +46,9 @@ public class Crawler {
         clearData();
 
         System.out.println("Finish crawling");
+
+        System.out.println("Total fetched web pages: " + CrawlerThread.sTotalFetchedWebPagesCnt);
+        System.out.println("Total indexed web pages: " + CrawlerThread.sTotalIndexedWebPagesCnt);
     }
 
     /**

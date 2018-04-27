@@ -5,6 +5,8 @@ import search.engine.indexer.Indexer;
 import search.engine.indexer.StemInfo;
 import search.engine.indexer.WebPage;
 import search.engine.utils.Constants;
+import search.engine.utils.Utilities;
+import search.engine.utils.WebUtilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +74,11 @@ public class Ranker {
             ret.add(mWebPages.get(idx++).id);
         }
 
+//        System.out.println("SORTED");
+//        for (ObjectId page : ret) {
+//            System.out.println(page);
+//        }
+
         return ret;
     }
 
@@ -110,6 +117,10 @@ public class Ranker {
      * @return the calculated web page score
      */
     private double calculatePageScore(WebPage webPage) {
+        String hostURL = WebUtilities.getHostName(webPage.url);
+        double levenshteinScore = 0.0;
+        double isHostWebPage = (WebUtilities.polishURL(webPage.url).equals(hostURL)) ? 1.0 : 0.0;
+
         double pageScore = 0.0; // TF-IDF score
         int foundWordsCount = 0;
 
@@ -148,9 +159,16 @@ public class Ranker {
             // Add the effect of the normalized score of the word
             // The word score is related to its occurrences in the HTML
             pageScore += score * wordScore;
+
+            // Levenshtein query word, url score
+            levenshteinScore += (1.0 * hostURL.length() - Utilities.editDist(word, hostURL)) / hostURL.length();
         }
 
-        return pageScore * (0.3 * webPage.rank) * (foundWordsCount);
+        // See this which is better.
+//      double r = (0.2 * pageScore * levenshteinScore*  foundWordsCount) + (webPage.rank * 100 * levenshteinScore) + (isHostWebPage); ORG
+        double r = (0.2 * pageScore * levenshteinScore * foundWordsCount) + (webPage.rank * 100 * levenshteinScore) + (isHostWebPage) + foundWordsCount;
+//        System.out.println(webPage.id + " TF-IDF Score: " + pageScore + " PageRank: " + webPage.rank + " FoundWordsCount: " + foundWordsCount + " levenshteinScore: " + levenshteinScore + " TotalScore: " + r);
+        return r;
     }
 
     /**
@@ -163,9 +181,15 @@ public class Ranker {
      * @return the calculated web page score
      */
     private double calculatePageScoreCosineSimilarity(WebPage webPage) {
-        // Calculate cosine similarity score.
-        int queryWordsCnt = mQueryWords.size();
+        String hostURL = WebUtilities.getHostName(webPage.url);
+
+        // Our score three metrics beside page rank.
+        double pageCosineSimilarityScore;
         int foundWordsCount = 0;
+        double levenshteinScore = 0.0;
+        double isHostWebPage = (WebUtilities.polishURL(webPage.url).equals(hostURL)) ? 1.0 : 0.0;
+
+        int queryWordsCnt = mQueryWords.size();
 
         double dotProduct = 0.0;
         double queryVectorMagnitude = 0.0;
@@ -213,15 +237,21 @@ public class Ranker {
                 pageVectorMagnitude += pageScoreComponent * pageScoreComponent;
                 dotProduct += pageScoreComponent * queryScoreComponent;
             }
+
+            // Levenshtein query word, url score
+            levenshteinScore += (hostURL.length() - Utilities.editDist(word, hostURL)) / hostURL.length();
         }
 
         queryVectorMagnitude = Math.sqrt(queryVectorMagnitude);
         pageVectorMagnitude = Math.sqrt(pageVectorMagnitude);
 
-        double pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
-        double pageScore = (1.0 * foundWordsCount / queryWordsCnt) * (pageCosineSimilarityScore) * (0.3 * webPage.rank);
+        //System.out.println("Number of found words: " + numberOfFoundWords + " " + webPage.id +" " + ((1.0 * numberOfFoundWords) + (0.7 * pageCosineSimilarityScore) + (0.5 * webPage.rank)) + " " + webPage.rank);
 
-        //System.out.println("Number of found words: " + foundWordsCount + " " + webPage.id + " " + pageScore);
+        // Calculate cosine similarity TF-IDF Score.
+        pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
+
+        // Final page score
+        double pageScore = (0.2 * pageCosineSimilarityScore * levenshteinScore * foundWordsCount) + (webPage.rank * 100 * levenshteinScore) + (isHostWebPage) + foundWordsCount;
 
         return pageScore;
     }

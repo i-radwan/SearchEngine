@@ -125,11 +125,26 @@ public class Indexer {
      * @param pageDoc  the web page raw content
      * @param outLinks the web page out links
      * @param prvPage  the previous version of the web page, retrieved from the database
+     * @return {@code true} if manged to index the web page successfully, {@code false}
+     * when any errors occurred or due to non HTML or non English web page was given.
      */
-    public void indexWebPage(URL url, org.jsoup.nodes.Document pageDoc, List<String> outLinks, WebPage prvPage) {
+    public boolean indexWebPage(URL url, org.jsoup.nodes.Document pageDoc, List<String> outLinks, WebPage prvPage) {
         // Parse the raw web page document
-        WebPageParser parser = new WebPageParser();
-        WebPage curPage = parser.parse(url, pageDoc);
+        WebPageParser parser = new WebPageParser(url, pageDoc);
+        WebPage curPage = parser.getParsedWebPage();
+
+        // Returns false if empty page content was found
+        // This may occur due to a non HTML web page
+        if (curPage.content.isEmpty()) {
+            return false;
+        }
+
+        // Returns false if length percentage of the parsed is less than a certain threshold
+        // This may occur due to a non English web page
+        if (parser.getParsedContentLength() * 100 <
+                Constants.MIN_PARSED_CONTENT_LENGTH_PERCENTAGE * curPage.content.length()) {
+            return false;
+        }
 
         curPage.outLinks = outLinks;
         curPage.rank = prvPage.rank;
@@ -149,7 +164,7 @@ public class Indexer {
 
             Output.log("Same page content : " + curPage.url);
             System.out.println("Same page content : " + curPage.url);
-            return;
+            return true;
         }
 
         // Insert new content in the database
@@ -159,6 +174,8 @@ public class Indexer {
         //
         Output.log("Indexed : " + curPage.url);
         System.out.println("Indexed: " + curPage.url);
+
+        return true;
     }
 
     /**

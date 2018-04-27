@@ -18,12 +18,16 @@ public class CrawlerThread extends Thread {
     //
     // Static variables
     //
+    public static int sTotalFetchedWebPagesCnt = 0;
+    public static int sTotalIndexedWebPagesCnt = 0;
     public static int sWebPagesCnt = 0;
     public static BlockingQueue<String> sURLsQueue = new LinkedBlockingDeque<>();
     public static ConcurrentSkipListSet<String> sVisitedURLs = new ConcurrentSkipListSet<>();
     public static ConcurrentHashMap<String, Integer> sBaseURLVisitedCnt = new ConcurrentHashMap<>();
 
     private static final Object sLock = new Object();
+    private static final Object sFetchedWebPagesCountLock = new Object();
+    private static final Object sIndexedWebPagesCountLock = new Object();
 
     //
     // Member variables
@@ -126,6 +130,11 @@ public class CrawlerThread extends Thread {
         System.out.println("Fetching: " + urlStr);
         Document doc = WebUtilities.fetchWebPage(urlStr);
 
+        // Increment fetched web pages count
+        synchronized (sFetchedWebPagesCountLock) {
+            sTotalFetchedWebPagesCnt++;
+        }
+
         // If any errors occurred during connection then continue
         if (doc == null || doc.body() == null) {
             removeURLFromCnt(baseUrlStr);
@@ -140,7 +149,20 @@ public class CrawlerThread extends Thread {
         //
 
         List<String> outLinks = WebPageParser.extractOutLinks(doc);
-        mIndexer.indexWebPage(url, doc, outLinks, lastPage);
+
+        // Check if failed to index the current web page due to in appropriate page format
+        if (!mIndexer.indexWebPage(url, doc, outLinks, lastPage)) {
+            removeURLFromCnt(baseUrlStr);
+            Output.log("Not English or not HTML page : " + urlStr);
+            System.out.println("Not English or not HTML page : " + urlStr);
+            return;
+        }
+
+        // Increment indexed web pages count
+        synchronized (sIndexedWebPagesCountLock) {
+            sTotalIndexedWebPagesCnt++;
+        }
+
         enqueueOutLinks(outLinks);
         Output.logVisitedURL(urlStr);
     }

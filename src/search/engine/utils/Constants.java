@@ -37,8 +37,7 @@ public class Constants {
     public static final int MAX_BASE_URL_COUNT = 10;
     public static final int MAX_WEB_PAGES_COUNT = 5000;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
-    public static final int MAX_SNIPPETS_COUNT = 10;
-    public static final int MAX_SNIPPETS_CHARS_COUNT = 320;
+    public static final int MIN_PARSED_CONTENT_LENGTH_PERCENTAGE = 70;
 
     // ================================================================================================
     //
@@ -96,6 +95,7 @@ public class Constants {
 
     public static final List<String> FIELDS_FOR_SEARCH_RANKING = Arrays.asList(
             FIELD_ID,
+            FIELD_URL,
             FIELD_RANK,
             FIELD_TOTAL_WORDS_COUNT,
             FIELD_WORDS_INDEX,
@@ -130,17 +130,17 @@ public class Constants {
      */
     public static final Map<String, Integer> TAG_TO_SCORE_MAP = new HashMap<String, Integer>() {
         {
-            put("title", 100);
-            put("h1", 50);
-            put("h2", 45);
-            put("h3", 40);
-            put("strong", 20);
-            put("em", 20);
-            put("b", 20);
-            put("i", 10);
-            put("h4", 10);
+            put("title", 50);
+            put("h1", 35);
+            put("h2", 30);
+            put("h3", 25);
+            put("strong", 15);
+            put("em", 15);
+            put("b", 15);
+            put("h4", 7);
             put("h5", 5);
             put("h6", 5);
+            put("i", 5);
         }
     };
 
@@ -167,16 +167,14 @@ public class Constants {
 
     // ================================================================================================
     //
-    // Server
-    //
-
-    public static int SEARCH_ENGINE_PORT_NUMBER = 8080;
-    public static int QUERY_MAX_LENGTH = 5 * 10;
-
-    // ================================================================================================
-    //
     // Query processing
     //
+
+    public static final int SEARCH_ENGINE_PORT_NUMBER = 8080;
+
+    public static final int QUERY_MAX_LENGTH = 5 * 10;
+    public static final int MAX_SNIPPETS_COUNT = 10;
+    public static final int MAX_SNIPPETS_CHARS_COUNT = 320;
 
     public static final String[] STOP_WORDS = {
             "i", "a", "about", "an", "are", "as", "at", "be", "by", "com", "for",

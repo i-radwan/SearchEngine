@@ -52,6 +52,21 @@ public final class WebUtilities {
     }
 
     /**
+     * Removes "http" or "https" and back slashes from the url.
+     *
+     * @param urlStr a web page URL string
+     * @return string representing the base address, or null if invalid URL was given
+     */
+    public static String polishURL(String urlStr) {
+        String ret = urlStr;
+        ret = ret.replace("http://", "");
+        ret = ret.replace("https://", "");
+        ret = ret.replace("/", "");
+
+        return  ret;
+    }
+
+    /**
      * Connects to the robots.txt URL of the given web page URL object
      * and returns its as an array of string lines.
      *
