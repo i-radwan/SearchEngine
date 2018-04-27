@@ -76,6 +76,11 @@ public class Ranker {
             ret.add(mWebPages.get(idx++).id);
         }
 
+        System.out.println("SORTED");
+        for (ObjectId pageID : ret) {
+            System.out.println(pageID);
+        }
+
         return ret;
     }
 
@@ -181,6 +186,7 @@ public class Ranker {
         double dotProduct = 0.0;
         double pageVectorMagnitude = 0.0;
 
+        int numberOfFoundWords = 0;
         // For each word in the query filter words
         for (int i = 0; i < queryWordsCnt; ++i) {
             String word = mQueryWords.get(i);
@@ -195,6 +201,7 @@ public class Ranker {
 
             // Exact word
             if (wordCnt > 0) {
+                numberOfFoundWords++;
                 TF = wordCnt / (double) webPage.wordsCount;
                 IDF = Math.log((double) mTotalDocsCount / mWordsDocsCount[i]);
                 pageVectorMagnitude += Math.pow(TF * IDF, 2);
@@ -211,8 +218,9 @@ public class Ranker {
             }
         }
         pageVectorMagnitude = Math.sqrt(pageVectorMagnitude);
+        System.out.println("Number of found words: " + numberOfFoundWords + " " + webPage.id +" " + ((1.0 * numberOfFoundWords) + (0.7 * pageCosineSimilarityScore) + (0.3 * webPage.rank)));
 
         pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
-        return (0.7 * pageCosineSimilarityScore) * (0.3 * webPage.rank);
+        return (1.0 * numberOfFoundWords) + (0.7 * pageCosineSimilarityScore) + (0.3 * webPage.rank);
     }
 }
