@@ -340,13 +340,8 @@ public class PageRanker {
                 // Get its host URl.
                 String webPageHostURL = hostWebPagesMap.get(webPageURL);
 
-                // update web page rank. Give the host a higher page rank
-                if (WebUtilities.polishURL(webPageURL).equals(webPageHostURL)) {
-                    Double rank = pagesRank.get(pagesIDS.get(webPageHostURL));
-                    graphNodes.get(webPageURL).rank = rank + rank * 0.5;
-                } else {
-                    graphNodes.get(webPageURL).rank = pagesRank.get(pagesIDS.get(webPageHostURL));
-                }
+                graphNodes.get(webPageURL).rank = pagesRank.get(pagesIDS.get(webPageHostURL));
+//                }
             }
 
             mIndexer.updatePageRanks(graphNodes.values());
