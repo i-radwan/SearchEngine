@@ -218,10 +218,10 @@ public class Ranker {
         queryVectorMagnitude = Math.sqrt(queryVectorMagnitude);
         pageVectorMagnitude = Math.sqrt(pageVectorMagnitude);
 
-        double pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
-        double pageScore = (1.0 * foundWordsCount / queryWordsCnt) * (pageCosineSimilarityScore) * (0.3 * webPage.rank);
+        //System.out.println("Number of found words: " + numberOfFoundWords + " " + webPage.id +" " + ((1.0 * numberOfFoundWords) + (0.7 * pageCosineSimilarityScore) + (0.5 * webPage.rank)) + " " + webPage.rank);
 
-        //System.out.println("Number of found words: " + foundWordsCount + " " + webPage.id + " " + pageScore);
+        double pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
+        double pageScore =  (1.0 * foundWordsCount / queryWordsCnt) + 0.7 * pageCosineSimilarityScore + 0.5 * webPage.rank;
 
         return pageScore;
     }
