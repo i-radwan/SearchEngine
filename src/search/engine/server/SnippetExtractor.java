@@ -207,7 +207,8 @@ public class SnippetExtractor {
     private String completeSnippetFilling(StringBuilder snippet) {
         // If no selected snippet
         if (selectedSnippets.size() == 0) {
-            return content.substring(0, Constants.MAX_SNIPPETS_CHARS_COUNT) + "...";
+            int len = Math.min(content.length(), Constants.MAX_SNIPPETS_CHARS_COUNT);
+            return content.substring(0, len) + "...";
         }
 
         // Fill more to show full-like snippet

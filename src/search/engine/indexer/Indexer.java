@@ -339,7 +339,7 @@ public class Indexer {
         // Query filter
         Bson filter = Filters.in(
                 Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM,
-                filterWords
+                filterStems
         );
 
         // Filter words index array
