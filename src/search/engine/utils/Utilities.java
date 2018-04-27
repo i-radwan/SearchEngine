@@ -99,30 +99,6 @@ public class Utilities {
     }
 
     /**
-     * Constructs and returns the words dictionary of the given words set.
-     * <p>
-     * Words dictionary is a map from a stemmed word to
-     * all the words present in the given set having the same stem.
-     *
-     * @param words the words set to get their dictionary
-     * @return the words dictionary
-     */
-    public static Map<String, List<String>> getWordsDictionary(Set<String> words) {
-        Map<String, List<String>> ret = new TreeMap<>();
-
-        for (String word : words) {
-            // Stem word
-            String stem = stemWord(word);
-
-            // Map[stem].insert(word)
-            ret.putIfAbsent(stem, new ArrayList<>());
-            ret.get(stem).add(word);
-        }
-
-        return ret;
-    }
-
-    /**
      * Checks whether the given word is stop word or not.
      *
      * @param word a string

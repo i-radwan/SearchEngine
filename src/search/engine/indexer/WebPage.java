@@ -67,8 +67,8 @@ public class WebPage {
      * Web page dictionary index holding all the occurrence positions
      * for every distinct word in the web page.
      */
-    public Map<String, List<Integer>> wordPosMap = null;
-    public Map<String, StemInfo> stemMap = null;
+    public Map<String, List<Integer>> wordPosMap = new HashMap<>();
+    public Map<String, StemInfo> stemMap = new HashMap<>();
 
     /**
      * Variables used to adjust the frequency of fetching the web page content.
@@ -106,8 +106,8 @@ public class WebPage {
         rank = (double) doc.getOrDefault(Constants.FIELD_RANK, 1.0);
         outLinks = (List<String>) doc.getOrDefault(Constants.FIELD_CONNECTED_TO, null);
 
-        parseWordsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_WORDS_INDEX, null));
-        parseStemsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_STEMS_INDEX, null));
+        // parseWordsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_WORDS_INDEX, null));
+        // parseStemsIndex((List<Document>) doc.getOrDefault(Constants.FIELD_STEMS_INDEX, null));
 
         fetchSkipLimit = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_LIMIT, 1);
         fetchSkipCount = (int) doc.getOrDefault(Constants.FILED_FETCH_SKIP_COUNT, 0);
@@ -133,8 +133,8 @@ public class WebPage {
         doc.append(Constants.FIELD_RANK, rank);
         doc.append(Constants.FIELD_CONNECTED_TO, outLinks);
 
-        doc.append(Constants.FIELD_WORDS_INDEX, getWordsIndex());
-        doc.append(Constants.FIELD_STEMS_INDEX, getStemsIndex());
+        // doc.append(Constants.FIELD_WORDS_INDEX, getWordsIndex());
+        // doc.append(Constants.FIELD_STEMS_INDEX, getStemsIndex());
 
         doc.append(Constants.FILED_FETCH_SKIP_LIMIT, fetchSkipLimit);
         doc.append(Constants.FILED_FETCH_SKIP_COUNT, fetchSkipCount);
@@ -147,7 +147,7 @@ public class WebPage {
      *
      * @return list of documents representing the words index of this web page
      */
-    private List<Document> getWordsIndex() {
+    public List<Document> getWordsIndex() {
         if (wordPosMap == null) {
             return null;
         }
@@ -157,8 +157,8 @@ public class WebPage {
 
         for (Map.Entry<String, List<Integer>> entry : wordPosMap.entrySet()) {
             Document doc = new Document()
+                    .append(Constants.FIELD_TERM_DOC_ID, this.id)
                     .append(Constants.FIELD_TERM, entry.getKey())
-                    //.append(Constants.FIELD_TERM_COUNT, entry.getValue().size())
                     .append(Constants.FIELD_TERM_POSITIONS, entry.getValue());
 
             dictionary.add(doc);
@@ -172,12 +172,10 @@ public class WebPage {
      *
      * @param wordsIndex list of documents representing the dictionary of this web page
      */
-    private void parseWordsIndex(List<Document> wordsIndex) {
+    public void parseWordsIndex(List<Document> wordsIndex) {
         if (wordsIndex == null) {
             return;
         }
-
-        wordPosMap = new HashMap<>();
 
         for (Document doc : wordsIndex) {
             String word = doc.getString(Constants.FIELD_TERM);
@@ -187,15 +185,17 @@ public class WebPage {
 
     /**
      * Returns the stem words index of this web page.
-     * (i.e. just a map from the stem word to its occurrence count in the web page)
+     * (i.e. just a map from the stem word to its occurrence count in the web page along with a score
+     * related to its occurrence)
      *
      * @return list of documents representing the stem index of this web page
      */
-    private List<Document> getStemsIndex() {
+    public List<Document> getStemsIndex() {
         List<Document> ret = new ArrayList<>();
 
         for (Map.Entry<String, StemInfo> entry : stemMap.entrySet()) {
             Document doc = new Document()
+                    .append(Constants.FIELD_TERM_DOC_ID, this.id)
                     .append(Constants.FIELD_TERM, entry.getKey())
                     .append(Constants.FIELD_TERM_COUNT, entry.getValue().count)
                     .append(Constants.FIELD_TERM_SCORE, entry.getValue().score);
@@ -212,12 +212,10 @@ public class WebPage {
      *
      * @param stemsIndex list of documents representing the stems index of this web page
      */
-    private void parseStemsIndex(List<Document> stemsIndex) {
+    public void parseStemsIndex(List<Document> stemsIndex) {
         if (stemsIndex == null) {
             return;
         }
-
-        stemMap = new HashMap<>();
 
         for (Document doc : stemsIndex) {
             stemMap.put(

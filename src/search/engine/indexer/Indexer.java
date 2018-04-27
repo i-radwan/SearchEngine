@@ -26,6 +26,8 @@ public class Indexer {
      * Mongo database collections
      */
     private MongoCollection<Document> mWebPagesCollection;
+    private MongoCollection<Document> mWordsCollection;
+    private MongoCollection<Document> mStemsCollection;
     private MongoCollection<Document> mDictionaryCollection;
     private MongoCollection<Document> mSuggestionsCollection;
 
@@ -59,19 +61,37 @@ public class Indexer {
         MongoCollection<Document> collection;
         IndexOptions indexOptions = new IndexOptions().unique(true);
 
+        //
         // Create web page collection and its indexes
+        //
         collection = database.getCollection(Constants.COLLECTION_WEB_PAGES);
         collection.createIndex(Indexes.ascending(Constants.FIELD_URL), indexOptions);
-        collection.createIndex(Indexes.ascending(Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM));
-        collection.createIndex(Indexes.ascending(Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM));
+        // collection.createIndex(Indexes.ascending(Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM));
+        // collection.createIndex(Indexes.ascending(Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM));
 
+        //
+        // Create words collection and its indexes
+        //
+        collection = database.getCollection(Constants.COLLECTION_WORDS);
+        collection.createIndex(Indexes.ascending(Constants.FIELD_TERM_DOC_ID));
+        collection.createIndex(Indexes.ascending(Constants.FIELD_TERM));
+
+        //
+        // Create stems collection and its indexes
+        //
+        collection = database.getCollection(Constants.COLLECTION_STEMS);
+        collection.createIndex(Indexes.ascending(Constants.FIELD_TERM_DOC_ID));
+        collection.createIndex(Indexes.ascending(Constants.FIELD_TERM));
+
+        //
         // Create dictionary collection and its indexes
-        database.createCollection(Constants.COLLECTION_DICTIONARY);
+        //
         collection = database.getCollection(Constants.COLLECTION_DICTIONARY);
         collection.createIndex(Indexes.ascending(Constants.FIELD_TERM), indexOptions);
 
+        //
         // Create suggestions collection and its indexes
-        database.createCollection(Constants.COLLECTION_SUGGESTIONS);
+        //
         collection = database.getCollection(Constants.COLLECTION_SUGGESTIONS);
         collection.createIndex(Indexes.ascending(Constants.FIELD_SUGGESTION), indexOptions);
     }
@@ -93,6 +113,8 @@ public class Indexer {
 
         // Get collections from the database
         mWebPagesCollection = database.getCollection(Constants.COLLECTION_WEB_PAGES);
+        mWordsCollection = database.getCollection(Constants.COLLECTION_WORDS);
+        mStemsCollection = database.getCollection(Constants.COLLECTION_STEMS);
         mDictionaryCollection = database.getCollection(Constants.COLLECTION_DICTIONARY);
         mSuggestionsCollection = database.getCollection(Constants.COLLECTION_SUGGESTIONS);
     }
@@ -154,8 +176,9 @@ public class Indexer {
         // Compare the newly fetched page with its previous version from the database.
         if (curPage.wordsCount == prvPage.wordsCount
                 && curPage.title.equals(prvPage.title)
-                && curPage.wordPosMap.equals(prvPage.wordPosMap)
-                && curPage.stemMap.equals(prvPage.stemMap)) {
+                // && curPage.wordPosMap.equals(prvPage.wordPosMap)
+                // && curPage.stemMap.equals(prvPage.stemMap)
+                && curPage.content.equals(prvPage.content)) {
 
             // If no changes happens to the content of the web page then
             // increase the skip fetch limit and return
@@ -169,7 +192,7 @@ public class Indexer {
 
         // Insert new content in the database
         updateWebPage(curPage);
-        // updateWordsDictionary(Utilities.getWordsDictionary(curPage.wordPosMap.keySet()));
+        // updateWordsDictionary(IndexerUtilities.getWordsDictionary(curPage.wordPosMap.keySet()));
 
         //
         Output.log("Indexed : " + curPage.url);
@@ -185,11 +208,32 @@ public class Indexer {
      */
     public void updateWebPage(WebPage page) {
         // Replace or create new document in the web pages collection
-        mWebPagesCollection.replaceOne(
-                Filters.eq(Constants.FIELD_URL, page.url),  // Filter document by web page url
-                page.toDocument(),                  // Create the web page document to be indexed
-                new UpdateOptions().upsert(true)    // Add upsert option
+        // mWebPagesCollection.replaceOne(
+        //         Filters.eq(Constants.FIELD_URL, page.url),  // Filter document by web page url
+        //         page.toDocument(),                          // Create the web page document to be indexed
+        //         new UpdateOptions().upsert(true)            // Add upsert option
+        // );
+
+        // Replace or insert web page document and return its ID
+        Document doc = mWebPagesCollection.findOneAndReplace(
+                Filters.eq(Constants.FIELD_URL, page.url),
+                page.toDocument(),
+                new FindOneAndReplaceOptions()
+                        .upsert(true)
+                        .projection(Projections.include(Constants.FIELD_ID))
+                        .returnDocument(ReturnDocument.AFTER)
         );
+
+        // Get web page id
+        page.id = doc.getObjectId(Constants.FIELD_ID);
+
+        // Delete old words and stems
+        mWordsCollection.deleteMany(Filters.eq(Constants.FIELD_TERM_DOC_ID, page.id));
+        mStemsCollection.deleteMany(Filters.eq(Constants.FIELD_TERM_DOC_ID, page.id));
+
+        // Insert new words and stems
+        mWordsCollection.insertMany(page.getWordsIndex());
+        mStemsCollection.insertMany(page.getStemsIndex());
     }
 
     /**
@@ -228,7 +272,12 @@ public class Indexer {
      * @param id the web page id to remove
      */
     public void removeWebPage(ObjectId id) {
+        // Delete page info
         mWebPagesCollection.deleteOne(Filters.eq(Constants.FIELD_ID, id));
+
+        // Delete page words and stems indexes
+        mWordsCollection.deleteMany(Filters.eq(Constants.FIELD_TERM_DOC_ID, id));
+        mStemsCollection.deleteMany(Filters.eq(Constants.FIELD_TERM_DOC_ID, id));
     }
 
     /**
@@ -294,10 +343,12 @@ public class Indexer {
      * @return documents count
      */
     public long getWordDocumentsCount(String word) {
-        return mWebPagesCollection.count(Filters.eq(
-                Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM,
-                word
-        ));
+        // return mWebPagesCollection.count(Filters.eq(
+        //         Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM,
+        //         word
+        // ));
+
+        return mWordsCollection.count(Filters.eq(Constants.FIELD_TERM, word));
     }
 
     /**
@@ -308,10 +359,12 @@ public class Indexer {
      * @return documents count
      */
     public long getStemDocumentsCount(String stem) {
-        return mWebPagesCollection.count(Filters.eq(
-                Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM,
-                stem
-        ));
+        // return mWebPagesCollection.count(Filters.eq(
+        //         Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM,
+        //         stem
+        // ));
+
+        return mStemsCollection.count(Filters.eq(Constants.FIELD_TERM, stem));
     }
 
     /**
@@ -348,11 +401,74 @@ public class Indexer {
     /**
      * Searches for web pages having any of the given filter words.
      *
+     * @param words list of search query words
+     * @param stems list of search query stems
+     * @return list of matching web pages
+     */
+    public List<WebPage> searchByWord(List<String> words, List<String> stems) {
+        Map<ObjectId, WebPage> map = new HashMap<>();
+
+        // Add stems
+        FindIterable<Document> res = mStemsCollection.find(Filters.in(Constants.FIELD_TERM, stems));
+        IndexerUtilities.fillStemsIndex(res, map);
+
+        // Add words
+        res = mWordsCollection.find(Filters.in(Constants.FIELD_TERM, words));
+        IndexerUtilities.fillWordsIndex(res, map);
+
+        // Add web page info
+        res = mWebPagesCollection
+                .find(Filters.in(Constants.FIELD_ID, map.keySet()))
+                .projection(Projections.include(Constants.FIELD_TOTAL_WORDS_COUNT, Constants.FIELD_RANK));
+
+        return IndexerUtilities.fillPageInfo(res, map);
+    }
+
+    /**
+     * Searches for web pages having all of the given filter words in the given order.
+     *
+     * @param words list of search query words
+     * @param stems list of search query stems
+     * @return list of matching web pages
+     */
+    public List<WebPage> searchByPhrase(List<String> words, List<String> stems) {
+        Map<ObjectId, WebPage> tmpMap = new HashMap<>(), map = new HashMap<>();
+
+        // Add words
+        FindIterable<Document> res = mWordsCollection.find(Filters.in(Constants.FIELD_TERM, words));
+        IndexerUtilities.fillWordsIndex(res, tmpMap);
+
+        for (Map.Entry<ObjectId, WebPage> entry : tmpMap.entrySet()) {
+            WebPage page = entry.getValue();
+
+            if (page.wordPosMap.size() == words.size() && IndexerUtilities.checkPhraseOccurred(page.wordPosMap, words)) {
+                map.put(entry.getKey(), page);
+            }
+        }
+
+        // Add stems
+        res = mStemsCollection.find(Filters.and(
+                Filters.in(Constants.FIELD_TERM, stems),
+                Filters.in(Constants.FIELD_TERM_DOC_ID, map.keySet())
+        ));
+        IndexerUtilities.fillStemsIndex(res, map);
+
+        // Add web page info
+        res = mWebPagesCollection
+                .find(Filters.in(Constants.FIELD_ID, map.keySet()))
+                .projection(Projections.include(Constants.FIELD_TOTAL_WORDS_COUNT, Constants.FIELD_RANK));
+
+        return IndexerUtilities.fillPageInfo(res, map);
+    }
+
+    /**
+     * Searches for web pages having any of the given filter words.
+     *
      * @param filterWords list of search query words
      * @param filterStems list of search query stems
      * @return list of matching web pages
      */
-    public List<WebPage> searchByWord(List<String> filterWords, List<String> filterStems) {
+    public List<WebPage> searchByWordDeprecated(List<String> filterWords, List<String> filterStems) {
         // Query filter
         Bson filter = Filters.in(
                 Constants.FIELD_STEMS_INDEX + "." + Constants.FIELD_TERM,
@@ -389,7 +505,7 @@ public class Indexer {
      * @param filterStems list of search query stems
      * @return list of matching web pages
      */
-    public List<WebPage> searchByPhrase(List<String> filterWords, List<String> filterStems) {
+    public List<WebPage> searchByPhraseDeprecated(List<String> filterWords, List<String> filterStems) {
         // Query filter
         Bson filter = Filters.all(
                 Constants.FIELD_WORDS_INDEX + "." + Constants.FIELD_TERM,

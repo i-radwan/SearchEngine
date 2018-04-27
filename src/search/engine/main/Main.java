@@ -7,10 +7,12 @@ import search.engine.indexer.WebPage;
 import search.engine.indexer.WebPageParser;
 import search.engine.ranker.PageRanker;
 import search.engine.server.Server;
+import search.engine.utils.Utilities;
 import search.engine.utils.WebUtilities;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 
@@ -116,8 +118,8 @@ public class Main {
      */
     private static void test() {
         try {
-            //testIndexer();
-            testWebPageParser();
+            testIndexer();
+            //testWebPageParser();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -126,10 +128,12 @@ public class Main {
     private static void testIndexer() {
         Indexer indexer = new Indexer();
 
-        indexer.searchByWord(
-                Arrays.asList("google", "code", "jam", "hello", "world", "wikipedia"),
-                Arrays.asList("googl", "cod", "jam", "hello", "world", "wikipedia")
+        List<WebPage> res = indexer.searchByWord(
+                Arrays.asList("hello", "world"),
+                Arrays.asList("hello", "world")
         );
+
+        System.out.println(res.size());
     }
 
     private static void testWebPageParser() throws Exception {

@@ -47,7 +47,7 @@ public class Constants {
     /**
      * Database constants
      */
-    public static final String DATABASE_NAME = "search_engine";
+    public static final String DATABASE_NAME = "search_engine_optimized";
     public static final String DATABASE_HOST_ADDRESS = "localhost";
     public static final int DATABASE_PORT_NUMBER = 27017;
 
@@ -55,6 +55,8 @@ public class Constants {
      * Collection constants
      */
     public static final String COLLECTION_WEB_PAGES = "web_pages";
+    public static final String COLLECTION_WORDS = "words";
+    public static final String COLLECTION_STEMS = "stems";
     public static final String COLLECTION_DICTIONARY = "dictionary";
     public static final String COLLECTION_SUGGESTIONS = "suggestions";
 
@@ -70,6 +72,7 @@ public class Constants {
     public static final String FIELD_CONNECTED_TO = "connected_to";
     public static final String FIELD_WORDS_INDEX = "words_index";
     public static final String FIELD_STEMS_INDEX = "stems_index";
+    public static final String FIELD_TERM_DOC_ID = "doc_id";
     public static final String FIELD_TERM = "term";
     public static final String FIELD_TERM_COUNT = "count";
     public static final String FIELD_TERM_SCORE = "score";
