@@ -48,6 +48,7 @@ public class Server {
 
                 ret = processor.getJsonResult();
             } catch (Exception e) {
+                e.printStackTrace();
                 ret = "{error_msg:\"" + e.getMessage() + "\"}";
             }
 

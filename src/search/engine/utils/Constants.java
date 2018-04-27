@@ -35,7 +35,7 @@ public class Constants {
      */
     public static final int MAX_POLL_WAIT_TIME_MS = 10000;
     public static final int MAX_BASE_URL_COUNT = 10;
-    public static final int MAX_WEB_PAGES_COUNT = 1000;
+    public static final int MAX_WEB_PAGES_COUNT = 5000;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
     public static final int MAX_SNIPPETS_COUNT = 10;
     public static final int MAX_SNIPPETS_CHARS_COUNT = 320;
@@ -137,7 +137,7 @@ public class Constants {
             put("strong", 20);
             put("em", 20);
             put("b", 20);
-            put("i", 20);
+            put("i", 10);
             put("h4", 10);
             put("h5", 5);
             put("h6", 5);
