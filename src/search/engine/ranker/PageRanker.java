@@ -178,7 +178,6 @@ public class PageRanker {
 
             if (!pagesIDS.containsKey(webPageHostURL)) {
                 this.pagesCount++;
-//                System.out.println("New Host " + webPageHostURL + " ID: " + nextWebPageID);
                 pagesIDS.put(webPageHostURL, nextWebPageID++);
             }
 
@@ -190,7 +189,6 @@ public class PageRanker {
                     hostWebPagesMap.put(to, toHostURL);
 
                     if (!pagesIDS.containsKey(toHostURL)) {
-//                        System.out.println("New Host " + toHostURL + " ID: " + nextWebPageID);
                         this.pagesCount++;
                         pagesIDS.put(toHostURL, nextWebPageID++);
                     }
@@ -215,9 +213,6 @@ public class PageRanker {
                 }
             }
         }
-
-        // TODO REMOVE THIS DEBUGGING LINE.
-        System.out.println("Number of unique hosts is " + this.pagesCount);
     }
 
     /**
@@ -345,8 +340,13 @@ public class PageRanker {
                 // Get its host URl.
                 String webPageHostURL = hostWebPagesMap.get(webPageURL);
 
-                // update web page rank.
-                graphNodes.get(webPageURL).rank = pagesRank.get(pagesIDS.get(webPageHostURL));
+                // update web page rank. Give the host a higher page rank
+                if (WebUtilities.polishURL(webPageURL).equals(webPageHostURL)) {
+                    Double rank = pagesRank.get(pagesIDS.get(webPageHostURL));
+                    graphNodes.get(webPageURL).rank = rank + rank * 0.5;
+                } else {
+                    graphNodes.get(webPageURL).rank = pagesRank.get(pagesIDS.get(webPageHostURL));
+                }
             }
 
             mIndexer.updatePageRanks(graphNodes.values());
