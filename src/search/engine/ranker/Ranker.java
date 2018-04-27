@@ -76,10 +76,10 @@ public class Ranker {
             ret.add(mWebPages.get(idx++).id);
         }
 
-        System.out.println("SORTED");
-        for (ObjectId pageID : ret) {
-            System.out.println(pageID);
-        }
+//        System.out.println("SORTED");
+//        for (ObjectId pageID : ret) {
+//            System.out.println(pageID);
+//        }
 
         return ret;
     }
@@ -218,9 +218,10 @@ public class Ranker {
             }
         }
         pageVectorMagnitude = Math.sqrt(pageVectorMagnitude);
-        System.out.println("Number of found words: " + numberOfFoundWords + " " + webPage.id +" " + ((1.0 * numberOfFoundWords) + (0.7 * pageCosineSimilarityScore) + (0.3 * webPage.rank)));
+
+        //System.out.println("Number of found words: " + numberOfFoundWords + " " + webPage.id +" " + ((1.0 * numberOfFoundWords) + (0.7 * pageCosineSimilarityScore) + (0.5 * webPage.rank)) + " " + webPage.rank);
 
         pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
-        return (1.0 * numberOfFoundWords/queryWordsCnt) + (0.7 * pageCosineSimilarityScore) + (0.3 * webPage.rank);
+        return 1.0 * numberOfFoundWords/queryWordsCnt + 0.7 * pageCosineSimilarityScore + 0.5 * webPage.rank;
     }
 }
