@@ -35,7 +35,6 @@ public class PageRanker {
      * Map web pages to their host
      */
     Map<String, String> hostWebPagesMap;
-    Map<String, Integer> hostWebPagesCount;
 
     /**
      * The number of pages in the graph.
@@ -113,7 +112,6 @@ public class PageRanker {
         pagesRank = new ArrayList<>();
         pagesIDS = new HashMap<>();
         hostWebPagesMap = new HashMap<>();
-        hostWebPagesCount = new HashMap<>();
     }
 
 
@@ -177,11 +175,9 @@ public class PageRanker {
             String webPageHostURL = WebUtilities.getHostName(webPageNode.getKey());
             // Map this url to its host url.
             hostWebPagesMap.put(webPageNode.getKey(), webPageHostURL);
-            hostWebPagesCount.put(webPageHostURL, hostWebPagesCount.getOrDefault(webPageHostURL, 0) + 1);
 
             if (!pagesIDS.containsKey(webPageHostURL)) {
                 this.pagesCount++;
-//                System.out.println("New Host " + webPageHostURL + " ID: " + nextWebPageID);
                 pagesIDS.put(webPageHostURL, nextWebPageID++);
             }
 
@@ -191,10 +187,8 @@ public class PageRanker {
                 if (graphNodes.containsKey(to)) { // Check if this out link page is currently indexed in the database.
                     // Map this url to its host url.
                     hostWebPagesMap.put(to, toHostURL);
-                    hostWebPagesCount.put(toHostURL, hostWebPagesCount.getOrDefault(toHostURL, 0) + 1);
 
                     if (!pagesIDS.containsKey(toHostURL)) {
-//                        System.out.println("New Host " + toHostURL + " ID: " + nextWebPageID);
                         this.pagesCount++;
                         pagesIDS.put(toHostURL, nextWebPageID++);
                     }
