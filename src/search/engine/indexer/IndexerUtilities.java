@@ -108,6 +108,7 @@ public class IndexerUtilities {
             WebPage page = map.get(id);
 
             page.id = id;
+            page.url = doc.getString(Constants.FIELD_URL);
             page.wordsCount = doc.getInteger(Constants.FIELD_TOTAL_WORDS_COUNT);
             page.rank = doc.getDouble(Constants.FIELD_RANK);
 

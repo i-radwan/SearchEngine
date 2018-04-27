@@ -419,7 +419,7 @@ public class Indexer {
         // Add web page info
         res = mWebPagesCollection
                 .find(Filters.in(Constants.FIELD_ID, map.keySet()))
-                .projection(Projections.include(Constants.FIELD_TOTAL_WORDS_COUNT, Constants.FIELD_RANK));
+                .projection(Projections.include(Constants.FIELD_URL, Constants.FIELD_TOTAL_WORDS_COUNT, Constants.FIELD_RANK));
 
         return IndexerUtilities.fillPageInfo(res, map);
     }
@@ -456,7 +456,7 @@ public class Indexer {
         // Add web page info
         res = mWebPagesCollection
                 .find(Filters.in(Constants.FIELD_ID, map.keySet()))
-                .projection(Projections.include(Constants.FIELD_TOTAL_WORDS_COUNT, Constants.FIELD_RANK));
+                .projection(Projections.include(Constants.FIELD_URL, Constants.FIELD_TOTAL_WORDS_COUNT, Constants.FIELD_RANK));
 
         return IndexerUtilities.fillPageInfo(res, map);
     }
