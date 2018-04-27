@@ -74,6 +74,11 @@ public class Ranker {
             ret.add(mWebPages.get(idx++).id);
         }
 
+//        System.out.println("SORTED");
+//        for (ObjectId page : ret) {
+//            System.out.println(page);
+//        }
+
         return ret;
     }
 
@@ -114,6 +119,7 @@ public class Ranker {
     private double calculatePageScore(WebPage webPage) {
         String hostURL = WebUtilities.getHostName(webPage.url);
         double levenshteinScore = 0.0;
+        double isHostWebPage = (WebUtilities.polishURL(webPage.url).equals(hostURL)) ? 1.0 : 0.0;
 
         double pageScore = 0.0; // TF-IDF score
         int foundWordsCount = 0;
@@ -155,11 +161,14 @@ public class Ranker {
             pageScore += score * wordScore;
 
             // Levenshtein query word, url score
-            levenshteinScore += (hostURL.length() - Utilities.editDist(word, hostURL)) / hostURL.length();
+            levenshteinScore += (1.0 * hostURL.length() - Utilities.editDist(word, hostURL)) / hostURL.length();
         }
 
-        return (pageScore + webPage.rank) * (foundWordsCount) * (levenshteinScore);
-//        return (25 *pageScore * levenshteinScore + 10 * webPage.rank) * (foundWordsCount);
+        // See this which is better.
+//      double r = (0.2 * pageScore * levenshteinScore*  foundWordsCount) + (webPage.rank * 100 * levenshteinScore) + (isHostWebPage); ORG
+        double r = (0.2 * pageScore * levenshteinScore * foundWordsCount) + (webPage.rank * 100 * levenshteinScore) + (isHostWebPage) + foundWordsCount;
+//        System.out.println(webPage.id + " TF-IDF Score: " + pageScore + " PageRank: " + webPage.rank + " FoundWordsCount: " + foundWordsCount + " levenshteinScore: " + levenshteinScore + " TotalScore: " + r);
+        return r;
     }
 
     /**
@@ -172,14 +181,15 @@ public class Ranker {
      * @return the calculated web page score
      */
     private double calculatePageScoreCosineSimilarity(WebPage webPage) {
+        String hostURL = WebUtilities.getHostName(webPage.url);
+
         // Our score three metrics beside page rank.
         double pageCosineSimilarityScore;
-        double foundWordsScore;
-        double levenshteinScore = 0.0;
-
-        String hostURL = WebUtilities.getHostName(webPage.url);
-        int queryWordsCnt = mQueryWords.size();
         int foundWordsCount = 0;
+        double levenshteinScore = 0.0;
+        double isHostWebPage = (WebUtilities.polishURL(webPage.url).equals(hostURL)) ? 1.0 : 0.0;
+
+        int queryWordsCnt = mQueryWords.size();
 
         double dotProduct = 0.0;
         double queryVectorMagnitude = 0.0;
@@ -240,11 +250,8 @@ public class Ranker {
         // Calculate cosine similarity TF-IDF Score.
         pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
 
-        // Calculate found words score.
-        foundWordsScore = (1.0 * foundWordsCount / queryWordsCnt);
-
         // Final page score
-        double pageScore = foundWordsScore * levenshteinScore * (pageCosineSimilarityScore + webPage.rank);
+        double pageScore = (0.2 * pageCosineSimilarityScore * levenshteinScore * foundWordsCount) + (webPage.rank * 100 * levenshteinScore) + (isHostWebPage) + foundWordsCount;
 
         return pageScore;
     }
