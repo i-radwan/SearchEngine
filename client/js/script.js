@@ -46,6 +46,7 @@ let app = {
      * @param page
      */
     getWebpagesRequest: function (query, page = 1) {
+        app.enterHitTime = Date.now();
         app.requestSent = true;
 
         $(".loader").css('display', 'block');
@@ -198,7 +199,6 @@ let app = {
      */
     configureSearchBox: function () {
         let execute = function () {
-            app.enterHitTime = Date.now();
             app.getWebpagesRequest(app.searchBox.val());
             $(".ui-menu").css('display', 'none');
         };
