@@ -63,7 +63,7 @@ public class Ranker {
         mWebPages.sort(new Comparator<WebPage>() {
             @Override
             public int compare(WebPage p1, WebPage p2) {
-                return Double.compare(p1.rank, p2.rank);
+                return Double.compare(p2.rank, p1.rank);
             }
         });
 
