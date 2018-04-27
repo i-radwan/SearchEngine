@@ -72,14 +72,6 @@ public class Ranker {
             ret.add(mWebPages.get(idx++).id);
         }
 
-<<<<<<< HEAD
-//        System.out.println("SORTED");
-//        for (ObjectId pageID : ret) {
-//            System.out.println(pageID);
-//        }
-
-=======
->>>>>>> 114d95658e9a9f0551eb242996aa98dee3b2bf80
         return ret;
     }
 
@@ -225,20 +217,12 @@ public class Ranker {
 
         queryVectorMagnitude = Math.sqrt(queryVectorMagnitude);
         pageVectorMagnitude = Math.sqrt(pageVectorMagnitude);
-<<<<<<< HEAD
 
         //System.out.println("Number of found words: " + numberOfFoundWords + " " + webPage.id +" " + ((1.0 * numberOfFoundWords) + (0.7 * pageCosineSimilarityScore) + (0.5 * webPage.rank)) + " " + webPage.rank);
 
-        pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
-        return 1.0 * numberOfFoundWords/queryWordsCnt + 0.7 * pageCosineSimilarityScore + 0.5 * webPage.rank;
-=======
-
         double pageCosineSimilarityScore = dotProduct / (pageVectorMagnitude * queryVectorMagnitude);
-        double pageScore = (1.0 * foundWordsCount / queryWordsCnt) * (pageCosineSimilarityScore) * (0.3 * webPage.rank);
-
-        //System.out.println("Number of found words: " + foundWordsCount + " " + webPage.id + " " + pageScore);
+        double pageScore =  (1.0 * foundWordsCount / queryWordsCnt) + 0.7 * pageCosineSimilarityScore + 0.5 * webPage.rank;
 
         return pageScore;
->>>>>>> 114d95658e9a9f0551eb242996aa98dee3b2bf80
     }
 }
