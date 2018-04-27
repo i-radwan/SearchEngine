@@ -110,6 +110,7 @@ public class Ranker {
      * @return the calculated web page score
      */
     private double calculatePageScore(WebPage webPage) {
+        System.out.println("URL " + webPage.url);
         double pageScore = 0.0; // TF-IDF score
         int foundWordsCount = 0;
 
@@ -163,6 +164,7 @@ public class Ranker {
      * @return the calculated web page score
      */
     private double calculatePageScoreCosineSimilarity(WebPage webPage) {
+        System.out.println("URL " + webPage.url);
         // Calculate cosine similarity score.
         int queryWordsCnt = mQueryWords.size();
         int foundWordsCount = 0;

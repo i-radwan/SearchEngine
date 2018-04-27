@@ -54,6 +54,9 @@ public class Main {
                     test();
                     break;
                 case 5:
+                    Indexer i = new Indexer();
+                    PageRanker r = new PageRanker(i);
+                    r.start(true);
                     System.out.println("Bye!");
                     break;
                 default:

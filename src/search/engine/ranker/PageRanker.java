@@ -35,6 +35,7 @@ public class PageRanker {
      * Map web pages to their host
      */
     Map<String, String> hostWebPagesMap;
+    Map<String, Integer> hostWebPagesCount;
 
     /**
      * The number of pages in the graph.
@@ -112,6 +113,7 @@ public class PageRanker {
         pagesRank = new ArrayList<>();
         pagesIDS = new HashMap<>();
         hostWebPagesMap = new HashMap<>();
+        hostWebPagesCount = new HashMap<>();
     }
 
 
@@ -175,6 +177,7 @@ public class PageRanker {
             String webPageHostURL = WebUtilities.getHostName(webPageNode.getKey());
             // Map this url to its host url.
             hostWebPagesMap.put(webPageNode.getKey(), webPageHostURL);
+            hostWebPagesCount.put(webPageHostURL, hostWebPagesCount.getOrDefault(webPageHostURL, 0) + 1);
 
             if (!pagesIDS.containsKey(webPageHostURL)) {
                 this.pagesCount++;
@@ -188,6 +191,7 @@ public class PageRanker {
                 if (graphNodes.containsKey(to)) { // Check if this out link page is currently indexed in the database.
                     // Map this url to its host url.
                     hostWebPagesMap.put(to, toHostURL);
+                    hostWebPagesCount.put(toHostURL, hostWebPagesCount.getOrDefault(toHostURL, 0) + 1);
 
                     if (!pagesIDS.containsKey(toHostURL)) {
 //                        System.out.println("New Host " + toHostURL + " ID: " + nextWebPageID);
@@ -345,8 +349,13 @@ public class PageRanker {
                 // Get its host URl.
                 String webPageHostURL = hostWebPagesMap.get(webPageURL);
 
-                // update web page rank.
-                graphNodes.get(webPageURL).rank = pagesRank.get(pagesIDS.get(webPageHostURL));
+                // update web page rank. Give the host a higher page rank
+                if (WebUtilities.polishURL(webPageURL).equals(webPageHostURL)) {
+                    Double rank = pagesRank.get(pagesIDS.get(webPageHostURL));
+                    graphNodes.get(webPageURL).rank = rank + rank * 0.5;
+                } else {
+                    graphNodes.get(webPageURL).rank = pagesRank.get(pagesIDS.get(webPageHostURL));
+                }
             }
 
             mIndexer.updatePageRanks(graphNodes.values());
