@@ -37,7 +37,7 @@ public class Constants {
     public static final int MAX_BASE_URL_COUNT = 10;
     public static final int MAX_WEB_PAGES_COUNT = 5000;
     public static final int MAX_FETCH_SKIP_LIMIT = 8;
-    public static final int MIN_PARSED_CONTENT_LENGTH_PERCENTAGE = 30;
+    public static final int MIN_PARSED_CONTENT_LENGTH_PERCENTAGE = 70;
 
     // ================================================================================================
     //
