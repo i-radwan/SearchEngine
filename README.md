@@ -17,6 +17,6 @@ A simple crawler-based search engine written in Java.
 
 ### How to use the search GUI?
 - Apply the `How to use` section described above but choose `Start Server`.
-- Make sure that the server is listening to `http://0.0.0.0:8080` (change the code in both client and server sides to use different port)
-- Open your browser and visit `http://0.0.0.0:8080`
+- Make sure that the server is listening to `http://localhost:8080` (change the code in both client and server sides to use different port)
+- Open your browser and visit `http://localhost:8080`
 
