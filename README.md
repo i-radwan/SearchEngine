@@ -1,5 +1,5 @@
 # Search Engine
-A Simple Search Engine written in Java
+A simple crawler-based search engine written in Java.
 
 ### Used libraries, frameworkd, ..etc.
 - MongoDB
