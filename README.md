@@ -1,6 +1,8 @@
 # Search Engine
 A simple crawler-based search engine written in Java.
 
+![alt text](https://raw.githubusercontent.com/hemoali/SearchEngine/master/screenshots/screenshot.png)
+
 ### Used libraries, frameworkd, ..etc.
 - MongoDB
 - Spark
